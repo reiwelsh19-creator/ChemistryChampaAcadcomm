@@ -1,1 +1,1 @@
-# ChemistryChampaAcadcomm.github.io
+# ChampacaAcadComm.github.io
