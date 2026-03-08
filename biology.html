@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Map of Biology</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #050e07;
+      --surface:  #091410;
+      --surface2: #0f1f18;
+      --border:   rgba(80,200,100,0.15);
+      --border2:  rgba(80,200,100,0.32);
+      --green:    #50c864;
+      --green2:   #7edc8a;
+      --lime:     #aaee55;
+      --text:     #e0f0e4;
+      --muted:    #5a8a65;
+      --dim:      #1a3020;
+
+      --nature:   #50c864;
+      --nature-bg: rgba(80,200,100,0.07);
+      --evolution:#a8e060;
+      --evolution-bg: rgba(168,224,96,0.07);
+      --cell:     #40d4b0;
+      --cell-bg:  rgba(64,212,176,0.07);
+      --diversity:#f0c040;
+      --diversity-bg: rgba(240,192,64,0.07);
+      --ecology:  #e08050;
+      --ecology-bg: rgba(224,128,80,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 80px;
+      overflow-x: hidden;
+    }
+
+    /* ── Leaf particle canvas ── */
+    #leaves {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+
+    header, .page-tabs, #mapPage, #practicePage, .modal-backdrop {
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 64px 40px 44px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(30,80,40,0.25) 0%, transparent 100%);
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: 'DNA · RNA · ATP · CELL · GENE · EVOLUTION · ECOLOGY · MITOSIS · PHOTOSYNTHESIS';
+      position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+      font-size: 10px; letter-spacing: 0.22em; color: var(--dim);
+      white-space: nowrap; overflow: hidden;
+    }
+    .label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    h1 {
+      font-family: 'Lora', serif;
+      font-weight: 400; font-size: clamp(2.4rem, 5.5vw, 4rem);
+      line-height: 1.05; color: var(--text);
+      text-shadow: 0 0 60px rgba(80,200,100,0.35);
+    }
+    h1 em {
+      font-style: italic; font-weight: 600;
+      background: linear-gradient(135deg, var(--green2), var(--lime));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.08em; }
+
+    /* ── Tabs ── */
+    .page-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .page-tab {
+      padding: 14px 28px; font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+      color: var(--muted); user-select: none;
+    }
+    .page-tab:hover { color: var(--text); }
+    .page-tab.active { color: var(--green2); border-bottom-color: var(--green); }
+
+    /* ── Quarter nav ── */
+    .quarters {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface); overflow-x: auto;
+    }
+    .quarter-pill {
+      flex: 1; min-width: 150px; padding: 13px 18px;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: background 0.2s; text-align: center;
+      user-select: none; color: var(--muted);
+    }
+    .quarter-pill:last-child { border-right: none; }
+    .quarter-pill:hover { background: rgba(80,200,100,0.06); color: var(--text); }
+    .quarter-pill.active {
+      background: rgba(80,200,100,0.12);
+      color: var(--green2);
+      box-shadow: inset 0 -2px 0 var(--green);
+    }
+    .quarter-pill span { display: block; font-size: 8px; opacity: 0.55; margin-top: 3px; }
+
+    /* ── Search ── */
+    .search-wrap { padding: 28px 32px 0; max-width: 1200px; margin: 0 auto; }
+    .search-wrap input {
+      width: 100%; max-width: 440px; padding: 10px 16px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 4px; outline: none; color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(80,200,100,0.12); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    /* ── Card grid ── */
+    main {
+      max-width: 1200px; margin: 0 auto; padding: 32px 32px 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px;
+    }
+
+    .field {
+      border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      background: var(--surface);
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+      animation: rise 0.45s ease both;
+    }
+    .field:hover {
+      border-color: var(--border2);
+      box-shadow: 0 0 28px rgba(80,200,100,0.1), 0 4px 24px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .field.dimmed { opacity: 0.18; pointer-events: none; }
+    .field:nth-child(1){animation-delay:.05s} .field:nth-child(2){animation-delay:.10s}
+    .field:nth-child(3){animation-delay:.15s} .field:nth-child(4){animation-delay:.20s}
+    .field:nth-child(5){animation-delay:.25s} .field:nth-child(6){animation-delay:.30s}
+    .field:nth-child(7){animation-delay:.35s}
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    .field-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 13px;
+    }
+    .field-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .field-title {
+      font-family: 'Lora', serif;
+      font-weight: 600; font-size: 1rem; line-height: 1.25; color: var(--text);
+    }
+    .field-tag {
+      display: inline-block; margin-top: 5px; font-size: 8px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* field colors */
+    .field[data-field="nature"]    .field-header { background: var(--nature-bg); }
+    .field[data-field="nature"]    .field-tag    { background: rgba(80,200,100,0.15); color: var(--nature); border: 1px solid rgba(80,200,100,0.3); }
+    .field[data-field="evolution"] .field-header { background: var(--evolution-bg); }
+    .field[data-field="evolution"] .field-tag    { background: rgba(168,224,96,0.15); color: var(--evolution); border: 1px solid rgba(168,224,96,0.3); }
+    .field[data-field="cell"]      .field-header { background: var(--cell-bg); }
+    .field[data-field="cell"]      .field-tag    { background: rgba(64,212,176,0.15); color: var(--cell); border: 1px solid rgba(64,212,176,0.3); }
+    .field[data-field="diversity"] .field-header { background: var(--diversity-bg); }
+    .field[data-field="diversity"] .field-tag    { background: rgba(240,192,64,0.15); color: var(--diversity); border: 1px solid rgba(240,192,64,0.3); }
+    .field[data-field="ecology"]   .field-header { background: var(--ecology-bg); }
+    .field[data-field="ecology"]   .field-tag    { background: rgba(224,128,80,0.15); color: var(--ecology); border: 1px solid rgba(224,128,80,0.3); }
+
+    .topic-list { padding: 8px 20px 14px; list-style: none; }
+    .topic-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      border-bottom: 1px solid rgba(80,200,100,0.07);
+      font-size: 12px; line-height: 1.45;
+    }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .field[data-field="nature"]    .topic-dot { background: var(--nature);    box-shadow: 0 0 5px var(--nature); }
+    .field[data-field="evolution"] .topic-dot { background: var(--evolution); box-shadow: 0 0 5px var(--evolution); }
+    .field[data-field="cell"]      .topic-dot { background: var(--cell);      box-shadow: 0 0 5px var(--cell); }
+    .field[data-field="diversity"] .topic-dot { background: var(--diversity); box-shadow: 0 0 5px var(--diversity); }
+    .field[data-field="ecology"]   .topic-dot { background: var(--ecology);   box-shadow: 0 0 5px var(--ecology); }
+
+    .topic-name {
+      cursor: pointer; flex: 1; color: var(--text);
+      border-bottom: 1px dashed transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .field[data-field="nature"]    .topic-name:hover { color: var(--nature);    border-color: var(--nature); }
+    .field[data-field="evolution"] .topic-name:hover { color: var(--evolution); border-color: var(--evolution); }
+    .field[data-field="cell"]      .topic-name:hover { color: var(--cell);      border-color: var(--cell); }
+    .field[data-field="diversity"] .topic-name:hover { color: var(--diversity); border-color: var(--diversity); }
+    .field[data-field="ecology"]   .topic-name:hover { color: var(--ecology);   border-color: var(--ecology); }
+
+    .topic-quarter { font-size: 8px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(2,8,4,0.78); backdrop-filter: blur(6px);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 10px; max-width: 480px; width: 100%;
+      padding: 32px 28px 28px; position: relative;
+      animation: popIn 0.22s ease;
+      box-shadow: 0 0 60px rgba(80,200,100,0.15), 0 20px 60px rgba(0,0,0,0.6);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-tag {
+      font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+      display: inline-block; margin-bottom: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .modal-title {
+      font-family: 'Lora', serif; font-weight: 600;
+      font-size: 1.25rem; line-height: 1.25; margin-bottom: 10px; color: var(--text);
+    }
+    .modal-quarter { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .modal-desc {
+      font-size: 12.5px; line-height: 1.8; color: #a8c8b0;
+      border-top: 1px solid var(--border); padding-top: 16px;
+    }
+    .modal-placeholder { font-style: italic; color: var(--muted); font-size: 12px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 18px;
+      font-size: 20px; cursor: pointer; color: var(--muted);
+      background: none; border: none; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── Practice page ── */
+    #practicePage { display: none; max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+    #practicePage.visible { display: block; }
+    #mapPage.hidden { display: none; }
+
+    .practice-section { margin-bottom: 56px; }
+    .practice-section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .practice-section-icon { font-size: 22px; }
+    .practice-section-title {
+      font-family: 'Lora', serif; font-weight: 600;
+      font-size: 1.15rem; color: var(--text);
+    }
+    .practice-section-tag {
+      font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 9px; border-radius: 20px; margin-left: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .question-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 22px 24px; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .question-card:hover { border-color: var(--border2); }
+    .question-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .q-num { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .q-type {
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 1px 7px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted);
+    }
+    .question-text { font-size: 13px; line-height: 1.75; margin-bottom: 16px; color: var(--text); }
+    .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .choice {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+      font-size: 12px; line-height: 1.5; transition: all 0.15s; user-select: none;
+      color: var(--text);
+    }
+    .choice:hover { border-color: var(--green); background: rgba(80,200,100,0.07); }
+    .choice.correct { border-color: var(--green); background: rgba(80,200,100,0.1); color: var(--green2); }
+    .choice.wrong   { border-color: #e05050; background: rgba(224,80,80,0.07); color: #e08080; }
+    .choice-letter  { font-size: 9px; width: 18px; flex-shrink: 0; margin-top: 1px; opacity: 0.45; }
+    .choice.correct .choice-letter, .choice.wrong .choice-letter { opacity: 1; }
+
+    .reveal-btn {
+      margin-top: 14px; padding: 8px 18px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid var(--border2); border-radius: 5px;
+      background: none; cursor: pointer; color: var(--green2);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .reveal-btn:hover { background: rgba(80,200,100,0.1); box-shadow: 0 0 12px rgba(80,200,100,0.18); }
+    .reveal-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+    .explanation {
+      display: none; margin-top: 14px; padding: 14px 16px;
+      background: rgba(80,200,100,0.05); border-radius: 6px;
+      font-size: 12.5px; line-height: 1.75; color: #a8d8b0;
+      border-left: 3px solid var(--green);
+    }
+    .explanation.visible { display: block; }
+
+    footer {
+      text-align: center; padding: 48px 20px 0;
+      font-size: 9px; letter-spacing: 0.2em; color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 20px 28px; }
+      main, .search-wrap { padding-left: 16px; padding-right: 16px; }
+      #practicePage { padding: 28px 16px 60px; }
+      .page-tab { padding: 12px 14px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="leaves"></canvas>
+
+<header>
+  <p class="label">Curriculum Map · Grade 8 · Champaca</p>
+  <h1>The Map of <em>Biology</em></h1>
+  <p class="subtitle">Click any topic for a description · organized by field</p>
+</header>
+
+<div class="page-tabs">
+  <div class="page-tab active" id="tabMap">&#128203; Curriculum Map</div>
+  <div class="page-tab" id="tabPractice">&#9999;&#65039; Practice Exercises</div>
+</div>
+
+<div id="mapPage">
+
+  <nav class="quarters" id="quarterNav">
+    <div class="quarter-pill active" data-q="all">All Topics <span>4 quarters · 20 SGs</span></div>
+    <div class="quarter-pill" data-q="Q1">Quarter 1 <span>Foundations of Biology</span></div>
+    <div class="quarter-pill" data-q="Q2">Quarter 2 <span>Evolution & Classification</span></div>
+    <div class="quarter-pill" data-q="Q3">Quarter 3 <span>Microscopy, Cells & Diversity</span></div>
+    <div class="quarter-pill" data-q="Q4">Quarter 4 <span>Diversity of Life & Ecology</span></div>
+  </nav>
+
+  <div class="search-wrap">
+    <input type="text" id="searchBox" placeholder="Search a topic, e.g. 'cell' or 'natural selection'…"/>
+  </div>
+
+  <main id="cardGrid">
+
+    <!-- SG 1–2: FOUNDATIONS OF BIOLOGY (Q1) -->
+    <div class="field" data-field="nature" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🔬</div>
+        <div>
+          <div class="field-title">Foundations of Biology</div>
+          <span class="field-tag">SG 1–2 · Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Biology as the Study of Life">
+          <span class="topic-dot"></span><span class="topic-name">Biology as the Study of Life</span><span class="topic-quarter">SG1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Branches of Biology">
+          <span class="topic-dot"></span><span class="topic-name">Branches of Biology</span><span class="topic-quarter">SG1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Characteristics of Life">
+          <span class="topic-dot"></span><span class="topic-name">Characteristics of Life</span><span class="topic-quarter">SG2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 3–4: THEMES & INQUIRY (Q1) -->
+    <div class="field" data-field="nature" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🧪</div>
+        <div>
+          <div class="field-title">Unifying Themes & Science as Inquiry</div>
+          <span class="field-tag">SG 3–4 · Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Organization">
+          <span class="topic-dot"></span><span class="topic-name">Organization</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Information">
+          <span class="topic-dot"></span><span class="topic-name">Information</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Flow of Energy and Cycling of Matter">
+          <span class="topic-dot"></span><span class="topic-name">Flow of Energy and Cycling of Matter</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Interaction">
+          <span class="topic-dot"></span><span class="topic-name">Interaction</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Evolutionary Theory">
+          <span class="topic-dot"></span><span class="topic-name">Evolutionary Theory</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Science as Inquiry">
+          <span class="topic-dot"></span><span class="topic-name">Science as Inquiry</span><span class="topic-quarter">SG4</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Scientific Method and Lab Skills">
+          <span class="topic-dot"></span><span class="topic-name">Scientific Method and Lab Skills</span><span class="topic-quarter">SG4</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 5–6: EVOLUTION INTRO (Q2) -->
+    <div class="field" data-field="evolution" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🦕</div>
+        <div>
+          <div class="field-title">Evolution & Descent with Modification</div>
+          <span class="field-tag">SG 5–6 · Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Classifying the Diversity of Life">
+          <span class="topic-dot"></span><span class="topic-name">Classifying the Diversity of Life</span><span class="topic-quarter">SG5</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Darwin and the Theory of Natural Selection">
+          <span class="topic-dot"></span><span class="topic-name">Darwin and the Theory of Natural Selection</span><span class="topic-quarter">SG5</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="The Tree of Life">
+          <span class="topic-dot"></span><span class="topic-name">The Tree of Life</span><span class="topic-quarter">SG5</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Lamarck's Hypothesis of Evolution">
+          <span class="topic-dot"></span><span class="topic-name">Lamarck's Hypothesis of Evolution</span><span class="topic-quarter">SG6</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Descent with Modification by Natural Selection">
+          <span class="topic-dot"></span><span class="topic-name">Descent with Modification by Natural Selection</span><span class="topic-quarter">SG6</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Evolutionary Evidence">
+          <span class="topic-dot"></span><span class="topic-name">Evolutionary Evidence</span><span class="topic-quarter">SG6</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Mutation as Raw Material for Evolution">
+          <span class="topic-dot"></span><span class="topic-name">Mutation as Raw Material for Evolution</span><span class="topic-quarter">SG6</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 7–8: POPULATIONS & SPECIATION (Q2) -->
+    <div class="field" data-field="evolution" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🧬</div>
+        <div>
+          <div class="field-title">Populations, Genetics & Speciation</div>
+          <span class="field-tag">SG 7–8 · Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Genetic Variation and Its Sources">
+          <span class="topic-dot"></span><span class="topic-name">Genetic Variation and Its Sources</span><span class="topic-quarter">SG7</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Natural Selection, Genetic Drift, and Gene Flow">
+          <span class="topic-dot"></span><span class="topic-name">Natural Selection, Genetic Drift, and Gene Flow</span><span class="topic-quarter">SG7</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Natural Selection and Adaptive Evolution">
+          <span class="topic-dot"></span><span class="topic-name">Natural Selection and Adaptive Evolution</span><span class="topic-quarter">SG7</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="The Biological Species Concept">
+          <span class="topic-dot"></span><span class="topic-name">The Biological Species Concept</span><span class="topic-quarter">SG8</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Allopatric and Sympatric Speciation">
+          <span class="topic-dot"></span><span class="topic-name">Allopatric and Sympatric Speciation</span><span class="topic-quarter">SG8</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 9–11: MICROSCOPY & THE CELL (Q3) -->
+    <div class="field" data-field="cell" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">🧫</div>
+        <div>
+          <div class="field-title">Microscopy & The Cell</div>
+          <span class="field-tag">SG 9–11 · Q3</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="The Microscope — Parts, Types and Power">
+          <span class="topic-dot"></span><span class="topic-name">The Microscope — Parts, Types and Power</span><span class="topic-quarter">SG9</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Cell Theory and Germ Theory">
+          <span class="topic-dot"></span><span class="topic-name">Cell Theory and Germ Theory</span><span class="topic-quarter">SG10</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Cell Structure and Function">
+          <span class="topic-dot"></span><span class="topic-name">Cell Structure and Function</span><span class="topic-quarter">SG10</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Cell Membrane and Transport Mechanisms">
+          <span class="topic-dot"></span><span class="topic-name">Cell Membrane and Transport Mechanisms</span><span class="topic-quarter">SG11</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 12–13: DIVERSITY OF CELLULAR LIFE & PHYLOGENY (Q3) -->
+    <div class="field" data-field="cell" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">🌳</div>
+        <div>
+          <div class="field-title">Diversity of Cellular Life & Phylogeny</div>
+          <span class="field-tag">SG 12–13 · Q3</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Prokaryotic and Eukaryotic Cells">
+          <span class="topic-dot"></span><span class="topic-name">Prokaryotic and Eukaryotic Cells</span><span class="topic-quarter">SG12</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Endosymbiotic Theory">
+          <span class="topic-dot"></span><span class="topic-name">Endosymbiotic Theory</span><span class="topic-quarter">SG12</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Evolution of Plant and Animal Cells">
+          <span class="topic-dot"></span><span class="topic-name">Evolution of Plant and Animal Cells</span><span class="topic-quarter">SG12</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Classification and Phylogeny">
+          <span class="topic-dot"></span><span class="topic-name">Classification and Phylogeny</span><span class="topic-quarter">SG13</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Schemes of Biological Classification">
+          <span class="topic-dot"></span><span class="topic-name">Schemes of Biological Classification</span><span class="topic-quarter">SG13</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Introduction to Biodiversity">
+          <span class="topic-dot"></span><span class="topic-name">Introduction to Biodiversity</span><span class="topic-quarter">SG13</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 14–17: PROKARYOTES, EUKARYOTES, PROTISTS, FUNGI (Q4) -->
+    <div class="field" data-field="diversity" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🦠</div>
+        <div>
+          <div class="field-title">Prokaryotes, Eukaryotes, Protists & Fungi</div>
+          <span class="field-tag">SG 14–17 · Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Prokaryotic Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Prokaryotic Diversity</span><span class="topic-quarter">SG14</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Eukaryotic Diversity and the Volvocine Series">
+          <span class="topic-dot"></span><span class="topic-name">Eukaryotic Diversity and the Volvocine Series</span><span class="topic-quarter">SG15</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Protist Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Protist Diversity</span><span class="topic-quarter">SG16</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Fungal Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Fungal Diversity</span><span class="topic-quarter">SG17</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 18–19: ANIMALS & PLANTS (Q4) -->
+    <div class="field" data-field="diversity" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🌿</div>
+        <div>
+          <div class="field-title">Animal and Plant Diversity</div>
+          <span class="field-tag">SG 18–19 · Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Animal Body Plan and Diversification">
+          <span class="topic-dot"></span><span class="topic-name">Animal Body Plan and Diversification</span><span class="topic-quarter">SG18</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Key Animal Groups and Phylogeny">
+          <span class="topic-dot"></span><span class="topic-name">Key Animal Groups and Phylogeny</span><span class="topic-quarter">SG18</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Evolution of Plants">
+          <span class="topic-dot"></span><span class="topic-name">Evolution of Plants</span><span class="topic-quarter">SG19</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Key Plant Groups and Phylogeny">
+          <span class="topic-dot"></span><span class="topic-name">Key Plant Groups and Phylogeny</span><span class="topic-quarter">SG19</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Threats to Plant Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Threats to Plant Diversity</span><span class="topic-quarter">SG19</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 20: ECOLOGY (Q4) -->
+    <div class="field" data-field="ecology" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🌍</div>
+        <div>
+          <div class="field-title">Ecology & Human Impact</div>
+          <span class="field-tag">SG 20 · Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Ecosystem Dynamics — Population vs. Species">
+          <span class="topic-dot"></span><span class="topic-name">Ecosystem Dynamics — Population vs. Species</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Population Ecology">
+          <span class="topic-dot"></span><span class="topic-name">Population Ecology</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Ecosystem Disruptions and Human Impact">
+          <span class="topic-dot"></span><span class="topic-name">Ecosystem Disruptions and Human Impact</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Habitat Destruction and Fragmentation">
+          <span class="topic-dot"></span><span class="topic-name">Habitat Destruction and Fragmentation</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Biodiversity Loss and Its Consequences">
+          <span class="topic-dot"></span><span class="topic-name">Biodiversity Loss and Its Consequences</span><span class="topic-quarter">SG20</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+</div><!-- end #mapPage -->
+
+<!-- TOPIC MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-quarter" id="modalQuarter"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+  </div>
+</div>
+
+<!-- PRACTICE PAGE -->
+<div id="practicePage">
+
+  <!-- FOUNDATIONS OF BIOLOGY -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🔬</div>
+      <div>
+        <span class="practice-section-title">Foundations of Biology</span>
+        <span class="practice-section-tag" style="background:rgba(80,200,100,0.15);color:#50c864;border:1px solid rgba(80,200,100,0.3);">Nature</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q1</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following is NOT a recognized branch of biology?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Zoology</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Botany</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Geology</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Microbiology</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Geology.</strong> Geology is the study of Earth's physical structure — a branch of Earth Science, not Biology. Zoology (animals), Botany (plants), and Microbiology (microscopic organisms) are all branches of Biology. Biology itself branches by type of organism, biological process, level of organization, and application.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q2</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the 8 characteristics of life describes an organism maintaining a stable internal environment?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Heredity</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Regulation and Homeostasis</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Growth and Development</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Energy Processing</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Regulation and Homeostasis.</strong> Homeostasis is the process of keeping the internal environment stable. Regulation is how it's achieved — e.g. sweating to cool down, or a single-celled organism using vacuoles to balance internal salt and water. All 8 characteristics: Order/Organization, Heredity, Evolutionary Adaptation, Energy Processing, Response to Stimuli, Reproduction, Regulation & Homeostasis, Growth & Development.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q3</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Viruses are a tricky edge case for the definition of life. Why?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> They can reproduce but only inside a host cell — they can't on their own</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> They have cells but no DNA</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> They are made of cells but cannot reproduce</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> They respond to stimuli but have no metabolism</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> Viruses have some characteristics of life (they can reproduce, they carry genetic information) but they cannot reproduce on their own — only inside a host cell. They also have no cells, no metabolism, and no homeostasis. This is why biologists debate whether viruses are truly "alive."</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q4</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which unifying theme of biology states that energy flows in one direction and cannot be recycled, while matter can be cycled?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Information</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Organization</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Evolution</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Energy and Matter</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Energy and Matter.</strong> Energy moves in one direction only and is lost as heat at every level (it cannot be recycled). Matter, however, is cycled — due to the conservation of matter, it can only be converted into new forms. The five unifying themes from your reviewer are: Organization, Information, Energy and Matter, Interaction, and Evolution.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q5</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In the Information unifying theme, DNA cannot leave the nucleus. What does it get transcribed into to carry information to the cytoplasm?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> ATP</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Protein</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> mRNA</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> tRNA</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — mRNA.</strong> The flow of information is: DNA → (transcription) → mRNA → (translation) → Proteins. DNA is transcribed into mRNA, which leaves the nucleus and carries the code to ribosomes in the cytoplasm where proteins are built. In transcription: A→U, G→C, C→G, T→A.</div>
+    </div>
+  </div>
+
+  <!-- TAXONOMY & CLASSIFICATION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌳</div>
+      <div>
+        <span class="practice-section-title">Taxonomy & Classification</span>
+        <span class="practice-section-tag" style="background:rgba(168,224,96,0.15);color:#a8e060;border:1px solid rgba(168,224,96,0.3);">Evolution</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q6</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Who is known as the Father of Modern Taxonomy and created binomial nomenclature?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Aristotle</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Carolus Linnaeus</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Ernst Haeckel</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Carl Woese</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Carolus Linnaeus (1707–1778).</strong> Linnaeus created binomial nomenclature (Genus species), introduced the hierarchical ranks (Kingdom → Phylum → Class → Order → Family → Genus → Species — remember: King Philip Came Over For Good Soup), and wrote Systema Naturae classifying thousands of species. Aristotle came first but his system was simpler; Haeckel proposed 3 kingdoms; Woese revolutionized taxonomy with rRNA genetics.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q7</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Carl Woese's Three-Domain System divided life into Bacteria, Archaea, and Eukarya. What revolutionary method did Woese use to propose this system?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Comparing physical body structures</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Fossil record analysis</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Microscope observations of cell shape</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> rRNA (ribosomal RNA) genetics</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — rRNA genetics.</strong> Woese compared ribosomal RNA sequences across organisms to determine evolutionary relationships at the molecular level. This revealed that Bacteria and Archaea — although both prokaryotes — are as different from each other as either is from eukaryotes, leading to the Three-Domain System replacing Whittaker's 5-kingdom system.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q8</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the correct order of Linnaean classification from broadest to most specific?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Species → Genus → Family → Order → Class → Phylum → Kingdom → Domain</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Kingdom → Domain → Class → Phylum → Order → Family → Genus → Species</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Domain → Species → Genus → Family → Order → Class → Phylum → Kingdom</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> Broadest to most specific: Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Mnemonic: <em>King Philip Came Over For Good Soup</em> (Kingdom, Phylum, Class, Order, Family, Genus, Species). Species is the most specific level; Domain is the broadest.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following is a common misconception about phylogenetic trees?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Branch points represent common ancestors</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Chimps and humans are sister taxa sharing a common ancestor</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Species at the top of a tree are "more evolved" than those at the bottom</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Phylogenetic trees show descent with modification</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — This is a misconception.</strong> Position on a phylogenetic tree does not indicate how "advanced" or "evolved" an organism is. All organisms alive today are equally evolved — they have all survived to the present. Other misconceptions: "modern species evolved from other modern species" and "species closest on the page are closest relatives."</div>
+    </div>
+  </div>
+
+  <!-- EVOLUTION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🦕</div>
+      <div>
+        <span class="practice-section-title">Evolution</span>
+        <span class="practice-section-tag" style="background:rgba(168,224,96,0.15);color:#a8e060;border:1px solid rgba(168,224,96,0.3);">Evolution</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Darwin's two main contributions to evolutionary theory are:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Genetics and taxonomy</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Natural selection (mechanism) and descent with modification (outcome)</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Phylogeny and binomial nomenclature</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Inheritance of acquired traits and the ladder of life</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> Darwin's two contributions: (1) <em>Natural selection</em> — the mechanism, individuals with favorable traits survive and reproduce more. (2) <em>Descent with modification</em> — the outcome, species accumulate differences from their ancestors over generations. He developed these ideas from his voyage on the HMS Beagle (1831–1836), especially observations on the Galápagos Islands.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q11</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which was a prevailing idea during Darwin's time that he directly challenged?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Species share common ancestors</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> The Earth is billions of years old</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Species are fixed and do not change over time</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Natural selection drives evolution</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Species are fixed.</strong> The prevailing idea was that species were created as they are and don't evolve or go extinct. Darwin challenged this directly. Other prevailing ideas he countered: that life was specially created, that the Earth was only a few thousand years old, and that humans are separate from animals.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q12</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Natural selection has 4 main principles. Which principle states that better traits lead to surviving and reproducing more?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Survival and Reproduction</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Variation</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Adaptation</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Competition</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Survival and Reproduction.</strong> The four principles of natural selection are: (1) Variation — individuals have different traits, (2) Competition — organisms compete for resources, (3) Survival and Reproduction — better traits = survive and reproduce more, (4) Adaptation — beneficial traits become more common over time.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q13</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the key difference between Lamarck's and Darwin's ideas about how evolution works?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Lamarck believed in evolution; Darwin did not</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Darwin believed traits acquired during life are inherited; Lamarck did not</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Both had identical ideas about how traits are passed on</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Lamarck believed changes during an organism's lifetime are inherited; Darwin focused on heritable variation already present in a population</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D.</strong> Lamarck's key ideas: use and disuse (body parts change when used/not used) and inheritance of acquired characteristics (changes during life are passed on). Darwin's key ideas: evolution acts on <em>heritable</em> variation already present in a population — traits acquired during life are NOT passed on. Both agreed species change over time and that organisms can become better adapted, but disagreed fundamentally on the mechanism.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q14</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which type of natural selection favors the average trait and selects against extremes, narrowing the distribution?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Directional selection</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Stabilizing selection</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Disruptive selection</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Artificial selection</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Stabilizing selection.</strong> The three patterns: (1) <em>Stabilizing</em> — the average is favored, extremes are selected against, narrows distribution. (2) <em>Directional</em> — one extreme is favored, shifts distribution left or right. (3) <em>Disruptive</em> — both extremes are favored, the middle does poorly, creates a bimodal distribution.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q15</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Mutation and sexual reproduction are both sources of genetic variation. What is the key difference between them?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Only mutations affect the gene pool</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Sexual reproduction creates entirely new alleles</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Mutation creates new alleles; sexual reproduction reshuffles existing ones</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Sexual reproduction is the only source of new variation</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Mutation is a change in DNA when it is copied or repaired — it creates <em>new alleles</em> for the gene pool. Sexual reproduction (through crossing over, independent assortment, and fertilization) reshuffles <em>existing alleles</em> into new combinations. Both contribute to the genetic variation that natural selection acts on.</div>
+    </div>
+  </div>
+
+  <!-- THE CELL -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🧫</div>
+      <div>
+        <span class="practice-section-title">The Cell</span>
+        <span class="practice-section-tag" style="background:rgba(64,212,176,0.15);color:#40d4b0;border:1px solid rgba(64,212,176,0.3);">Cell</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A compound microscope uses two lenses: the ocular lens (10×) and the objective lens (40×). What is the total magnification?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 50×</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 400×</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 4×</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 14×</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 400×.</strong> Total magnification = ocular × objective = 10 × 40 = 400×. The two lenses multiply (not add) their magnifications. This is why microscopes can achieve very high magnifications by combining lenses.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which organelle is known as the "powerhouse of the cell" because it produces ATP through cellular respiration?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Ribosome</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Nucleus</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Mitochondria</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Golgi apparatus</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Mitochondria.</strong> The mitochondria convert glucose and oxygen into ATP (adenosine triphosphate) — the cell's energy currency — through cellular respiration. Cells with high energy demands (like muscle cells) have more mitochondria. The nucleus stores DNA; ribosomes make proteins; the Golgi packages and ships proteins.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q11</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the main difference between a prokaryotic and a eukaryotic cell?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Prokaryotes have no membrane-bound nucleus; eukaryotes do</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Eukaryotes have no cell membrane; prokaryotes do</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Prokaryotes have more organelles than eukaryotes</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Eukaryotes are always smaller than prokaryotes</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> The defining difference is the nucleus. Prokaryotes (like bacteria) have no membrane-bound nucleus — their DNA floats freely in the cytoplasm. Eukaryotes (like plant, animal, and fungal cells) have a true nucleus enclosed by a membrane. Eukaryotes also generally have more organelles.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q12</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The movement of water from an area of high water concentration to low water concentration across a semi-permeable membrane is called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Active transport</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Facilitated diffusion</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Endocytosis</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Osmosis</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Osmosis.</strong> Osmosis is the passive movement of water across a semi-permeable membrane from high to low water concentration (or equivalently, from low to high solute concentration). It requires no energy. Active transport moves substances against their gradient and requires ATP.</div>
+    </div>
+  </div>
+
+  <!-- DIVERSITY OF LIFE -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌿</div>
+      <div>
+        <span class="practice-section-title">Diversity of Life</span>
+        <span class="practice-section-tag" style="background:rgba(240,192,64,0.15);color:#f0c040;border:1px solid rgba(240,192,64,0.3);">Diversity</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q13</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Bacteria are classified as prokaryotes. Which of the following is a unique feature of bacterial cells?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> They have a membrane-bound nucleus</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> They have a cell wall made of peptidoglycan</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> They contain chloroplasts</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> They reproduce only sexually</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Peptidoglycan cell wall.</strong> Bacterial cell walls are made of peptidoglycan, a unique polymer not found in eukaryotes. This is why antibiotics like penicillin can target bacteria without harming human cells — they attack peptidoglycan synthesis. Bacteria reproduce asexually through binary fission.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q14</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Protists are best described as:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Prokaryotic organisms with no nucleus</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Multicellular organisms only</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Mostly unicellular eukaryotes that don't fit into other kingdoms</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Fungi that live in water</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Protists are a diverse group of mostly unicellular eukaryotes that are essentially defined by what they are not — not animals, plants, or fungi. They include amoeba, paramecia, algae, and plasmodium (the malaria parasite). Some are photosynthetic, some are heterotrophic.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q15</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which characteristic distinguishes fungi from plants?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Fungi are heterotrophs — they cannot make their own food</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Fungi have chloroplasts</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Fungi have no cell wall</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Fungi are prokaryotes</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Fungi are heterotrophs.</strong> Unlike plants which photosynthesize (autotrophs), fungi cannot make their own food. They are decomposers — they secrete enzymes to break down organic matter externally and absorb the nutrients. Fungi do have cell walls, but made of chitin (not cellulose like plants), and they are eukaryotes.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q16</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following animal groups is characterized by having a backbone (vertebral column)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Insects</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Mollusks</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Arthropods</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Vertebrates</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Vertebrates.</strong> Vertebrates (fish, amphibians, reptiles, birds, mammals) are defined by their vertebral column (backbone). Insects, mollusks, and arthropods are all invertebrates — they make up the vast majority of animal species on Earth.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q17</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What structure in plant cells allows them to perform photosynthesis?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Mitochondria</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Chloroplast</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Cell wall</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Vacuole</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Chloroplast.</strong> Chloroplasts contain chlorophyll, the green pigment that absorbs sunlight. They convert light energy, CO₂, and water into glucose and oxygen through photosynthesis. Animal cells have no chloroplasts — this is a key feature that distinguishes plant and animal cells.</div>
+    </div>
+  </div>
+
+  <!-- ECOLOGY -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌍</div>
+      <div>
+        <span class="practice-section-title">Ecology</span>
+        <span class="practice-section-tag" style="background:rgba(224,128,80,0.15);color:#e08050;border:1px solid rgba(224,128,80,0.3);">Ecology</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q18</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The nonliving (physical and chemical) factors of an environment are called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Biotic factors</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Ecosystems</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Abiotic factors</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Populations</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Abiotic factors.</strong> Abiotic (non-living) factors include temperature, water, sunlight, soil, and pH. Biotic factors are the living components (organisms, their interactions). Together, biotic and abiotic factors make up an ecosystem — every living thing is shaped by both.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q19</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In a food chain, which organisms are the primary producers?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Plants and photosynthetic organisms</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Herbivores</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Carnivores</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Decomposers</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Plants and photosynthetic organisms.</strong> Producers (autotrophs) form the base of every food chain — they capture solar energy and convert it into chemical energy (glucose). All other organisms ultimately depend on producers. Herbivores are primary consumers; carnivores are secondary or tertiary consumers; decomposers break down dead matter.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q20</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A relationship where one organism benefits and the other is neither harmed nor helped is called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Mutualism</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Parasitism</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Predation</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Commensalism</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Commensalism.</strong> In commensalism, one organism benefits while the other is unaffected (e.g. barnacles on a whale). Mutualism = both benefit (e.g. bees and flowers). Parasitism = one benefits, one is harmed (e.g. tapeworm in a host). Predation = one organism eats another.</div>
+    </div>
+  </div>
+
+</div><!-- end #practicePage -->
+
+<footer>Biology · Grade 8 Champaca · Click any topic to review</footer>
+
+<script>
+const descriptions = {
+  // SG1
+  "Biology as the Study of Life": {q:"Q1", field:"nature", desc:"Biology (from Greek bios = life, logos = study) is the scientific study of life. It examines how living organisms are structured, grow, function, reproduce, interact, and evolve. Life is described as an emergent — the parts alone (atoms, molecules) are not alive, but when combined and organized, life emerges. Biology has real-world applications in agriculture, climate science, biotechnology, conservation, and health."},
+  "Branches of Biology": {q:"Q1", field:"nature", desc:"Because life is so vast, biology branches into specializations. Branches by <em>type of organism</em>: Microbiology (microscopic organisms), Botany (plants), Zoology (animals). Branches by <em>process</em>: Genetics (genes and heredity), Physiology (how organisms function), Cell Biology (cell structure and function). Branches by <em>level of organization</em>: Ecology (organism-environment interactions), Evolutionary Biology (change over time), Developmental Biology (growth from single cell). Branches by <em>application</em>: Biotechnology, Bioinformatics."},
+  // SG2
+  "Characteristics of Life": {q:"Q1", field:"nature", desc:"All living things share 8 characteristics: (1) <strong>Order/Organization</strong> — parts work together (e.g. leaf cells, stem cells, and root cells all transport energy). (2) <strong>Response to Stimuli</strong> — react to the environment (e.g. moving hand from heat). (3) <strong>Reproduction</strong> — makes new life; sexual (2 parents), asexual (1 parent/clone), or binary fission (single-celled). (4) <strong>Growth and Development</strong> — organisms mature and change (e.g. tadpole → frog). (5) <strong>Regulation</strong> — processes that maintain homeostasis. (6) <strong>Homeostasis</strong> — maintaining a stable internal environment (e.g. sweating to cool down). (7) <strong>Energy Processing</strong> — photosynthesis (plants: CO₂ + H₂O → glucose + O₂) or cellular respiration (glucose → ATP). (8) <strong>Evolutionary Adaptation</strong> — heritable traits that aid survival build up over time. Plus <strong>Heredity</strong> — passing traits via genes to offspring. Viruses are a borderline case — they can replicate but only inside a host cell."},
+  // SG3
+  "Organization": {q:"Q1", field:"nature", desc:"Organization is the unifying theme that says life is hierarchical and structured — the whole is more than the sum of its parts. The levels of life's organization from smallest to largest: molecule → organelle → cell → tissue → organ → organ system → organism → population → community → ecosystem → biosphere. Each level has properties that emerge from the combination of lower levels."},
+  "Information": {q:"Q1", field:"nature", desc:"All living things store and transmit information via DNA. A <em>gene</em> is a specific segment of DNA; the complete set of genes is the <em>genome</em>. DNA cannot leave the nucleus, so it is <em>transcribed</em> into mRNA (messenger RNA), which carries the instructions to ribosomes in the cytoplasm where <em>translation</em> builds proteins. The flow: DNA → (transcription) → mRNA → (translation) → Protein. Transcription base pairing: A→U, G→C, C→G, T→A."},
+  "Flow of Energy and Cycling of Matter": {q:"Q1", field:"nature", desc:"Energy and matter behave differently in living systems. <strong>Energy</strong> flows in one direction — it cannot be recycled. Sunlight is captured by producers through photosynthesis and passed along food chains, losing heat at every step. <strong>Matter</strong> is cycled — due to the law of conservation of matter, it cannot be created or destroyed, only converted. Carbon, nitrogen, and water all cycle through ecosystems indefinitely."},
+  "Interaction": {q:"Q1", field:"nature", desc:"No organism is isolated — all living systems, from the molecular level to ecosystems, are interconnected and interdependent. Organisms interact with each other (predation, competition, mutualism) and with their physical environment (temperature, water, light). These interactions form complex communities and ecosystems where survival depends on the whole network."},
+  "Evolutionary Theory": {q:"Q1", field:"nature", desc:"Evolution is described as the core unifying theme of all biology because it explains both the <em>unity</em> of life (shared ancestry, common biochemistry — all life uses DNA) and its <em>diversity</em> (natural selection produces the variety of species). Evolution connects all levels of biology from molecular genetics to ecosystems. In the words of biologist Theodosius Dobzhansky: 'Nothing in biology makes sense except in the light of evolution.'"},
+  // SG4
+  "Science as Inquiry": {q:"Q1", field:"nature", desc:"Science as Inquiry involves four core skills: <strong>Observing</strong> (gathering information using senses or tools), <strong>Inferring</strong> (drawing conclusions from observations), <strong>Predicting</strong> (forecasting outcomes based on patterns), and <strong>Identifying variables</strong> (the independent variable is what you change, the dependent variable is what you measure, and the controlled variables are kept constant). A hypothesis is a testable prediction. A scientific theory is not a guess — it is a well-tested explanation supported by extensive evidence from multiple fields."},
+  "Scientific Method and Lab Skills": {q:"Q1", field:"nature", desc:"The steps of the scientific method: (1) Observation, (2) Question, (3) Research/Gather Information, (4) Hypothesis, (5) Experiment/Data Collection, (6) Analysis, (7) Conclusion, (8) Communication of Results. Good scientific writing is clear, objective, and structured. A lab report includes: Title, Introduction, Materials & Methods, Results (data tables, graphs), Discussion, and Conclusion. Lab safety rules apply at all times."},
+  // SG5
+  "Classifying the Diversity of Life": {q:"Q2", field:"evolution", desc:"Taxonomy is the science of classifying and naming living organisms. The modern system uses <strong>Linnaean classification</strong>: Kingdom → Phylum → Class → Order → Family → Genus → Species (mnemonic: <em>King Philip Came Over For Good Soup</em>). Carolus Linnaeus (1707–1778), the Father of Modern Taxonomy, created <strong>binomial nomenclature</strong> — every species has a two-part Latin name (Genus species). Carl Woese later proposed the Three-Domain System (Bacteria, Archaea, Eukarya) based on rRNA genetics."},
+  "Darwin and the Theory of Natural Selection": {q:"Q2", field:"evolution", desc:"Charles Darwin developed his theory during his voyage on the HMS Beagle (1831–1836), especially from observations on the Galápagos Islands. His two main contributions: (1) <strong>Natural selection</strong> (the mechanism) — individuals with favorable traits survive and reproduce more. (2) <strong>Descent with modification</strong> (the outcome) — species accumulate differences from ancestors over generations. The 4 principles of natural selection: Variation, Competition, Survival & Reproduction, Adaptation. Darwin published these ideas in <em>On the Origin of Species</em> (1859)."},
+  "The Tree of Life": {q:"Q2", field:"evolution", desc:"The Tree of Life is a visual representation of evolutionary relationships among all organisms, showing that all life shares common ancestors — a concept called <strong>universal common descent</strong>. <strong>Phylogenetic trees</strong> show branch points (common ancestors) and lineages (evolutionary paths). Common misconceptions: species at the top are NOT 'more evolved,' modern species did NOT evolve from other modern species, and species closest on the page are NOT necessarily the closest relatives."},
+  // SG6
+  "Lamarck's Hypothesis of Evolution": {q:"Q2", field:"evolution", desc:"Jean-Baptiste Lamarck proposed an early but incorrect mechanism of evolution. His ideas: <strong>Use and disuse</strong> — body parts change when heavily used or not used. <strong>Inheritance of acquired characteristics</strong> — changes an organism undergoes during its lifetime are passed to offspring. Lamarck was right that species change over time but wrong about the mechanism. Darwin showed that only <em>heritable genetic traits</em> — not traits acquired during life — are passed on. Both agreed species are not fixed and can become better adapted."},
+  "Descent with Modification by Natural Selection": {q:"Q2", field:"evolution", desc:"Descent with modification means all species have descended from earlier ancestors, accumulating changes (modifications) over generations. Natural selection is the mechanism: (1) <strong>Variation</strong> — individuals differ in traits, (2) <strong>Competition</strong> — organisms compete for resources, (3) <strong>Survival & Reproduction</strong> — better-suited individuals reproduce more, (4) <strong>Adaptation</strong> — beneficial traits spread through the population over time. Evolution happens in <em>populations</em>, not in individuals during their lifetime."},
+  "Evolutionary Evidence": {q:"Q2", field:"evolution", desc:"Multiple lines of evidence support evolution: <strong>Fossil Records</strong> — historical sequence of organisms showing gradual changes over time. <strong>Comparative Anatomy</strong> — homologous structures (same origin, different function, e.g. human arm and whale flipper) suggest common ancestry. <strong>Molecular Biology</strong> — DNA, RNA, and protein sequences; species with more similar sequences are more closely related. <strong>Biogeography</strong> — distribution of species across regions supports descent with modification (mainland → islands). <strong>Direct Observation</strong> — real-time evolution, e.g. antibiotic resistance in bacteria, beak adaptation in finches."},
+  "Mutation as Raw Material for Evolution": {q:"Q2", field:"evolution", desc:"Mutation is a change in DNA sequence when DNA is copied or repaired. Mutations create <em>new alleles</em> — they are the original source of all genetic variation in a population. Many mutations have little or no effect; some are harmful; a few are beneficial in a specific environment. Beneficial mutations that improve survival and reproduction are acted upon by natural selection. Without mutation, there would be no new variation for evolution to work with."},
+  // SG7
+  "Genetic Variation and Its Sources": {q:"Q2", field:"evolution", desc:"<strong>Genetic variation</strong> = inherited differences in genes and alleles between individuals. A <em>gene</em> is a segment of DNA for a specific heritable feature; <em>alleles</em> are different forms of the same gene (e.g. A, B, O blood type). The <em>gene pool</em> = all alleles in a population. Sources of variation: (1) <strong>Mutation</strong> — creates new alleles, (2) <strong>Sexual reproduction</strong> — reshuffles existing alleles through crossing over (chromosomes swap pieces in meiosis), independent assortment (chromosome pairs separate randomly), and fertilization (unique offspring combination)."},
+  "Natural Selection, Genetic Drift, and Gene Flow": {q:"Q2", field:"evolution", desc:"Three mechanisms that change allele frequencies in a population: (1) <strong>Natural selection</strong> — non-random; traits that improve survival/reproduction become more common. (2) <strong>Genetic drift</strong> — random changes in allele frequency due to chance, strongest in small populations (e.g. bottleneck or founder effect). (3) <strong>Gene flow</strong> — movement of alleles between populations when individuals migrate; reduces differences between populations. Allele frequency changes over generations = evolution of the population."},
+  "Natural Selection and Adaptive Evolution": {q:"Q2", field:"evolution", desc:"<strong>Adaptive evolution</strong> occurs when natural selection increases the frequency of alleles that improve fitness (survival and reproduction). Three patterns of natural selection: (1) <strong>Stabilizing selection</strong> — average is favored, extremes selected against, narrows distribution. (2) <strong>Directional selection</strong> — one extreme is favored, shifts distribution left or right. (3) <strong>Disruptive selection</strong> — both extremes are favored, middle does poorly, creates a bimodal distribution."},
+  // SG8
+  "The Biological Species Concept": {q:"Q2", field:"evolution", desc:"Ernst Mayr (1942) defined a species as 'groups of interbreeding natural populations which are reproductively isolated from other such groups.' Reproductive isolation means members of different species cannot successfully interbreed and produce fertile offspring. Species and Domains are the only taxonomic levels with a true biological identity (natural classification). Higher levels like Kingdom are more artificial — different scientists may group organisms differently."},
+  "Allopatric and Sympatric Speciation": {q:"Q2", field:"evolution", desc:"<strong>Speciation</strong> is the formation of new species. <strong>Allopatric speciation</strong> (allo = different, patri = homeland) — populations become geographically separated (e.g. by a mountain range or ocean), evolve independently, and eventually become reproductively isolated. <strong>Sympatric speciation</strong> (sym = same) — new species evolve within the same geographic area, often through polyploidy, habitat differentiation, or sexual selection. Both result in reproductive isolation, which is the key criterion for being a separate species."},
+  // SG9
+  "The Microscope — Parts, Types and Power": {q:"Q3", field:"cell", desc:"The microscope is the essential tool for studying cells. Types: <strong>Light (compound) microscope</strong> — uses lenses and visible light; total magnification = ocular lens × objective lens (e.g. 10× × 40× = 400×). <strong>Electron microscope</strong> — uses electrons for far greater magnification and resolution. Key concepts: <strong>Magnification</strong> = how much larger the image appears; <strong>Resolving power (resolution)</strong> = ability to distinguish two close points as separate (more important than magnification alone). Proper use: coarse focus first, then fine focus."},
+  // SG10
+  "Cell Theory and Germ Theory": {q:"Q3", field:"cell", desc:"<strong>Cell Theory</strong> (three principles): (1) All living things are made of cells. (2) The cell is the basic structural and functional unit of life. (3) All cells come from pre-existing cells (Virchow). Key contributors: Hooke (described cells in cork, 1665), Schleiden (plants are made of cells), Schwann (animals are made of cells). <strong>Germ Theory</strong>: infectious diseases are caused by microorganisms (pathogens), not 'bad air' or spontaneous generation. Pasteur and Koch developed germ theory through controlled experiments."},
+  "Cell Structure and Function": {q:"Q3", field:"cell", desc:"Key organelles and their functions: <strong>Nucleus</strong> (stores DNA, control center), <strong>Mitochondria</strong> (ATP production via cellular respiration — the powerhouse), <strong>Ribosomes</strong> (protein synthesis), <strong>Endoplasmic Reticulum</strong> (rough ER: protein processing; smooth ER: lipid synthesis), <strong>Golgi Apparatus</strong> (packaging and shipping proteins), <strong>Lysosomes</strong> (digestion via enzymes), <strong>Cell Membrane</strong> (selective barrier). Plant cells additionally have: <strong>Cell Wall</strong> (structural support, cellulose), <strong>Chloroplasts</strong> (photosynthesis), <strong>Central Vacuole</strong> (storage, turgor pressure)."},
+  // SG11
+  "Cell Membrane and Transport Mechanisms": {q:"Q3", field:"cell", desc:"The cell membrane is a <strong>phospholipid bilayer</strong> — selectively permeable, controlling what enters and exits. Transport types: <strong>Passive transport</strong> (no energy/ATP needed): Simple diffusion (small nonpolar molecules move freely), Facilitated diffusion (uses protein channels for polar/large molecules), Osmosis (water moves from high to low water concentration across a semi-permeable membrane). <strong>Active transport</strong> (requires ATP): moves substances against their concentration gradient (low → high). <strong>Endocytosis</strong> (cell engulfs large particles) and <strong>Exocytosis</strong> (cell expels large particles)."},
+  // SG12
+  "Prokaryotic and Eukaryotic Cells": {q:"Q3", field:"cell", desc:"The fundamental division of cellular life: <strong>Prokaryotes</strong> — no membrane-bound nucleus, DNA floats freely in cytoplasm, no membrane-bound organelles, generally smaller (~1–10 µm). Examples: Bacteria and Archaea. <strong>Eukaryotes</strong> — have a true, membrane-bound nucleus; have membrane-bound organelles; generally larger and more complex. Examples: plants, animals, fungi, protists. Key difference: the nucleus. Both have ribosomes and a cell membrane."},
+  "Endosymbiotic Theory": {q:"Q3", field:"cell", desc:"The endosymbiotic theory (proposed by Lynn Margulis) explains the origin of mitochondria and chloroplasts in eukaryotic cells. An ancestral prokaryote engulfed smaller aerobic bacteria — rather than digesting them, they formed a mutually beneficial relationship. Over time, these engulfed bacteria evolved into <strong>mitochondria</strong> (from aerobic bacteria) and <strong>chloroplasts</strong> (from photosynthetic cyanobacteria). Evidence: both organelles have their own DNA, divide by binary fission, and have double membranes."},
+  "Evolution of Plant and Animal Cells": {q:"Q3", field:"cell", desc:"Plant and animal cells share a common eukaryotic ancestor but have diverged. <strong>Plant cells</strong> gained chloroplasts (via endosymbiosis of cyanobacteria), cell walls (cellulose), and large central vacuoles — adaptations for a sessile, photosynthetic lifestyle. <strong>Animal cells</strong> lack cell walls and chloroplasts, giving them flexibility for movement. Both retained mitochondria. These specializations reflect the different ecological niches and survival strategies of plants and animals."},
+  // SG13
+  "Classification and Phylogeny": {q:"Q3", field:"cell", desc:"<strong>Phylogeny</strong> is the evolutionary history and relationships of organisms (from Greek: tribe + origin). <strong>Systematics</strong> combines taxonomy (naming and describing) with phylogeny (evolutionary relationships) to create an accurate picture of how life is related. Classical taxonomy grouped by appearance (artificial — e.g. dolphins and fish look alike but are not close relatives). Modern systematics uses DNA data and common ancestry (natural — more accurate). Homologous characters — traits inherited from a common ancestor — are the basis for grouping."},
+  "Schemes of Biological Classification": {q:"Q3", field:"cell", desc:"Classification systems have evolved over time: Aristotle (2 groups: plants/animals) → Linnaeus (hierarchical kingdoms) → Haeckel (3 kingdoms) → Whittaker (5 kingdoms: Monera, Protista, Fungi, Plantae, Animalia) → Woese (3 domains: Bacteria, Archaea, Eukarya based on rRNA). Phylogenetic tree terminology: <em>Taxa</em> = groups at branch tips; <em>Branch points</em> = common ancestors; <em>Sister taxa</em> = groups sharing a most recent common ancestor; <em>Outgroup</em> = distant relative used as a reference."},
+  "Introduction to Biodiversity": {q:"Q3", field:"cell", desc:"Biodiversity refers to the variety of life on Earth at all levels — genetic diversity (variation within a species), species diversity (number of different species), and ecosystem diversity (variety of habitats and ecosystems). Scientists estimate there are 8–10 million species on Earth, but only ~1.8 million have been formally described. Biodiversity is essential for ecosystem stability, resilience, and the services ecosystems provide to humans (clean air, water, food, medicine)."},
+  // SG14
+  "Prokaryotic Diversity": {q:"Q4", field:"diversity", desc:"Prokaryotes (Domains Bacteria and Archaea) are the oldest and most abundant life forms. <strong>Bacteria</strong>: diverse metabolisms, cell walls of peptidoglycan, found everywhere. <strong>Archaea</strong>: no peptidoglycan, often found in extreme environments (hot springs, salt lakes, deep ocean). Both reproduce by binary fission. Ecological importance: decomposers, nitrogen fixers, base of food chains. Economic importance: fermentation (yogurt, bread), antibiotics, biotechnology. Prokaryotes are essential for nutrient cycling in all ecosystems."},
+  "Eukaryotic Diversity and the Volvocine Series": {q:"Q4", field:"diversity", desc:"Eukaryotes include four kingdoms: Protista, Fungi, Plantae, Animalia — all sharing membrane-bound nuclei and organelles. A key evolutionary question is how multicellularity arose. The <strong>Volvocine series</strong> (Chlamydomonas → Gonium → Pandorina → Eudorina → Volvox) illustrates a progression from unicellular to colonial to multicellular green algae, demonstrating how cell specialization and division of labor may have evolved. This series shows that multicellularity likely evolved multiple times independently."},
+  "Protist Diversity": {q:"Q4", field:"diversity", desc:"Protists are a diverse catch-all kingdom of mostly unicellular eukaryotes that don't fit neatly into other kingdoms. Major groups: <strong>Algae</strong> (photosynthetic; produce ~50% of Earth's oxygen; e.g. diatoms, kelp), <strong>Protozoa</strong> (animal-like, heterotrophic; e.g. amoeba, paramecium, Plasmodium — which causes malaria), <strong>Slime molds</strong> (fungus-like decomposers). Ecological role: base of aquatic food webs, primary oxygen producers, nutrient cycling. Climate change is altering protist distributions and threatening reef-building algae."},
+  "Fungal Diversity": {q:"Q4", field:"diversity", desc:"Fungi are heterotrophic decomposers — they secrete digestive enzymes externally and absorb nutrients. Bodies made of <em>hyphae</em> (thread-like filaments) forming a <em>mycelium</em>. Cell walls of chitin (not cellulose). Reproduce sexually and asexually via spores. Major groups: Zygomycetes (bread mold), Ascomycetes (yeasts, morels, truffles), Basidiomycetes (mushrooms, puffballs). Ecological importance: primary decomposers, mycorrhizal partnerships with plant roots (aid nutrient uptake). Economic importance: food (bread, beer, cheese), medicine (penicillin). Climate change is shifting fungal distributions and increasing fungal diseases."},
+  // SG18
+  "Animal Body Plan and Diversification": {q:"Q4", field:"diversity", desc:"Animals are multicellular, heterotrophic eukaryotes. Key body plan features used to classify them: presence/absence of tissues, body symmetry (radial vs. bilateral), body cavity (coelom), and embryonic development patterns. Animals are divided into <strong>Invertebrates</strong> (no backbone — ~97% of all animal species; includes Porifera, Cnidaria, Platyhelminthes, Annelida, Mollusca, Arthropoda, Echinodermata) and <strong>Vertebrates</strong> (backbone; includes fish, amphibians, reptiles, birds, mammals)."},
+  "Key Animal Groups and Phylogeny": {q:"Q4", field:"diversity", desc:"Animal phylogeny is based on shared derived characters. Key groups: <strong>Porifera</strong> (sponges — no true tissues), <strong>Cnidaria</strong> (jellyfish, coral — radial symmetry), <strong>Arthropoda</strong> (insects, crustaceans, spiders — largest phylum by species count), <strong>Mollusca</strong> (snails, clams, octopuses), <strong>Echinodermata</strong> (sea stars — deuterostomes, closely related to vertebrates), <strong>Chordata</strong> (vertebrates). Each group has unifying characteristics that define it."},
+  // SG19
+  "Evolution of Plants": {q:"Q4", field:"diversity", desc:"Plants evolved from freshwater green algae ancestors approximately 470 million years ago. The major challenge was surviving on land — needing protection from drying out, structural support against gravity, and new reproduction methods. Key evolutionary innovations: cuticle (waxy coating), stomata (gas exchange), vascular tissue (xylem and phloem), seeds (protected embryos), and flowers/fruits (attract pollinators, aid seed dispersal). Each innovation opened new ecological niches."},
+  "Key Plant Groups and Phylogeny": {q:"Q4", field:"diversity", desc:"Plant groups in evolutionary order: <strong>Non-vascular plants</strong> (Bryophytes: mosses, liverworts — no transport tissue, need moist environments, small). <strong>Vascular seedless plants</strong> (Ferns — have xylem and phloem, reproduce by spores). <strong>Gymnosperms</strong> (conifers, cycads — seeds in cones, no flowers; dominated Mesozoic era). <strong>Angiosperms</strong> (flowering plants — seeds in fruit; the most diverse group today, ~300,000 species). Each level builds on the adaptations of the previous."},
+  "Threats to Plant Diversity": {q:"Q4", field:"diversity", desc:"Plant diversity is under serious threat globally. Major threats: <strong>Habitat destruction</strong> (deforestation, agriculture, urbanization), <strong>Invasive species</strong> (outcompete native plants), <strong>Climate change</strong> (shifting temperature and rainfall patterns, more frequent droughts and fires), <strong>Overexploitation</strong> (overharvesting of wild plants for food, medicine, timber). Consequences: loss of ecosystem services (oxygen production, carbon storage, soil stabilization), loss of potential medicines, and collapse of dependent animal species."},
+  // SG20
+  "Ecosystem Dynamics — Population vs. Species": {q:"Q4", field:"ecology", desc:"Key ecological terms: A <strong>population</strong> = all individuals of the same species living in the same area at the same time. A <strong>species</strong> = a group of organisms that can interbreed and produce fertile offspring. A <strong>community</strong> = all populations of different species in an area. An <strong>ecosystem</strong> = community + abiotic (nonliving) factors. <strong>Abiotic factors</strong>: temperature, water, light, soil, pH. <strong>Biotic factors</strong>: all living organisms and their interactions (competition, predation, symbiosis)."},
+  "Population Ecology": {q:"Q4", field:"ecology", desc:"Population ecology studies the size, density, and dynamics of populations. Key concepts: <strong>Population density</strong> = number of individuals per unit area. <strong>Limiting factors</strong> = abiotic or biotic factors that cap population growth (food, space, predators, disease). <strong>Carrying capacity (K)</strong> = maximum population size an environment can sustainably support. Growth patterns: <em>Exponential growth</em> (J-curve, unlimited resources) and <em>Logistic growth</em> (S-curve, growth slows as K is reached). Energy flows through ecosystems: producers → consumers → decomposers, with ~10% transferred at each level."},
+  "Ecosystem Disruptions and Human Impact": {q:"Q4", field:"ecology", desc:"Human activities are the primary driver of ecosystem disruption. Major disruptions: <strong>Pollution</strong> (air, water, soil contamination), <strong>Climate change</strong> (altered temperature and precipitation, ocean acidification), <strong>Invasive species</strong> (outcompete and displace native organisms), <strong>Overexploitation</strong> (overfishing, overhunting). These disruptions cascade through food webs — the removal or addition of a species can drastically alter the entire ecosystem."},
+  "Habitat Destruction and Fragmentation": {q:"Q4", field:"ecology", desc:"<strong>Habitat destruction</strong> is the most significant cause of biodiversity loss globally. Primary causes: deforestation (especially tropical rainforests), agricultural expansion, urbanization, and mining. <strong>Habitat fragmentation</strong> occurs when large, continuous habitats are broken into smaller, isolated patches. Effects: reduced genetic diversity (small isolated populations), increased edge effects, barriers to migration, local extinction of species unable to survive in fragments. Conservation corridors can help connect fragmented habitats."},
+  "Biodiversity Loss and Its Consequences": {q:"Q4", field:"ecology", desc:"Earth is currently experiencing a sixth mass extinction, primarily driven by human activity. Biodiversity provides essential <strong>ecosystem services</strong>: oxygen production, water purification, pollination, soil formation, disease regulation, and climate regulation. Loss of biodiversity reduces ecosystem resilience — ecosystems with fewer species are less able to recover from disturbances. Consequences extend to human welfare: loss of potential medicines (most drugs originate from natural compounds), food security threats, and ecosystem collapse."}
+};
+
+const tagColors = {
+  nature:    {bg:'rgba(80,200,100,0.15)',  color:'#50c864', border:'rgba(80,200,100,0.3)'},
+  evolution: {bg:'rgba(168,224,96,0.15)', color:'#a8e060', border:'rgba(168,224,96,0.3)'},
+  cell:      {bg:'rgba(64,212,176,0.15)', color:'#40d4b0', border:'rgba(64,212,176,0.3)'},
+  diversity: {bg:'rgba(240,192,64,0.15)', color:'#f0c040', border:'rgba(240,192,64,0.3)'},
+  ecology:   {bg:'rgba(224,128,80,0.15)', color:'#e08050', border:'rgba(224,128,80,0.3)'},
+};
+const tagLabels = {nature:'Nature', evolution:'Evolution', cell:'Cell', diversity:'Diversity', ecology:'Ecology'};
+const quarterLabels = {Q1:'Quarter 1 · Foundations of Biology', Q2:'Quarter 2 · Evolution & Classification', Q3:'Quarter 3 · Microscopy, Cells & Diversity', Q4:'Quarter 4 · Diversity of Life & Ecology'};
+
+const backdrop = document.getElementById('modalBackdrop');
+
+function openModal(title, field, q) {
+  const data = descriptions[title] || {};
+  const c = tagColors[field] || tagColors.nature;
+  const tag = document.getElementById('modalTag');
+  tag.textContent = tagLabels[field] || field;
+  tag.style.background = c.bg; tag.style.color = c.color; tag.style.border = `1px solid ${c.border}`;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalQuarter').textContent = quarterLabels[q] || q;
+  const desc = document.getElementById('modalDesc');
+  if (data.desc) { desc.innerHTML = data.desc; desc.classList.remove('modal-placeholder'); }
+  else { desc.innerHTML = '<em>Reviewer coming soon.</em>'; desc.classList.add('modal-placeholder'); }
+  backdrop.classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => backdrop.classList.remove('open'));
+backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('open'); });
+
+document.querySelectorAll('.topic-name').forEach(el => {
+  el.addEventListener('click', () => {
+    const item = el.closest('.topic-item');
+    openModal(item.dataset.title, item.dataset.field, item.dataset.q);
+  });
+});
+
+// Quarter filter & search
+const quarters = document.querySelectorAll('.quarter-pill');
+const cards    = document.querySelectorAll('.field');
+const search   = document.getElementById('searchBox');
+let activeQ = 'all';
+
+function applyFilters() {
+  const term = search.value.toLowerCase().trim();
+  cards.forEach(card => {
+    const matchQ = activeQ === 'all' || (card.dataset.quarters || '').includes(activeQ);
+    if (!matchQ) { card.classList.add('dimmed'); return; }
+    if (term) {
+      let anyMatch = false;
+      card.querySelectorAll('.topic-item').forEach(t => {
+        const match = t.textContent.toLowerCase().includes(term);
+        t.style.opacity = match ? '1' : '0.2';
+        if (match) anyMatch = true;
+      });
+      card.classList.toggle('dimmed', !anyMatch);
+    } else {
+      card.querySelectorAll('.topic-item').forEach(t => t.style.opacity = '1');
+      card.classList.remove('dimmed');
+    }
+  });
+}
+
+quarters.forEach(btn => {
+  btn.addEventListener('click', () => {
+    quarters.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeQ = btn.dataset.q;
+    applyFilters();
+  });
+});
+search.addEventListener('input', applyFilters);
+
+// Page tabs
+const tabMap       = document.getElementById('tabMap');
+const tabPractice  = document.getElementById('tabPractice');
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+
+tabMap.addEventListener('click', () => {
+  tabMap.classList.add('active'); tabPractice.classList.remove('active');
+  mapPage.classList.remove('hidden'); practicePage.classList.remove('visible');
+});
+tabPractice.addEventListener('click', () => {
+  tabPractice.classList.add('active'); tabMap.classList.remove('active');
+  practicePage.classList.add('visible'); mapPage.classList.add('hidden');
+});
+
+// Practice interactions
+document.querySelectorAll('.question-card').forEach(card => {
+  const correct     = card.dataset.answer;
+  const choices     = card.querySelectorAll('.choice');
+  const revealBtn   = card.querySelector('.reveal-btn');
+  const explanation = card.querySelector('.explanation');
+  let answered = false;
+
+  choices.forEach(choice => {
+    choice.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        if (c.dataset.val === correct) c.classList.add('correct');
+        else c.classList.add('wrong');
+      });
+      explanation.classList.add('visible');
+      revealBtn.disabled = true;
+    });
+  });
+
+  revealBtn.addEventListener('click', () => {
+    if (answered) return;
+    answered = true;
+    choices.forEach(c => {
+      if (c.dataset.val === correct) c.classList.add('correct');
+      else c.classList.add('wrong');
+    });
+    explanation.classList.add('visible');
+    revealBtn.disabled = true;
+  });
+});
+
+// Animated leaf particles
+(function() {
+  const canvas = document.getElementById('leaves');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function randomParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.6 + 0.3,
+      a: Math.random() * 0.5 + 0.1,
+      speedX: (Math.random() - 0.5) * 0.15,
+      speedY: Math.random() * 0.12 + 0.04,
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: Math.random() * 0.015 + 0.005,
+      hue: Math.floor(Math.random() * 60 + 100) // greens to yellow-greens
+    };
+  }
+
+  function init() {
+    particles = [];
+    for (let i = 0; i < 220; i++) particles.push(randomParticle());
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.twinkle += p.twinkleSpeed;
+      p.x += p.speedX;
+      p.y += p.speedY;
+      if (p.y > H + 5) { p.y = -5; p.x = Math.random() * W; }
+      if (p.x < -5) p.x = W + 5;
+      if (p.x > W + 5) p.x = -5;
+      const alpha = p.a * (0.4 + 0.6 * Math.abs(Math.sin(p.twinkle)));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  init();
+  window.addEventListener('resize', () => { resize(); init(); });
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
