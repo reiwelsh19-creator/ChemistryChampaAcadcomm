@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Map of Chemistry</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f2eb; --ink: #1a1a2e; --faint: #e8e3d8; --line: #c8c0b0;
+      --atomic: #4a7c6f; --atomic-bg: #eaf4f1;
+      --stoich: #7a5c3a; --stoich-bg: #f5ede0;
+      --quantum: #3d5a80; --quantum-bg: #e8eef7;
+      --periodic: #6b4c7a; --periodic-bg: #f2ecf7;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--ink); font-family: 'DM Mono', monospace; min-height: 100vh; padding: 0 0 80px; }
+
+    header {
+      padding: 60px 40px 40px; border-bottom: 1.5px solid var(--line);
+      display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: 'H₂O · NaCl · C₆H₁₂O₆ · CH₄ · NH₃ · CO₂ · Fe₂O₃ · H₂SO₄';
+      position: absolute; top: 12px; left: 0; right: 0; text-align: center;
+      font-size: 11px; letter-spacing: 0.15em; color: var(--line); white-space: nowrap; overflow: hidden;
+    }
+    .label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--line); }
+    h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; }
+    h1 em { font-style: italic; font-weight: 300; }
+    .subtitle { font-size: 12px; color: #888; margin-top: 4px; }
+
+    .quarters { display: flex; border-bottom: 1.5px solid var(--line); overflow-x: auto; }
+    .quarter-pill {
+      flex: 1; min-width: 160px; padding: 14px 20px; font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; border-right: 1px solid var(--line); cursor: pointer;
+      transition: background 0.2s; text-align: center; user-select: none;
+    }
+    .quarter-pill:last-child { border-right: none; }
+    .quarter-pill:hover { background: var(--faint); }
+    .quarter-pill.active { background: var(--ink); color: var(--bg); }
+    .quarter-pill span { display: block; font-size: 9px; opacity: 0.6; margin-top: 2px; }
+
+    .search-wrap { padding: 28px 32px 0; max-width: 1200px; margin: 0 auto; }
+    .search-wrap input {
+      width: 100%; max-width: 440px; padding: 10px 16px;
+      font-family: 'DM Mono', monospace; font-size: 13px; background: #fff;
+      border: 1.5px solid var(--line); border-radius: 3px; outline: none; color: var(--ink); transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--ink); }
+    .search-wrap input::placeholder { color: #bbb; }
+
+    main {
+      max-width: 1200px; margin: 0 auto; padding: 36px 32px 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 24px;
+    }
+
+    .field {
+      border: 1.5px solid var(--line); border-radius: 3px; overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s; background: #fff; animation: rise 0.4s ease both;
+    }
+    .field:hover { box-shadow: 4px 4px 0 var(--line); transform: translate(-2px, -2px); }
+    .field.dimmed { display: none; }
+    .field:nth-child(1){animation-delay:.05s} .field:nth-child(2){animation-delay:.10s}
+    .field:nth-child(3){animation-delay:.15s} .field:nth-child(4){animation-delay:.20s}
+    .field:nth-child(5){animation-delay:.25s}
+    @keyframes rise { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .field-header { padding: 18px 20px 14px; border-bottom: 1.5px solid var(--line); display: flex; align-items: flex-start; gap: 12px; }
+    .field-icon { font-size: 22px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+    .field-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; line-height: 1.2; }
+    .field-tag {
+      display: inline-block; margin-top: 5px; font-size: 9px; letter-spacing: 0.15em;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 2px; font-family: 'DM Mono', monospace;
+    }
+    .field[data-field="atomic"]   .field-header { background: var(--atomic-bg); }
+    .field[data-field="atomic"]   .field-tag    { background: var(--atomic);    color: #fff; }
+    .field[data-field="stoich"]   .field-header { background: var(--stoich-bg); }
+    .field[data-field="stoich"]   .field-tag    { background: var(--stoich);    color: #fff; }
+    .field[data-field="quantum"]  .field-header { background: var(--quantum-bg);}
+    .field[data-field="quantum"]  .field-tag    { background: var(--quantum);   color: #fff; }
+    .field[data-field="periodic"] .field-header { background: var(--periodic-bg);}
+    .field[data-field="periodic"] .field-tag    { background: var(--periodic);  color: #fff; }
+
+    .topic-list { padding: 10px 20px 14px; list-style: none; }
+    .topic-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      border-bottom: 1px solid var(--faint); font-size: 12.5px; line-height: 1.4;
+    }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .field[data-field="atomic"]   .topic-dot { background: var(--atomic); }
+    .field[data-field="stoich"]   .topic-dot { background: var(--stoich); }
+    .field[data-field="quantum"]  .topic-dot { background: var(--quantum); }
+    .field[data-field="periodic"] .topic-dot { background: var(--periodic); }
+
+    .topic-name {
+      cursor: pointer; border-bottom: 1px dashed var(--line);
+      transition: color 0.15s, border-color 0.15s; flex: 1;
+    }
+    .field[data-field="atomic"]   .topic-name:hover { color: var(--atomic);   border-color: var(--atomic); }
+    .field[data-field="stoich"]   .topic-name:hover { color: var(--stoich);   border-color: var(--stoich); }
+    .field[data-field="quantum"]  .topic-name:hover { color: var(--quantum);  border-color: var(--quantum); }
+    .field[data-field="periodic"] .topic-name:hover { color: var(--periodic); border-color: var(--periodic); }
+
+    .topic-quarter { font-size: 9px; letter-spacing: 0.1em; color: #aaa; white-space: nowrap; flex-shrink: 0; }
+
+    /* MODAL */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(26,26,46,0.45);
+      backdrop-filter: blur(3px); z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #fff; border: 1.5px solid var(--line); border-radius: 4px;
+      max-width: 480px; width: 100%; padding: 32px 28px 28px; position: relative;
+      animation: popIn 0.2s ease; box-shadow: 6px 6px 0 var(--line);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-tag {
+      font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 2px; color: #fff; display: inline-block; margin-bottom: 12px;
+    }
+    .modal-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem; line-height: 1.2; margin-bottom: 10px; }
+    .modal-quarter { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #aaa; margin-bottom: 16px; }
+    .modal-desc { font-size: 13px; line-height: 1.75; color: #444; border-top: 1px solid var(--faint); padding-top: 16px; }
+    .modal-placeholder { font-style: italic; color: #bbb; font-size: 12px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px; font-size: 18px; cursor: pointer;
+      color: var(--line); background: none; border: none; line-height: 1; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--ink); }
+
+    footer { text-align: center; padding: 48px 20px 0; font-size: 10px; letter-spacing: 0.15em; color: var(--line); text-transform: uppercase; }
+
+    /* PAGE TABS */
+    .page-tabs { display: flex; border-bottom: 1.5px solid var(--line); background: var(--bg); }
+    .page-tab {
+      padding: 14px 28px; font-family: 'DM Mono', monospace; font-size: 11px;
+      letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
+      border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+      transition: color 0.2s, border-color 0.2s; color: #aaa; user-select: none;
+    }
+    .page-tab:hover { color: var(--ink); }
+    .page-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+    /* PRACTICE PAGE */
+    #practicePage { display: none; max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+    #practicePage.visible { display: block; }
+    #mapPage.hidden { display: none; }
+
+    .practice-section { margin-bottom: 56px; }
+    .practice-section-header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
+      padding-bottom: 14px; border-bottom: 1.5px solid var(--line);
+    }
+    .practice-section-icon { font-size: 22px; line-height: 1; }
+    .practice-section-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.2rem; }
+    .practice-section-tag {
+      font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 2px; color: #fff; margin-left: 4px;
+    }
+
+    .question-card {
+      background: #fff; border: 1.5px solid var(--line); border-radius: 3px;
+      padding: 22px 24px; margin-bottom: 16px; transition: box-shadow 0.2s;
+    }
+    .question-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .q-num { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #aaa; }
+    .q-type {
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 1px 6px; border-radius: 2px; border: 1px solid var(--line); color: #888;
+    }
+    .question-text { font-size: 13.5px; line-height: 1.7; margin-bottom: 16px; color: var(--ink); }
+    .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .choice {
+      display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px;
+      border: 1.5px solid var(--faint); border-radius: 3px; cursor: pointer;
+      font-size: 12.5px; line-height: 1.5; transition: all 0.15s; user-select: none;
+    }
+    .choice:hover { border-color: var(--line); background: var(--faint); }
+    .choice.selected { border-color: var(--ink); background: #f0ede8; }
+    .choice.correct { border-color: #4a7c6f; background: #eaf4f1; color: #2a5c4f; }
+    .choice.wrong { border-color: #c0392b; background: #fdf0ee; color: #a93226; }
+    .choice-letter {
+      font-size: 10px; letter-spacing: 0.1em; font-weight: 500;
+      width: 18px; flex-shrink: 0; margin-top: 1px; opacity: 0.5;
+    }
+    .choice.correct .choice-letter, .choice.wrong .choice-letter { opacity: 1; }
+
+    .reveal-btn {
+      margin-top: 14px; padding: 8px 16px; font-family: 'DM Mono', monospace;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      border: 1.5px solid var(--line); border-radius: 3px; background: none;
+      cursor: pointer; color: var(--ink); transition: background 0.15s;
+    }
+    .reveal-btn:hover { background: var(--faint); }
+    .reveal-btn:disabled { opacity: 0.4; cursor: default; }
+    .explanation {
+      display: none; margin-top: 14px; padding: 14px 16px;
+      background: var(--faint); border-radius: 3px; font-size: 12.5px;
+      line-height: 1.7; color: #555; border-left: 3px solid var(--line);
+    }
+    .explanation.visible { display: block; }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 20px 28px; }
+      main, .search-wrap { padding-left: 16px; padding-right: 16px; }
+      #practicePage { padding: 28px 16px 60px; }
+      .page-tab { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="label">Curriculum Map · Senior High School</p>
+  <h1>The Map of <em>Chemistry</em></h1>
+  <p class="subtitle">Click any topic for a reviewer description · organized by field</p>
+</header>
+
+<!-- PAGE TAB SWITCHER -->
+<div class="page-tabs">
+  <div class="page-tab active" id="tabMap">&#128203; Curriculum Map</div>
+  <div class="page-tab" id="tabPractice">&#9999;&#65039; Practice Exercises</div>
+</div>
+
+<div id="mapPage">
+
+<nav class="quarters" id="quarterNav">
+  <div class="quarter-pill active" data-q="all">All Topics <span>4 quarters</span></div>
+  <div class="quarter-pill" data-q="Q1">Quarter 1 <span>Pre-Stoichiometry</span></div>
+  <div class="quarter-pill" data-q="Q2">Quarter 2 <span>Stoichiometry</span></div>
+  <div class="quarter-pill" data-q="Q3">Quarter 3 <span>Stoich + Quantum</span></div>
+  <div class="quarter-pill" data-q="Q4">Quarter 4 <span>Periodic & Molecular</span></div>
+</nav>
+
+<div class="search-wrap">
+  <input type="text" id="searchBox" placeholder="Search a topic, e.g. 'mole' or 'electron'…" />
+</div>
+
+<main id="cardGrid">
+
+  <!-- NOMENCLATURE & BASICS -->
+  <div class="field" data-field="atomic" data-quarters="Q1">
+    <div class="field-header">
+      <div class="field-icon">🏷️</div>
+      <div><div class="field-title">Nomenclature & Basics</div><span class="field-tag">Atomic</span></div>
+    </div>
+    <ul class="topic-list">
+      <li class="topic-item" data-q="Q1" data-field="atomic" data-title="Atoms, Molecules & Ions">
+        <span class="topic-dot"></span><span class="topic-name">Atoms, Molecules & Ions</span><span class="topic-quarter">Q1</span>
+      </li>
+      <li class="topic-item" data-q="Q1" data-field="atomic" data-title="Naming of Ionic Compounds">
+        <span class="topic-dot"></span><span class="topic-name">Naming of Ionic Compounds</span><span class="topic-quarter">Q1</span>
+      </li>
+      <li class="topic-item" data-q="Q1" data-field="atomic" data-title="Naming of Covalent Compounds">
+        <span class="topic-dot"></span><span class="topic-name">Naming of Covalent Compounds</span><span class="topic-quarter">Q1</span>
+      </li>
+      <li class="topic-item" data-q="Q1" data-field="atomic" data-title="Naming of Acids & Bases">
+        <span class="topic-dot"></span><span class="topic-name">Naming of Acids & Bases</span><span class="topic-quarter">Q1</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- STOICHIOMETRY -->
+  <div class="field" data-field="stoich" data-quarters="Q2 Q3">
+    <div class="field-header">
+      <div class="field-icon">⚖️</div>
+      <div><div class="field-title">Stoichiometry</div><span class="field-tag">Stoich</span></div>
+    </div>
+    <ul class="topic-list">
+      <li class="topic-item" data-q="Q2" data-field="stoich" data-title="Balancing Chemical Equations">
+        <span class="topic-dot"></span><span class="topic-name">Balancing Chemical Equations</span><span class="topic-quarter">Q2</span>
+      </li>
+      <li class="topic-item" data-q="Q2" data-field="stoich" data-title="Types of Reactions">
+        <span class="topic-dot"></span><span class="topic-name">Types of Reactions</span><span class="topic-quarter">Q2</span>
+      </li>
+      <li class="topic-item" data-q="Q2" data-field="stoich" data-title="Atomic and Formula Mass">
+        <span class="topic-dot"></span><span class="topic-name">Atomic and Formula Mass</span><span class="topic-quarter">Q2</span>
+      </li>
+      <li class="topic-item" data-q="Q2" data-field="stoich" data-title="Mole–Mass Concept">
+        <span class="topic-dot"></span><span class="topic-name">Mole–Mass Concept</span><span class="topic-quarter">Q2</span>
+      </li>
+      <li class="topic-item" data-q="Q2" data-field="stoich" data-title="Conversions between Mass and Moles">
+        <span class="topic-dot"></span><span class="topic-name">Conversions between Mass and Moles</span><span class="topic-quarter">Q2</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="stoich" data-title="Empirical & Molecular Formulae from Analysis">
+        <span class="topic-dot"></span><span class="topic-name">Empirical & Molecular Formulae from Analysis</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="stoich" data-title="Limiting Reagents">
+        <span class="topic-dot"></span><span class="topic-name">Limiting Reagents</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="stoich" data-title="Percent Yield">
+        <span class="topic-dot"></span><span class="topic-name">Percent Yield</span><span class="topic-quarter">Q3</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- QUANTUM MECHANICS & ATOMIC STRUCTURE (merged) -->
+  <div class="field" data-field="quantum" data-quarters="Q1 Q3">
+    <div class="field-header">
+      <div class="field-icon">🌊</div>
+      <div><div class="field-title">Quantum Mechanics & Atomic Structure</div><span class="field-tag">Quantum</span></div>
+    </div>
+    <ul class="topic-list">
+      <li class="topic-item" data-q="Q1" data-field="quantum" data-title="History of the Atomic Model">
+        <span class="topic-dot"></span><span class="topic-name">History of the Atomic Model</span><span class="topic-quarter">Q1</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Quantum Mechanical Model of the Atom">
+        <span class="topic-dot"></span><span class="topic-name">Quantum Mechanical Model of the Atom</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Wave–Particle Duality">
+        <span class="topic-dot"></span><span class="topic-name">Wave–Particle Duality</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Heisenberg Uncertainty Principle">
+        <span class="topic-dot"></span><span class="topic-name">Heisenberg Uncertainty Principle</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Schrödinger's Equation (conceptual)">
+        <span class="topic-dot"></span><span class="topic-name">Schrödinger's Equation (conceptual)</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Orbitals & Probability Clouds">
+        <span class="topic-dot"></span><span class="topic-name">Orbitals & Probability Clouds</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Quantum Numbers">
+        <span class="topic-dot"></span><span class="topic-name">Quantum Numbers</span><span class="topic-quarter">Q3</span>
+      </li>
+      <li class="topic-item" data-q="Q3" data-field="quantum" data-title="Electron Configuration">
+        <span class="topic-dot"></span><span class="topic-name">Electron Configuration</span><span class="topic-quarter">Q3</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- PERIODIC TRENDS -->
+  <div class="field" data-field="periodic" data-quarters="Q4">
+    <div class="field-header">
+      <div class="field-icon">📊</div>
+      <div><div class="field-title">Periodic Trends</div><span class="field-tag">Periodic</span></div>
+    </div>
+    <ul class="topic-list">
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Atomic Radius">
+        <span class="topic-dot"></span><span class="topic-name">Atomic Radius</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Ionic Radius">
+        <span class="topic-dot"></span><span class="topic-name">Ionic Radius</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Ionization Energy">
+        <span class="topic-dot"></span><span class="topic-name">Ionization Energy</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Electron Affinity">
+        <span class="topic-dot"></span><span class="topic-name">Electron Affinity</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Metallic Character">
+        <span class="topic-dot"></span><span class="topic-name">Metallic Character</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Electronegativity">
+        <span class="topic-dot"></span><span class="topic-name">Electronegativity</span><span class="topic-quarter">Q4</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- MOLECULAR GEOMETRY & BONDING -->
+  <div class="field" data-field="periodic" data-quarters="Q4">
+    <div class="field-header">
+      <div class="field-icon">🔷</div>
+      <div><div class="field-title">Molecular Geometry & Bonding</div><span class="field-tag">Molecular</span></div>
+    </div>
+    <ul class="topic-list">
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="VSEPR Theory">
+        <span class="topic-dot"></span><span class="topic-name">VSEPR Theory</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Valence Bond Theory (VBT)">
+        <span class="topic-dot"></span><span class="topic-name">Valence Bond Theory (VBT)</span><span class="topic-quarter">Q4</span>
+      </li>
+      <li class="topic-item" data-q="Q4" data-field="periodic" data-title="Molecular Orbital Theory (MOT)">
+        <span class="topic-dot"></span><span class="topic-name">Molecular Orbital Theory (MOT)</span><span class="topic-quarter">Q4</span>
+      </li>
+    </ul>
+  </div>
+
+</main>
+
+</div><!-- end #mapPage -->
+
+<!-- PRACTICE EXERCISES PAGE -->
+<div id="practicePage">
+
+  <!-- SECTION 1: NOMENCLATURE & BASICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🏷️</div>
+      <div>
+        <span class="practice-section-title">Nomenclature &amp; Basics</span>
+        <span class="practice-section-tag" style="background:#4a7c6f;">Atomic</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q1</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following correctly names the ionic compound FeCl₃?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Iron chloride</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Iron(III) chloride</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Triiron chloride</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Iron(III) trichloride</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Iron(III) chloride.</strong> Iron is a transition metal with multiple possible charges, so a Roman numeral is required. The 3 Cl⁻ ions (each −1) balance the Fe³⁺, confirming the +3 charge. Never use Greek prefixes (like tri-) in ionic compound names.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q2</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the correct IUPAC name for N₂O₄?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Nitrogen oxide</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Dinitrogen oxide</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Dinitrogen tetroxide</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Dinitrogen tetraoxide</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Dinitrogen tetroxide.</strong> N₂O₄ is a covalent compound (two nonmetals), so Greek prefixes apply: di- for 2 nitrogen atoms, tetr- for 4 oxygen atoms. Drop the extra 'a' before 'oxide' → tetroxide, not tetraoxide.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q3</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">HBr dissolved in water is correctly named:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Hydrobromic acid</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Bromic acid</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Bromous acid</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Hydrogen bromide acid</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Hydrobromic acid.</strong> HBr is a binary acid (H + one nonmetal, no oxygen). Binary acids follow the pattern: Hydro- + root + -ic + Acid. The root of bromine is "brom", giving hydrobrom-ic acid.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q4</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which compound below contains a polyatomic anion?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> NaCl</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> MgO</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> CaF₂</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Ca(NO₃)₂</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Ca(NO₃)₂.</strong> The nitrate ion (NO₃⁻) is a polyatomic anion — it contains more than one atom bonded together with an overall negative charge. The other options all have monatomic anions (Cl⁻, O²⁻, F⁻).</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q5</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">An atom of sulfur has 16 protons and 16 electrons. When it becomes a sulfide ion (S²⁻), it has:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 14 electrons and 16 protons</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 18 electrons and 16 protons</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 16 electrons and 18 protons</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 14 electrons and 14 protons</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 18 electrons and 16 protons.</strong> A 2− charge means the atom gained 2 electrons. 16 + 2 = 18 electrons. The number of protons never changes in ordinary chemistry — the nucleus stays the same.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: STOICHIOMETRY -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⚖️</div>
+      <div>
+        <span class="practice-section-title">Stoichiometry</span>
+        <span class="practice-section-tag" style="background:#7a5c3a;">Stoich</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q6</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">When balancing a chemical equation, which of the following may you change?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Subscripts within a formula</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> The identity of the reactants</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Coefficients in front of formulas</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> The arrow direction</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Coefficients.</strong> Coefficients are the large numbers in front of each formula. Changing subscripts would create a different substance entirely. The Law of Conservation of Mass requires the same number of each atom on both sides — coefficients achieve this without altering any compound's identity.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q7</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In the reaction: Zn + CuSO₄ → ZnSO₄ + Cu, what type of reaction is this?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Synthesis</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Single displacement</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Double displacement</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Decomposition</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Single displacement.</strong> Zinc (a free element) replaces copper in the compound CuSO₄. The pattern A + BC → AC + B is the hallmark of single displacement. This works because zinc is more reactive than copper.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q8</span><span class="q-type">Computation</span></div>
+      <p class="question-text">How many moles are in 54 g of water (H₂O)? [Molar mass of H₂O ≈ 18 g/mol]</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 18 mol</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 1 mol</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 972 mol</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 3 mol</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — 3 mol.</strong> moles = mass ÷ molar mass = 54 g ÷ 18 g/mol = 3 mol. Always divide mass by molar mass to convert grams → moles.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A compound is 40.0% C, 6.7% H, and 53.3% O by mass. What is its empirical formula? [C = 12, H = 1, O = 16]</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> CH₂O</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> C₂H₄O₂</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> CHO</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> C₂H₂O</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — CH₂O.</strong> Assume 100 g: C = 40/12 = 3.33 mol, H = 6.7/1 = 6.7 mol, O = 53.3/16 = 3.33 mol. Divide by smallest (3.33): C = 1, H ≈ 2, O = 1. Empirical formula: CH₂O. (C₂H₄O₂ is the molecular formula of acetic acid, and C₆H₁₂O₆ is glucose — both have CH₂O as their empirical formula.)</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Computation</span></div>
+      <p class="question-text">In the reaction N₂ + 3H₂ → 2NH₃, if 2 mol of N₂ and 3 mol of H₂ are mixed, which is the limiting reagent?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> N₂, because it has fewer moles</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> N₂, because nitrogen is heavier</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> H₂, because 3 mol H₂ ÷ 3 = 1, while 2 mol N₂ ÷ 1 = 2</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Neither — they are present in the exact stoichiometric ratio</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — H₂ is the limiting reagent.</strong> Divide moles by stoichiometric coefficient: N₂ → 2/1 = 2; H₂ → 3/3 = 1. The smaller value identifies the limiting reagent. H₂ runs out first, limiting how much NH₃ can form.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q11</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A reaction has a theoretical yield of 25.0 g and an actual yield of 19.5 g. What is the percent yield?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 28.2%</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 78.0%</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 128%</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 44.5%</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 78.0%.</strong> % yield = (actual ÷ theoretical) × 100 = (19.5 ÷ 25.0) × 100 = 78.0%. A yield near 80% is considered good in a lab setting.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: QUANTUM MECHANICS & ATOMIC STRUCTURE -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌊</div>
+      <div>
+        <span class="practice-section-title">Quantum Mechanics &amp; Atomic Structure</span>
+        <span class="practice-section-tag" style="background:#3d5a80;">Quantum</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q12</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Rutherford's gold foil experiment led to which conclusion?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Atoms are indivisible solid spheres</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Electrons are embedded throughout a diffuse positive sphere</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Atoms have a tiny, dense, positively charged nucleus surrounded by mostly empty space</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Electrons orbit the nucleus in fixed circular paths</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Most alpha particles passed straight through the gold foil (confirming mostly empty space), but a small fraction bounced back sharply — indicating a concentrated positive charge at the center. This disproved Thomson's plum pudding model.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q13</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The photoelectric effect demonstrated that light:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Behaves as discrete packets of energy (photons)</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Always travels as a continuous wave</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Can only eject electrons if the beam is intense enough</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Has no relationship to frequency</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> Below a threshold frequency, no electrons are ejected — regardless of intensity. This proved that energy comes in fixed packets (photons). Only a photon with enough individual energy (E = hν) can eject an electron.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q14</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which set of quantum numbers is NOT allowed?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> n=2, l=1, mₗ=0, mₛ=+½</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> n=3, l=2, mₗ=−2, mₛ=−½</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> n=1, l=0, mₗ=0, mₛ=+½</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> n=2, l=2, mₗ=1, mₛ=+½</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Not allowed.</strong> The rule is l can only range from 0 to n−1. For n=2, l can be 0 or 1 — but not 2. Having l=2 with n=2 violates the quantum number rules.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q15</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following is the correct electron configuration for chromium (Cr, Z=24)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> [Ar] 3d⁴ 4s²</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> [Ar] 3d⁵ 4s¹</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> [Ar] 3d⁶ 4s⁰</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> [Ar] 4s² 4p⁴</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — [Ar] 3d⁵ 4s¹.</strong> Chromium is an anomalous configuration. A half-filled d subshell (3d⁵) is particularly stable, so one electron migrates from 4s² to 3d, giving 3d⁵ 4s¹ instead of the expected 3d⁴ 4s².</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q16</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">According to the Heisenberg Uncertainty Principle, which pair of properties cannot be simultaneously known with precision?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Mass and charge</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Energy and charge</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Position and momentum</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Spin and mass</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Position and momentum.</strong> Δx · Δp ≥ h/4π. The more precisely you measure where a particle is, the less precisely you can know how fast it's moving — and vice versa. This is not a measurement limitation; it's a fundamental property of quantum systems.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q17</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The shape of a p orbital (l = 1) is best described as:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Dumbbell-shaped, oriented along an axis</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Perfectly spherical</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Cloverleaf-shaped</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Donut-shaped with a node at the center</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Dumbbell-shaped.</strong> l=0 is spherical (s orbital). l=1 is dumbbell-shaped (p orbital), with three orientations (px, py, pz). l=2 is the cloverleaf (d orbital). The angular momentum quantum number l determines orbital shape.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: PERIODIC TRENDS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">📊</div>
+      <div>
+        <span class="practice-section-title">Periodic Trends</span>
+        <span class="practice-section-tag" style="background:#6b4c7a;">Periodic</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q18</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following correctly describes the trend in atomic radius across Period 3 (Na → Cl)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Increases, because more electrons are added</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Stays the same, because all atoms are in the same period</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Increases, because nuclear charge decreases</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Decreases, because increasing nuclear charge pulls electrons closer</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D.</strong> Across a period, protons are added to the nucleus, increasing the positive charge. This stronger pull draws the electron cloud inward, shrinking atomic radius despite the addition of electrons to the same shell.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q19</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Why does phosphorus (P) have a higher first ionization energy than sulfur (S), despite S being further right on the periodic table?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Phosphorus has more protons</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Phosphorus has a half-filled 3p³ subshell, which is extra stable</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Sulfur's electrons are more shielded</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Phosphorus is a larger atom</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> P has a exactly half-filled 3p³ subshell — one electron per orbital, no forced pairing. This configuration is extra stable. Sulfur's 3p⁴ forces two electrons to share an orbital; that paired electron experiences extra repulsion and is easier to remove, lowering S's IE below P's.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q20</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In an isoelectronic series — Na⁺, Mg²⁺, and Al³⁺ — all have 10 electrons. Which ion is the smallest?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Na⁺ (11 protons)</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Mg²⁺ (12 protons)</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Al³⁺ (13 protons)</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> They are all the same size</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Al³⁺.</strong> When ions are isoelectronic (same electron count), the one with the most protons has the greatest nuclear charge pulling the same 10 electrons inward. More protons = smaller radius. Al³⁺ has 13 protons vs. 12 for Mg²⁺ and 11 for Na⁺.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q21</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which element has the highest electronegativity on the Pauling scale?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Fluorine (F)</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Oxygen (O)</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Nitrogen (N)</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Chlorine (Cl)</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Fluorine.</strong> Fluorine has an electronegativity of 4.0 on the Pauling scale — the highest of any element. The order to remember: F (4.0) > O (3.5) > Cl (3.2) > N (3.0). These are the top electronegative elements and the driving force behind polar bonds and hydrogen bonding.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: MOLECULAR GEOMETRY & BONDING -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🔷</div>
+      <div>
+        <span class="practice-section-title">Molecular Geometry &amp; Bonding</span>
+        <span class="practice-section-tag" style="background:#6b4c7a;">Molecular</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q22</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Water (H₂O) has 4 electron domains around oxygen. What is its molecular geometry?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Tetrahedral</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Bent</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Linear</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Trigonal planar</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Bent.</strong> Oxygen has 4 electron domains (2 bonding pairs to H, 2 lone pairs). The electron geometry is tetrahedral, but molecular geometry only describes where the atoms are — and the 2 lone pairs are invisible in the shape name. With 2 bonds and 2 lone pairs: bent, with a bond angle compressed below 109.5° to about 104.5°.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q23</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In Valence Bond Theory, a double bond consists of:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Two sigma (σ) bonds</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Two pi (π) bonds</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> One pi (π) bond only</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> One sigma (σ) bond and one pi (π) bond</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — 1σ + 1π.</strong> A single bond is always one σ bond (head-on orbital overlap). A double bond adds one π bond on top (side-by-side p orbital overlap). A triple bond = 1σ + 2π. The first bond between any two atoms is always sigma; additional bonds are always pi.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q24</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Carbon in methane (CH₄) is sp³ hybridized. What bond angle does this produce?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 109.5°</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 120°</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 180°</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 90°</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — 109.5°.</strong> sp³ hybridization = 4 electron domains pointing to the corners of a tetrahedron. This gives bond angles of 109.5°. sp² = 3 domains, 120° (trigonal planar). sp = 2 domains, 180° (linear). The number in the hybridization label tells you how many domains.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q25</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Molecular Orbital Theory predicts that O₂ is paramagnetic. This means O₂:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Has no unpaired electrons and is repelled by magnets</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Has a bond order of 1</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Has two unpaired electrons in degenerate π* antibonding orbitals</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Cannot form any bonds</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> When MOT fills O₂'s molecular orbitals, two electrons end up in degenerate (equal-energy) π* antibonding orbitals — one in each, by Hund's Rule. Unpaired electrons = paramagnetism (attracted to magnetic fields). This is something Lewis structures and VBT completely failed to predict, making it one of MOT's greatest early successes.</div>
+    </div>
+  </div>
+
+</div><!-- end #practicePage -->
+
+<footer>Chemistry · Senior High School · Click any topic to review</footer>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <span class="modal-tag" id="modalTag"></span>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-quarter" id="modalQuarter"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+  </div>
+</div>
+
+<script>
+  // ── Reviewer descriptions ──────────────────────────────────────────────────
+  // Descriptions filled from reviewer PDFs + online sources.
+  const descriptions = {
+
+    "Atoms, Molecules & Ions":
+      "Matter is anything that has mass and takes up space — it shows up as a pure substance (element or compound) or a mixture (homogeneous or heterogeneous). Elements are made of only one kind of atom; compounds are two or more elements chemically combined in fixed ratios. When atoms lose or gain electrons they become ions: lose electrons → positive cation, gain electrons → negative anion. The atomic number tells you how many protons an atom has (and equals the number of electrons in a neutral atom); the mass number is protons + neutrons. Ionic compounds form between a metal and a nonmetal through electron transfer. Covalent compounds form between two nonmetals through electron sharing.",
+
+    "Naming of Ionic Compounds":
+      "Ionic compounds are named cation first, then anion. The cation keeps its element name — but if it's a transition metal that can carry more than one charge (like iron), you add a Roman numeral in parentheses to specify which one: Fe²⁺ is iron(II), Fe³⁺ is iron(III). The anion, if it's a single element, gets its name shortened and the suffix -ide added: Cl⁻ → chloride, O²⁻ → oxide. If the anion is a polyatomic ion (like NO₃⁻ or SO₄²⁻), you just use the polyatomic ion's name as-is — those names must be memorized. One important rule: never use Greek number prefixes (mono-, di-, tri-) when naming ionic compounds. The formula balances charge automatically, so there's no need to indicate how many of each ion are present in the name.",
+
+    "Naming of Covalent Compounds":
+      "Covalent (molecular) compounds are made of two nonmetals sharing electrons, and they get named using Greek number prefixes to show exactly how many atoms of each element are present. The first element in the formula is named as-is; the second gets its ending replaced with -ide. The prefixes go: mono- (1), di- (2), tri- (3), tetra- (4), penta- (5), hexa- (6), hepta- (7), octa- (8), nona- (9), deca- (10). Skip mono- on the first element (CCl₄ is carbon tetrachloride, not monocarbon tetrachloride), but always use it on the second if there's only one (CO is carbon monoxide). When a prefix ends in a vowel and the element name starts with a vowel, drop the extra vowel to avoid awkward pronunciation — monooxide becomes monoxide, tetraoxide becomes tetroxide.",
+
+    "Naming of Acids & Bases":
+      "Binary acids are made of hydrogen + one other nonmetal (no oxygen). To name them: start with 'Hydro-', take the root of the nonmetal's name, add '-ic', then write 'Acid'. So HCl dissolved in water becomes hydrochloric acid. Oxyacids contain hydrogen + a polyatomic ion with oxygen. The naming rule depends on the suffix of the polyatomic ion: if the ion ends in -ate, drop it and add -ic acid (sulfate → sulfuric acid); if the ion ends in -ite, drop it and add -ous acid (sulfite → sulfurous acid). For the halogen oxyacids, the same rule applies but you also carry the per- or hypo- prefix along: perchlorate → perchloric acid, hypochlorite → hypochlorous acid.",
+
+    "Balancing Chemical Equations":
+      "A chemical equation shows reactants on the left and products on the right of an arrow. Balancing it means making sure the same number of each type of atom appears on both sides — this is required by the Law of Conservation of Mass, which states that matter cannot be created or destroyed. You balance equations by adjusting coefficients (the big numbers in front of formulas), never by changing subscripts inside a formula (that would change the identity of the substance entirely). The general approach: write the unbalanced equation with correct formulas, tally atoms on each side, then adjust coefficients one element at a time — usually starting with elements that appear in only one compound on each side. A helpful rule of thumb: save hydrogen and oxygen for last, since they often appear in multiple places.",
+
+    "Types of Reactions":
+      "There are five main types of chemical reactions. Synthesis (combination): two or more reactants combine to form one product — A + B → AB. Decomposition: one compound breaks down into two or more simpler products — AB → A + B. Single displacement (substitution): one element replaces another in a compound — A + BC → AC + B; only occurs if A is more reactive than the element it displaces. Double displacement (metathesis): two compounds swap their ions — AB + CD → AD + CB; often produces a precipitate, water, or gas. Combustion: a hydrocarbon (or other fuel) reacts with O₂ to produce CO₂ and H₂O; complete combustion requires sufficient oxygen. Combustion is technically a subset of synthesis or decomposition depending on framing, but it's treated as its own category because of how common and important it is.",
+
+    "Atomic and Formula Mass":
+      "The atomic mass of an element (found on the periodic table) is a weighted average of all its naturally occurring isotopes, expressed in atomic mass units (amu). For a molecule or compound, you calculate the formula mass by adding up the atomic masses of every atom in the formula — multiply each element's atomic mass by the number of times it appears, then sum them all. For example, water (H₂O) has a formula mass of 2(1.008) + 15.999 = 18.015 amu. For ionic compounds, the same calculation applies to the formula unit — it's technically called formula mass rather than molecular mass, since ionic compounds don't exist as discrete molecules. The formula mass in amu is numerically equal to the molar mass in grams per mole, which is what makes it so useful for lab calculations.",
+
+    "Mole–Mass Concept":
+      "A mole is chemistry's counting unit for absurdly large collections of tiny things. One mole = 6.022 × 10²³ particles (atoms, molecules, ions — whatever you're counting). This number is Avogadro's number. The reason it's useful: the molar mass of any substance (in g/mol) is numerically equal to its formula mass in amu. So one mole of carbon-12 has a mass of exactly 12 g. One mole of water (formula mass ≈ 18 amu) has a molar mass of ≈ 18 g/mol. This bridge between the microscopic world (individual atoms) and the macroscopic world (grams you can weigh on a lab balance) is the whole point of the mole concept. Think of it like a 'chemist's dozen' — instead of 12, it's 6.022 × 10²³.",
+
+    "Conversions between Mass and Moles":
+      "The mole is your conversion factor between mass (grams, something measurable) and amount of substance (moles, something useful for stoichiometry). To convert grams to moles: divide the mass by the molar mass (g/mol). To convert moles to grams: multiply by the molar mass. To convert moles to particles: multiply by Avogadro's number (6.022 × 10²³). To go from particles to moles: divide by Avogadro's number. The key is always dimensional analysis — set up the conversion so units cancel cleanly. For example: 36 g of water ÷ 18.02 g/mol = 2 mol of water. These conversions are the backbone of every stoichiometry calculation you will ever do.",
+
+    "Empirical & Molecular Formulae from Analysis":
+      "The empirical formula is the simplest whole-number ratio of atoms in a compound; the molecular formula is the actual count per molecule. To find the empirical formula from percent composition: assume a 100 g sample (so percentages become grams), convert each element's mass to moles by dividing by its molar mass, then divide all mole values by the smallest one to get the ratio. If the ratios aren't whole numbers, multiply through by whatever integer clears the decimals (×2 if you have ~0.5, ×3 for ~0.33 or ~0.67, etc.). The 0.05 rule: if a ratio lands within 0.05 of a whole number, round it; otherwise you need to multiply. To get the molecular formula from the empirical formula, divide the given molar mass by the empirical formula mass — the result is the multiplier n. Multiply every subscript by n.",
+
+    "Limiting Reagents":
+      "In a reaction with multiple reactants, the limiting reagent is the one that runs out first and therefore determines the maximum amount of product that can be formed. The excess reagent is whatever's left over. To identify the limiting reagent: convert all reactant masses to moles, then divide each by its stoichiometric coefficient in the balanced equation. The reactant with the smallest resulting value is the limiting reagent. All theoretical yield calculations must be based on the limiting reagent — once it's gone, the reaction stops, no matter how much of the other reactants remain. A common analogy: if a recipe requires 2 slices of bread per sandwich, having 10 slices of bread but only 3 pieces of cheese means cheese limits you to 3 sandwiches.",
+
+    "Percent Yield":
+      "In theory, a perfectly efficient reaction would produce exactly as much product as stoichiometry predicts — that's the theoretical yield. In practice, things go wrong: product gets lost during transfer, reactions don't go to completion, side reactions occur, or impurities interfere. The amount you actually collect is the actual yield. Percent yield measures how close you got to the theoretical maximum: % yield = (actual yield ÷ theoretical yield) × 100. A yield of 80–90% is considered good to excellent in a lab setting. A yield above 100% usually means the product wasn't fully dried and still contains solvent. The goal in industrial chemistry is to push percent yield as close to 100% as possible, since wasted product means wasted money and unnecessary chemical waste.",
+
+    "History of the Atomic Model":
+      "The atomic model has been revised several times as new experimental evidence came in. Dalton (early 1800s): atoms are indivisible solid spheres; each element has its own unique kind. Thomson (1897): discovered the electron using cathode ray tubes — proposed the 'plum pudding model,' where electrons are embedded throughout a diffuse positive sphere. Rutherford (1911): fired alpha particles at gold foil; most passed through, but some bounced back sharply. Conclusion: atoms are mostly empty space, with a tiny, dense, positively charged nucleus at the center. Bohr (1913): electrons orbit the nucleus in fixed energy levels (like planets around the sun); they emit or absorb light only when jumping between levels. Schrödinger/Quantum Model (1926): electrons don't orbit in fixed paths — they exist as probability clouds described by wave functions.",
+
+    "Quantum Mechanical Model of the Atom":
+      "The quantum mechanical model replaces Bohr's neat circular orbits with a more honest description: we can't know exactly where an electron is, only the probability of finding it in a given region. That region of probability is called an orbital — a 3D cloud shaped by a mathematical wave function, ψ. The square of the wave function (ψ²) gives the probability density at any point in space. Electrons don't travel defined paths; they exist in fuzzy probability distributions that look different depending on their energy level and angular momentum. This model uses four quantum numbers (n, l, mₗ, mₛ) to fully describe the state of any electron in an atom, and it accurately explains atomic spectra, chemical bonding, and the structure of the periodic table in ways the Bohr model simply couldn't.",
+
+    "Wave–Particle Duality":
+      "Light behaves as both a wave and a particle depending on how you look at it. As a wave: it has frequency (ν) and wavelength (λ), related by c = λν (where c is the speed of light, 3.00 × 10⁸ m/s). As a particle: it travels in discrete packets called photons, each carrying energy E = hν, where h is Planck's constant (6.626 × 10⁻³⁴ J·s). The photoelectric effect proved the particle side — light below a minimum frequency can't eject electrons from a metal no matter how bright it is; only photons with enough individual energy can do it. de Broglie extended the idea to matter: if light has particle properties, particles should have wave properties too. His equation λ = h/mv says every moving object has an associated wavelength — though for macroscopic objects it's immeasurably small, for electrons it's significant.",
+
+    "Heisenberg Uncertainty Principle":
+      "The Heisenberg Uncertainty Principle states that you cannot simultaneously know both the exact position and the exact momentum (or velocity) of a particle — the more precisely you pin down one, the more uncertain the other becomes. Mathematically: Δx · Δp ≥ h/4π. This isn't a limitation of our instruments; it's a fundamental feature of quantum mechanics. The act of measuring a particle's position disturbs its momentum, and vice versa. This is why the Bohr model's idea of electrons traveling in precise, fixed orbits is wrong — you simply cannot have an electron with a defined position AND a defined velocity at the same time. Instead of orbits, we describe regions of space (orbitals) where an electron is likely to be found.",
+
+    "Schrödinger's Equation (conceptual)":
+      "Schrödinger's equation is the quantum mechanical equivalent of Newton's laws — it describes how the quantum state of a system (represented by the wave function ψ) evolves in space and energy. You don't need to solve it mathematically in this course, but conceptually: the equation takes the potential energy of the system (e.g., the attraction between a nucleus and an electron) and outputs allowed wave functions and their corresponding energies. Each solution ψ describes one possible state for an electron. The square of the wave function, |ψ|², gives the probability density — the likelihood of finding the electron at any given point in space. This is where the idea of 'electron clouds' or probability clouds comes from. The shapes we call s, p, d, and f orbitals are all solutions to Schrödinger's equation for the hydrogen atom.",
+
+    "Orbitals & Probability Clouds":
+      "Orbitals are three-dimensional regions of space where there's a high probability of finding an electron. Their shape is determined by the angular momentum quantum number l: l = 0 → s orbital (spherical), l = 1 → p orbital (dumbbell-shaped, oriented along x, y, or z), l = 2 → d orbital (more complex, usually cloverleaf), l = 3 → f orbital (even more complex). Each orbital can hold a maximum of 2 electrons with opposite spins (Pauli exclusion principle). The 'cloud' you see in diagrams represents the region where the electron spends ~90% of its time — not a fixed path, but a statistical distribution. s orbitals are the most penetrating (they have density right at the nucleus), which is why s electrons feel more of the nuclear charge than p or d electrons at the same energy level.",
+
+    "Quantum Numbers":
+      "Every electron in an atom is described by four quantum numbers that together uniquely identify its state — no two electrons in the same atom can share all four (Pauli exclusion principle). The principal quantum number n (1, 2, 3…) describes the energy level and general distance from the nucleus. The angular momentum quantum number l (0 to n−1) describes the shape of the orbital: l=0 is s, l=1 is p, l=2 is d, l=3 is f. The magnetic quantum number mₗ (ranging from −l to +l) describes the orbital's orientation in space — for example, the three p orbitals (px, py, pz) correspond to mₗ = −1, 0, +1. The spin quantum number mₛ can be +½ or −½, representing the two possible spin states of an electron (often called 'spin up' and 'spin down').",
+
+    "Electron Configuration":
+      "Electron configuration describes how electrons are arranged among an atom's orbitals. Three rules govern the filling: Aufbau principle — fill orbitals from lowest energy to highest (use the diagonal mnemonic: 1s, 2s, 2p, 3s, 3p, 4s, 3d…). Pauli Exclusion — each orbital holds at most 2 electrons, and they must have opposite spins. Hund's Rule — when filling orbitals of equal energy (degenerate), put one electron in each before pairing up (maximizes unpaired spins). The periodic table's blocks directly reflect this: s-block fills s orbitals, p-block fills p, d-block fills d, f-block fills f. Condensed notation uses the previous noble gas in brackets: Na is [Ne] 3s¹. Notable anomalies: Cr is [Ar] 3d⁵ 4s¹ and Cu is [Ar] 3d¹⁰ 4s¹ — a half-filled or completely filled d subshell is extra stable, so one electron migrates from 4s to 3d.",
+
+    "Atomic Radius":
+      "Atomic radius is the measure of the size of an atom — typically defined as half the distance between two adjacent nuclei of the same element. Trend across a period (left to right): atomic radius decreases. As you add protons, the nuclear charge (Z) increases and pulls the electrons in tighter, even though you're also adding electrons to the same shell. The increase in nuclear pull wins out, so atoms shrink. Trend down a group: atomic radius increases. Each new period adds another electron shell, pushing the outermost electrons further from the nucleus. The smallest atom is helium (or hydrogen, depending on the definition), and the largest naturally occurring atom is francium. These trends directly influence reactivity, ionization energy, and electronegativity.",
+
+    "Ionic Radius":
+      "When an atom forms an ion, its radius changes. Cations (positive ions) are smaller than their parent atoms — removing electrons reduces electron-electron repulsion and lets the remaining electrons be pulled closer to the nucleus. Anions (negative ions) are larger than their parent atoms — adding electrons increases electron-electron repulsion, which causes the electron cloud to expand. Across a period, ionic radii generally decrease for cations and increase for anions, following the same nuclear charge logic as atomic radius. Down a group, ionic radii increase as additional electron shells are added. For isoelectronic species (ions with the same number of electrons — like Na⁺, Mg²⁺, and F⁻, which all have 10 electrons), the one with the most protons has the smallest radius, because more nuclear charge is pulling the same number of electrons closer.",
+
+    "Ionization Energy":
+      "Ionization energy (IE) is the energy required to remove one electron from a neutral atom in the gas phase. The first IE removes the outermost (least tightly held) electron; the second IE removes the next one, and so on — successive IEs always increase. Trend across a period (left to right): IE increases, because greater nuclear charge holds electrons more tightly. Trend down a group: IE decreases, because the outermost electron is further from the nucleus and more shielded by inner electrons. Notable exception: phosphorus (P) has a higher IE than sulfur (S), even though S is further right. Why? P has a half-filled 3p³ subshell, which is extra stable — those three electrons are each in their own orbital with no forced pairing. Sulfur has to pair up one electron in its 3p⁴, and that paired electron is easier to remove due to electron-electron repulsion.",
+
+    "Electron Affinity":
+      "Electron affinity (EA) is the energy change when a neutral gaseous atom gains an electron to form an anion. A large, negative EA means the atom strongly wants an electron (releases a lot of energy gaining one). General trend: EA increases in magnitude moving right across a period and up a group — same reasoning as ionization energy, since both relate to how strongly the nucleus attracts electrons. Fluorine and chlorine have the highest electron affinities among the halogens (chlorine actually has a slightly higher EA than fluorine, because fluorine's small size causes electron-electron repulsion in the already-crowded 2p shell). Noble gases and nitrogen have near-zero or positive EAs — full or half-filled subshells make them reluctant to accept electrons. Nobelium (No) has the lowest known electron affinity.",
+
+    "Metallic Character":
+      "Metallic character refers to how easily an atom loses electrons — and therefore how 'metal-like' it behaves. Metals tend to have low ionization energies and low electronegativities; they lose electrons easily to form cations. Trend across a period (left to right): metallic character decreases, because increasing nuclear charge holds electrons more tightly, making them harder to lose. Trend down a group: metallic character increases, because outer electrons are farther from the nucleus and more shielded by inner shells, so they're lost more easily. The most metallic elements are in the bottom-left of the periodic table (cesium, francium). The least metallic (most nonmetallic) is fluorine. The staircase line on the periodic table separates metals from nonmetals; elements along it are metalloids, which show intermediate behavior.",
+
+    "Electronegativity":
+      "Electronegativity is a measure of how strongly an atom attracts shared electrons in a covalent bond. It was quantified by Linus Pauling on a scale from ~0.7 (francium) to 4.0 (fluorine). Trend across a period (left to right): electronegativity increases — more protons pull shared electrons more strongly. Trend down a group: electronegativity decreases — outer electrons are farther away and more shielded, so the nucleus has less pull on bonding electrons. The big three electronegative elements are nitrogen (3.0), oxygen (3.5), and fluorine (4.0) — memorized as N, O, F. When two atoms in a bond have a large electronegativity difference (≥ ~1.7 on the Pauling scale), the bond is considered ionic. A moderate difference means a polar covalent bond; no difference means nonpolar covalent.",
+
+    "VSEPR Theory":
+      "VSEPR (Valence Shell Electron Pair Repulsion) theory predicts the 3D shape of a molecule based on one simple idea: electron pairs around a central atom repel each other and arrange themselves as far apart as possible to minimize that repulsion. You count all electron domains around the central atom — each single bond, double bond, triple bond, and lone pair counts as one domain. The electron geometry describes where all domains point; the molecular geometry describes only where the atoms are. Lone pairs take up more space than bonding pairs and compress bond angles slightly below the ideal. Common shapes: 2 domains → linear (180°), 3 domains → trigonal planar (120°) or bent, 4 domains → tetrahedral (109.5°), trigonal pyramidal, or bent. The key skill is distinguishing electron geometry from molecular geometry — water (H₂O) has tetrahedral electron geometry but bent molecular geometry because two of the four domains are lone pairs.",
+
+    "Valence Bond Theory (VBT)":
+      "Valence Bond Theory explains covalent bonding as the overlap of half-filled atomic orbitals from two atoms, creating a shared region of electron density that holds the atoms together. Head-on overlap of orbitals along the internuclear axis creates a sigma (σ) bond — all single bonds are sigma bonds. Side-by-side overlap of parallel p orbitals creates a pi (π) bond — these only form in addition to a sigma bond, so double bonds = 1σ + 1π, and triple bonds = 1σ + 2π. To explain the actual bond angles seen in molecules (which don't match raw orbital geometry), VBT introduces hybridization: atomic orbitals mix to form new hybrid orbitals with different shapes and orientations. Carbon in methane uses sp³ hybridization (tetrahedral, 109.5°); in ethene, sp² (trigonal planar, 120°); in ethyne, sp (linear, 180°). The number of electron domains around an atom tells you its hybridization.",
+
+    "Molecular Orbital Theory (MOT)":
+      "Molecular Orbital Theory takes a different approach than VBT — instead of assigning electrons to bonds between specific pairs of atoms, it treats electrons as belonging to the whole molecule. Atomic orbitals combine mathematically (via Linear Combination of Atomic Orbitals, LCAO) to form molecular orbitals (MOs) that extend over the entire molecule. When two atomic orbitals combine in phase (constructive interference), they form a bonding MO — lower energy, electron density concentrated between nuclei, stabilizes the molecule. Out-of-phase combination (destructive interference) creates an antibonding MO (marked with *) — higher energy, a node between nuclei, destabilizes the molecule. Electrons fill MOs from lowest to highest energy (Aufbau), obeying Pauli exclusion and Hund's rules. Bond order = (bonding electrons − antibonding electrons) / 2. MOT's biggest win: it correctly predicts that O₂ is paramagnetic (has two unpaired electrons) — something VBT completely fails to explain.",
+  };
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const fieldColors  = { atomic:"#4a7c6f", stoich:"#7a5c3a", quantum:"#3d5a80", periodic:"#6b4c7a" };
+  const fieldLabels  = { atomic:"Atomic", stoich:"Stoichiometry", quantum:"Quantum", periodic:"Periodic / Molecular" };
+  const quarterLabels= { Q1:"Quarter 1 · Pre-Stoichiometry", Q2:"Quarter 2 · Stoichiometry", Q3:"Quarter 3 · Stoich + Quantum", Q4:"Quarter 4 · Periodic & Molecular" };
+
+  const backdrop   = document.getElementById('modalBackdrop');
+  const modalTag   = document.getElementById('modalTag');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalQtr   = document.getElementById('modalQuarter');
+  const modalDesc  = document.getElementById('modalDesc');
+
+  function openModal(title, field, quarter) {
+    const desc = descriptions[title];
+    modalTag.textContent = fieldLabels[field] || field;
+    modalTag.style.background = fieldColors[field] || '#888';
+    modalTitle.textContent = title;
+    modalQtr.textContent = quarterLabels[quarter] || quarter;
+    modalDesc.innerHTML = (!desc || desc === 'placeholder')
+      ? `<span class="modal-placeholder">📝 Reviewer description coming soon!</span>`
+      : desc;
+    backdrop.classList.add('open');
+  }
+
+  document.getElementById('modalClose').addEventListener('click', () => backdrop.classList.remove('open'));
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('open'); });
+
+  document.querySelectorAll('.topic-name').forEach(el => {
+    el.addEventListener('click', () => {
+      const item = el.closest('.topic-item');
+      openModal(item.dataset.title, item.dataset.field, item.dataset.q);
+    });
+  });
+
+  // ── Quarter filter & search ──
+  const quarters = document.querySelectorAll('.quarter-pill');
+  const cards    = document.querySelectorAll('.field');
+  const search   = document.getElementById('searchBox');
+  let activeQ = 'all';
+
+  function applyFilters() {
+    const term = search.value.toLowerCase().trim();
+    cards.forEach(card => {
+      const topics = card.querySelectorAll('.topic-item');
+      topics.forEach(t => {
+        const topicQ = t.dataset.q;
+        const qMatch = activeQ === 'all' || topicQ === activeQ;
+        const termMatch = !term || t.textContent.toLowerCase().includes(term);
+        t.style.display = (qMatch && termMatch) ? '' : 'none';
+        t.style.opacity = '1';
+      });
+      const anyVisible = Array.from(topics).some(t => t.style.display !== 'none');
+      card.classList.toggle('dimmed', !anyVisible);
+    });
+  }
+
+  quarters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      quarters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeQ = btn.dataset.q;
+      applyFilters();
+    });
+  });
+  search.addEventListener('input', applyFilters);
+
+  // ── Page tab switching ────────────────────────────────────────────────────
+  const tabMap      = document.getElementById('tabMap');
+  const tabPractice = document.getElementById('tabPractice');
+  const mapPage     = document.getElementById('mapPage');
+  const practicePage= document.getElementById('practicePage');
+
+  tabMap.addEventListener('click', () => {
+    tabMap.classList.add('active'); tabPractice.classList.remove('active');
+    mapPage.classList.remove('hidden'); practicePage.classList.remove('visible');
+  });
+  tabPractice.addEventListener('click', () => {
+    tabPractice.classList.add('active'); tabMap.classList.remove('active');
+    practicePage.classList.add('visible'); mapPage.classList.add('hidden');
+  });
+
+  // ── Practice exercise interactions ───────────────────────────────────────
+  document.querySelectorAll('.question-card').forEach(card => {
+    const correct    = card.dataset.answer;
+    const choices    = card.querySelectorAll('.choice');
+    const revealBtn  = card.querySelector('.reveal-btn');
+    const explanation= card.querySelector('.explanation');
+    let answered     = false;
+
+    choices.forEach(choice => {
+      choice.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        choices.forEach(c => {
+          c.classList.remove('selected');
+          if (c.dataset.val === correct) c.classList.add('correct');
+          else c.classList.add('wrong');
+        });
+        explanation.classList.add('visible');
+        revealBtn.disabled = true;
+      });
+    });
+
+    revealBtn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        if (c.dataset.val === correct) c.classList.add('correct');
+        else c.classList.add('wrong');
+      });
+      explanation.classList.add('visible');
+      revealBtn.disabled = true;
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Map of Physics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #09060f;
+      --surface:   #110d1e;
+      --surface2:  #1a1430;
+      --border:    rgba(160,120,255,0.18);
+      --border2:   rgba(160,120,255,0.35);
+      --purple:    #a078ff;
+      --purple2:   #c4a0ff;
+      --violet:    #7b4fff;
+      --text:      #e8e0ff;
+      --muted:     #7a6a9a;
+      --dim:       #3a2e55;
+
+      --mechanics:    #6ec6ff;
+      --mechanics-bg: rgba(110,198,255,0.07);
+      --grav:         #ff9f6e;
+      --grav-bg:      rgba(255,159,110,0.07);
+      --thermo:       #ff6eb0;
+      --thermo-bg:    rgba(255,110,176,0.07);
+      --waves:        #6effcc;
+      --waves-bg:     rgba(110,255,204,0.07);
+      --electric:     #ffe46e;
+      --electric-bg:  rgba(255,228,110,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 80px;
+      overflow-x: hidden;
+    }
+
+    /* ── Starfield canvas ── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+
+    /* everything above the canvas */
+    header, .page-tabs, #mapPage, #practicePage, .modal-backdrop {
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 64px 40px 44px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(123,79,255,0.12) 0%, transparent 100%);
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: 'v = u + at  ·  F = ma  ·  E = mc²  ·  p = mv  ·  λ = h/p  ·  F = kq₁q₂/r²';
+      position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+      font-size: 10px; letter-spacing: 0.2em; color: var(--dim); white-space: nowrap; overflow: hidden;
+    }
+    .label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 300; font-size: clamp(2.4rem, 5.5vw, 4rem);
+      line-height: 1.05; color: var(--text);
+      text-shadow: 0 0 60px rgba(160,120,255,0.4);
+    }
+    h1 em {
+      font-style: italic; font-weight: 600;
+      background: linear-gradient(135deg, var(--purple2), #ff9fff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.08em; }
+
+    /* ── Tabs ── */
+    .page-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .page-tab {
+      padding: 14px 28px; font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+      color: var(--muted); user-select: none;
+    }
+    .page-tab:hover { color: var(--text); }
+    .page-tab.active { color: var(--purple2); border-bottom-color: var(--purple); }
+
+    /* ── Quarter nav ── */
+    .quarters {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface); overflow-x: auto;
+    }
+    .quarter-pill {
+      flex: 1; min-width: 150px; padding: 13px 18px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: background 0.2s; text-align: center;
+      user-select: none; color: var(--muted);
+    }
+    .quarter-pill:last-child { border-right: none; }
+    .quarter-pill:hover { background: rgba(160,120,255,0.06); color: var(--text); }
+    .quarter-pill.active {
+      background: rgba(160,120,255,0.14);
+      color: var(--purple2);
+      box-shadow: inset 0 -2px 0 var(--purple);
+    }
+    .quarter-pill span { display: block; font-size: 8px; opacity: 0.55; margin-top: 3px; }
+
+    /* ── Search ── */
+    .search-wrap { padding: 28px 32px 0; max-width: 1200px; margin: 0 auto; }
+    .search-wrap input {
+      width: 100%; max-width: 440px; padding: 10px 16px;
+      font-family: 'Space Mono', monospace; font-size: 12px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 4px; outline: none; color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(160,120,255,0.15); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    /* ── Card grid ── */
+    main {
+      max-width: 1200px; margin: 0 auto; padding: 32px 32px 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px;
+    }
+
+    .field {
+      border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      background: var(--surface);
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+      animation: rise 0.45s ease both;
+    }
+    .field:hover {
+      border-color: var(--border2);
+      box-shadow: 0 0 28px rgba(160,120,255,0.12), 0 4px 24px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .field.dimmed { display: none; }
+    .field:nth-child(1){animation-delay:.05s} .field:nth-child(2){animation-delay:.10s}
+    .field:nth-child(3){animation-delay:.15s} .field:nth-child(4){animation-delay:.20s}
+    .field:nth-child(5){animation-delay:.25s}
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    .field-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 13px;
+    }
+    .field-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .field-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 1rem; line-height: 1.25; color: var(--text);
+    }
+    .field-tag {
+      display: inline-block; margin-top: 5px; font-size: 8px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* field colors */
+    .field[data-field="mechanics"]  .field-header { background: var(--mechanics-bg); }
+    .field[data-field="mechanics"]  .field-tag    { background: rgba(110,198,255,0.15); color: var(--mechanics); border: 1px solid rgba(110,198,255,0.3); }
+    .field[data-field="grav"]       .field-header { background: var(--grav-bg); }
+    .field[data-field="grav"]       .field-tag    { background: rgba(255,159,110,0.15); color: var(--grav); border: 1px solid rgba(255,159,110,0.3); }
+    .field[data-field="thermo"]     .field-header { background: var(--thermo-bg); }
+    .field[data-field="thermo"]     .field-tag    { background: rgba(255,110,176,0.15); color: var(--thermo); border: 1px solid rgba(255,110,176,0.3); }
+    .field[data-field="waves"]      .field-header { background: var(--waves-bg); }
+    .field[data-field="waves"]      .field-tag    { background: rgba(110,255,204,0.15); color: var(--waves); border: 1px solid rgba(110,255,204,0.3); }
+    .field[data-field="electric"]   .field-header { background: var(--electric-bg); }
+    .field[data-field="electric"]   .field-tag    { background: rgba(255,228,110,0.15); color: var(--electric); border: 1px solid rgba(255,228,110,0.3); }
+
+    .topic-list { padding: 8px 20px 14px; list-style: none; }
+    .topic-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      border-bottom: 1px solid rgba(160,120,255,0.07);
+      font-size: 12px; line-height: 1.45;
+    }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .field[data-field="mechanics"]  .topic-dot { background: var(--mechanics); box-shadow: 0 0 5px var(--mechanics); }
+    .field[data-field="grav"]       .topic-dot { background: var(--grav);      box-shadow: 0 0 5px var(--grav); }
+    .field[data-field="thermo"]     .topic-dot { background: var(--thermo);    box-shadow: 0 0 5px var(--thermo); }
+    .field[data-field="waves"]      .topic-dot { background: var(--waves);     box-shadow: 0 0 5px var(--waves); }
+    .field[data-field="electric"]   .topic-dot { background: var(--electric);  box-shadow: 0 0 5px var(--electric); }
+
+    .topic-name {
+      cursor: pointer; flex: 1; color: var(--text);
+      border-bottom: 1px dashed transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .field[data-field="mechanics"]  .topic-name:hover { color: var(--mechanics);  border-color: var(--mechanics); }
+    .field[data-field="grav"]       .topic-name:hover { color: var(--grav);       border-color: var(--grav); }
+    .field[data-field="thermo"]     .topic-name:hover { color: var(--thermo);     border-color: var(--thermo); }
+    .field[data-field="waves"]      .topic-name:hover { color: var(--waves);      border-color: var(--waves); }
+    .field[data-field="electric"]   .topic-name:hover { color: var(--electric);   border-color: var(--electric); }
+
+    .topic-quarter {
+      font-size: 8px; letter-spacing: 0.12em; color: var(--muted);
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(5,3,12,0.75); backdrop-filter: blur(6px);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px; max-width: 480px; width: 100%;
+      padding: 32px 28px 28px; position: relative;
+      animation: popIn 0.22s ease;
+      box-shadow: 0 0 60px rgba(160,120,255,0.2), 0 20px 60px rgba(0,0,0,0.6);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-tag {
+      font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+      display: inline-block; margin-bottom: 14px;
+      font-family: 'Space Mono', monospace;
+    }
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 1.25rem;
+      line-height: 1.25; margin-bottom: 10px; color: var(--text);
+    }
+    .modal-quarter { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .modal-desc {
+      font-size: 12.5px; line-height: 1.8; color: #b8acd4;
+      border-top: 1px solid var(--border); padding-top: 16px;
+    }
+    .modal-placeholder { font-style: italic; color: var(--muted); font-size: 12px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 18px;
+      font-size: 20px; cursor: pointer; color: var(--muted);
+      background: none; border: none; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── Practice page ── */
+    #practicePage { display: none; max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+    #practicePage.visible { display: block; }
+    #mapPage.hidden { display: none; }
+
+    .practice-section { margin-bottom: 56px; }
+    .practice-section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .practice-section-icon { font-size: 22px; }
+    .practice-section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 1.15rem; color: var(--text);
+    }
+    .practice-section-tag {
+      font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 9px; border-radius: 20px; margin-left: 4px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .question-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 22px 24px; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .question-card:hover { border-color: var(--border2); }
+    .question-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .q-num { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .q-type {
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 1px 7px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted);
+    }
+    .question-text { font-size: 13px; line-height: 1.75; margin-bottom: 16px; color: var(--text); }
+    .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .choice {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+      font-size: 12px; line-height: 1.5; transition: all 0.15s; user-select: none;
+      color: var(--text);
+    }
+    .choice:hover { border-color: var(--purple); background: rgba(160,120,255,0.07); }
+    .choice.correct { border-color: var(--waves); background: rgba(110,255,204,0.07); color: var(--waves); }
+    .choice.wrong   { border-color: #ff5555;      background: rgba(255,85,85,0.07);   color: #ff8080; }
+    .choice-letter  { font-size: 9px; width: 18px; flex-shrink: 0; margin-top: 1px; opacity: 0.45; }
+    .choice.correct .choice-letter, .choice.wrong .choice-letter { opacity: 1; }
+
+    .reveal-btn {
+      margin-top: 14px; padding: 8px 18px;
+      font-family: 'Space Mono', monospace; font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid var(--border2); border-radius: 5px;
+      background: none; cursor: pointer; color: var(--purple2);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .reveal-btn:hover { background: rgba(160,120,255,0.1); box-shadow: 0 0 12px rgba(160,120,255,0.2); }
+    .reveal-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+    .explanation {
+      display: none; margin-top: 14px; padding: 14px 16px;
+      background: rgba(160,120,255,0.06); border-radius: 6px;
+      font-size: 12.5px; line-height: 1.75; color: #c4b8e8;
+      border-left: 3px solid var(--purple);
+    }
+    .explanation.visible { display: block; }
+
+    .back-btn {
+      position: fixed; top: 16px; left: 18px; z-index: 100;
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 20px;
+      background: rgba(160,120,255,0.12); border: 1px solid rgba(160,120,255,0.3);
+      color: #c0a0ff; font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; transition: background 0.15s, box-shadow 0.15s;
+    }
+    .back-btn:hover { background: rgba(160,120,255,0.22); box-shadow: 0 0 14px rgba(160,120,255,0.2); }
+
+    footer {
+      text-align: center; padding: 48px 20px 0;
+      font-size: 9px; letter-spacing: 0.2em; color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 20px 28px; }
+      main, .search-wrap { padding-left: 16px; padding-right: 16px; }
+      #practicePage { padding: 28px 16px 60px; }
+      .page-tab { padding: 12px 14px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<a class="back-btn" href="index.html">← Home</a>
+
+<header>
+  <p class="label">Curriculum Map · Grade 8 · Champaca</p>
+  <h1>The Map of <em>Physics</em></h1>
+  <p class="subtitle">Click any topic for a description · organized by field</p>
+</header>
+
+<div class="page-tabs">
+  <div class="page-tab active" id="tabMap">&#128203; Curriculum Map</div>
+  <div class="page-tab" id="tabPractice">&#9999;&#65039; Practice Exercises</div>
+</div>
+
+<div id="mapPage">
+
+  <nav class="quarters" id="quarterNav">
+    <div class="quarter-pill active" data-q="all">All Topics <span>4 quarters</span></div>
+    <div class="quarter-pill" data-q="Q1">Quarter 1 <span>Mechanics</span></div>
+    <div class="quarter-pill" data-q="Q2">Quarter 2 <span>Gravitation & Thermo</span></div>
+    <div class="quarter-pill" data-q="Q3">Quarter 3 <span>Waves & Light</span></div>
+    <div class="quarter-pill" data-q="Q4">Quarter 4 <span>The Electric Force</span></div>
+  </nav>
+
+  <div class="search-wrap">
+    <input type="text" id="searchBox" placeholder="Search a topic, e.g. 'momentum' or 'refraction'…"/>
+  </div>
+
+  <main id="cardGrid">
+
+    <!-- MECHANICS OF MOTION -->
+    <div class="field" data-field="mechanics" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🚀</div>
+        <div>
+          <div class="field-title">Mechanics of Motion</div>
+          <span class="field-tag">Mechanics</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="History of the Ideas of Motion">
+          <span class="topic-dot"></span><span class="topic-name">History of the Ideas of Motion</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Kinematic Quantities">
+          <span class="topic-dot"></span><span class="topic-name">Kinematic Quantities</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Forces and Laws of Motion">
+          <span class="topic-dot"></span><span class="topic-name">Forces and Laws of Motion</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Vectors">
+          <span class="topic-dot"></span><span class="topic-name">Vectors</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- MOMENTUM & IMPULSE -->
+    <div class="field" data-field="mechanics" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">💫</div>
+        <div>
+          <div class="field-title">Momentum & Impulse</div>
+          <span class="field-tag">Mechanics</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Impulse and Momentum">
+          <span class="topic-dot"></span><span class="topic-name">Impulse and Momentum</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Conservation of Momentum">
+          <span class="topic-dot"></span><span class="topic-name">Conservation of Momentum</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- GRAVITATION -->
+    <div class="field" data-field="grav" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🪐</div>
+        <div>
+          <div class="field-title">Gravitation</div>
+          <span class="field-tag">Gravity</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="grav" data-title="Scientists of Gravitation">
+          <span class="topic-dot"></span><span class="topic-name">Scientists of Gravitation</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="grav" data-title="Gravitational Field Force & Potential Energy">
+          <span class="topic-dot"></span><span class="topic-name">Gravitational Field Force & Potential Energy</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="grav" data-title="Conservation of Mechanical Energy">
+          <span class="topic-dot"></span><span class="topic-name">Conservation of Mechanical Energy</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- THERMODYNAMICS -->
+    <div class="field" data-field="thermo" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🌡️</div>
+        <div>
+          <div class="field-title">Thermodynamics</div>
+          <span class="field-tag">Thermo</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="thermo" data-title="Heat Transfer — Convection, Conduction, Radiation">
+          <span class="topic-dot"></span><span class="topic-name">Heat Transfer — Convection, Conduction, Radiation</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="thermo" data-title="Consequences of Heat Transfer">
+          <span class="topic-dot"></span><span class="topic-name">Consequences of Heat Transfer</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- WAVE MECHANICS -->
+    <div class="field" data-field="waves" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">〰️</div>
+        <div>
+          <div class="field-title">Wave Mechanics</div>
+          <span class="field-tag">Waves</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Introduction to Waves">
+          <span class="topic-dot"></span><span class="topic-name">Introduction to Waves</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Characteristic Behaviors of Waves">
+          <span class="topic-dot"></span><span class="topic-name">Characteristic Behaviors of Waves</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Sound as a Wave">
+          <span class="topic-dot"></span><span class="topic-name">Sound as a Wave</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- LIGHT & OPTICS -->
+    <div class="field" data-field="waves" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">🔭</div>
+        <div>
+          <div class="field-title">Light & Optics</div>
+          <span class="field-tag">Waves</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Evolution of Understanding of Light">
+          <span class="topic-dot"></span><span class="topic-name">Evolution of Understanding of Light</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Wave Nature of Light, Electromagnetic Waves & Color">
+          <span class="topic-dot"></span><span class="topic-name">Wave Nature of Light, EM Waves & Color</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Reflection and Refraction of Light">
+          <span class="topic-dot"></span><span class="topic-name">Reflection and Refraction of Light</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Different Types of Mirrors and Lenses">
+          <span class="topic-dot"></span><span class="topic-name">Different Types of Mirrors and Lenses</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ELECTROMAGNETISM -->
+    <div class="field" data-field="electric" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">⚡</div>
+        <div>
+          <div class="field-title">Electrostatics & Circuits</div>
+          <span class="field-tag">Electric</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="History of Electromagnetism">
+          <span class="topic-dot"></span><span class="topic-name">History of Electromagnetism</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Electric Charge and Charging Methods">
+          <span class="topic-dot"></span><span class="topic-name">Electric Charge and Charging Methods</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Coulomb's Law">
+          <span class="topic-dot"></span><span class="topic-name">Coulomb's Law</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Voltage, Current and Resistance">
+          <span class="topic-dot"></span><span class="topic-name">Voltage, Current and Resistance</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Electromagnetic Induction">
+          <span class="topic-dot"></span><span class="topic-name">Electromagnetic Induction</span><span class="topic-quarter">Q4</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+</div><!-- end #mapPage -->
+
+<!-- TOPIC MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-quarter" id="modalQuarter"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+  </div>
+</div>
+
+<!-- PRACTICE PAGE -->
+<div id="practicePage">
+
+  <!-- MECHANICS OF MOTION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🚀</div>
+      <div>
+        <span class="practice-section-title">Mechanics of Motion</span>
+        <span class="practice-section-tag" style="background:rgba(110,198,255,0.15);color:#6ec6ff;border:1px solid rgba(110,198,255,0.3);">Mechanics</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q1</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which scientist first described the concept of inertia as a property of matter at rest?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Aristotle</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Galileo Galilei</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Isaac Newton</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> René Descartes</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Isaac Newton.</strong> Newton formalized inertia as his First Law of Motion: an object at rest stays at rest, and an object in motion stays in motion, unless acted on by an external force. Galileo challenged Aristotle's view that motion requires a continuous force, but Newton codified inertia into law.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q2</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A car travels 100 m in 10 seconds. What is its average speed?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 1000 m/s</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 10 m/s</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 0.1 m/s</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 100 m/s</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 10 m/s.</strong> Average speed = distance ÷ time = 100 m ÷ 10 s = 10 m/s. Speed is a scalar — it only tells you how fast, not which direction. If the question asked for velocity, you'd also need to specify the direction of travel.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q3</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Newton's Third Law states that for every action there is an equal and opposite reaction. Which of the following is the best example of this?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> A rocket expelling gas downward and moving upward</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> A ball rolling to a stop due to friction</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> A car accelerating when the engine applies force</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> A book resting on a table</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — A rocket.</strong> The rocket pushes exhaust gas backward (action); the gas pushes the rocket forward (reaction). The forces are equal in magnitude, opposite in direction, and act on different objects — the hallmark of Newton's Third Law.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q4</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Two forces act on an object: 3 N to the right and 4 N upward. Using the graphical (tip-to-tail) method, what is the magnitude of the resultant force?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 7 N</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 1 N</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 5 N</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 12 N</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — 5 N.</strong> When two perpendicular vectors are added graphically (tip-to-tail), the resultant is the arrow drawn from the tail of the first to the tip of the last. For a 3-4-5 right triangle, the resultant = 5 N. You can verify this with a ruler and protractor on a scale drawing.</div>
+    </div>
+  </div>
+
+  <!-- MOMENTUM & IMPULSE -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">💫</div>
+      <div>
+        <span class="practice-section-title">Momentum & Impulse</span>
+        <span class="practice-section-tag" style="background:rgba(110,198,255,0.15);color:#6ec6ff;border:1px solid rgba(110,198,255,0.3);">Mechanics</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q5</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A 2 kg ball moving at 6 m/s collides with a wall and comes to rest. What impulse did the wall exert on the ball?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 6 N·s</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 12 N·s</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 3 N·s</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 0 N·s</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 12 N·s.</strong> Impulse = change in momentum = mΔv = 2 × (0 − 6) = −12 N·s. The magnitude is 12 N·s. Impulse equals the area under a force-time graph and always equals the change in momentum.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q6</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Two ice skaters push off each other from rest. Skater A (60 kg) moves left at 2 m/s. What can we say about Skater B?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Skater B also moves left</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Skater B remains stationary</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Skater B moves right — total momentum stays zero</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Skater B moves right with the same speed as A</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Since the system started at rest, total momentum = 0. After the push, Skater A has −120 kg·m/s (left). Skater B must have +120 kg·m/s (right) to keep the total at zero. Skater B's speed depends on their mass — same speed only if masses are equal.</div>
+    </div>
+  </div>
+
+  <!-- GRAVITATION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🪐</div>
+      <div>
+        <span class="practice-section-title">Gravitation</span>
+        <span class="practice-section-tag" style="background:rgba(255,159,110,0.15);color:#ff9f6e;border:1px solid rgba(255,159,110,0.3);">Gravity</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q7</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which scientist published the law of universal gravitation in 1687?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Galileo Galilei</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Isaac Newton</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Johannes Kepler</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Tycho Brahe</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Isaac Newton.</strong> Newton published his law of universal gravitation in Principia Mathematica (1687): F = Gm₁m₂/r². Kepler described planetary orbits mathematically before Newton, and Tycho Brahe collected the observational data Kepler used — but Newton unified it all into one law.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q8</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">If the distance between two masses is doubled, the gravitational force between them becomes:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Doubled</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Halved</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Unchanged</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> One quarter of the original</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — One quarter.</strong> Gravity follows an inverse square law: F ∝ 1/r². If r doubles, r² quadruples, so F becomes 1/4 of the original. This is why gravity weakens rapidly with distance — the relationship is not linear, it's squared.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A ball is thrown upward. At the highest point of its trajectory, which of the following is true?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Velocity is zero but acceleration is still 9.8 m/s² downward</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Both velocity and acceleration are zero</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Velocity is upward, acceleration is downward</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Velocity is zero, acceleration is zero</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> At the peak, the ball momentarily stops (v = 0) but gravity never stops acting. Gravitational acceleration is always 9.8 m/s² downward — it does not "turn off" at the highest point. This is a very common misconception.</div>
+    </div>
+  </div>
+
+  <!-- THERMODYNAMICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌡️</div>
+      <div>
+        <span class="practice-section-title">Thermodynamics</span>
+        <span class="practice-section-tag" style="background:rgba(255,110,176,0.15);color:#ff6eb0;border:1px solid rgba(255,110,176,0.3);">Thermo</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Heat transfer through direct contact between particles of matter is called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Radiation</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Convection</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Conduction</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Induction</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Conduction.</strong> Conduction occurs when heat flows through direct particle-to-particle contact — like a metal spoon heating up in soup. Convection transfers heat through fluid movement (currents). Radiation transfers heat via electromagnetic waves, requiring no medium at all.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q11</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The Sun heats the Earth across the vacuum of space. Which mode of heat transfer makes this possible?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Conduction</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Radiation</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Convection</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> All three equally</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Radiation.</strong> Space is a vacuum — there is no medium for conduction (requires contact) or convection (requires fluid). Radiation travels as electromagnetic waves (infrared, visible light) and needs no medium, making it the only method that works across space.</div>
+    </div>
+  </div>
+
+  <!-- WAVE MECHANICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">〰️</div>
+      <div>
+        <span class="practice-section-title">Wave Mechanics</span>
+        <span class="practice-section-tag" style="background:rgba(110,255,204,0.15);color:#6effcc;border:1px solid rgba(110,255,204,0.3);">Waves</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q12</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A transverse wave is one where the particle vibration is:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Perpendicular to the direction of wave travel</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Parallel to the direction of wave travel</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Circular around the direction of travel</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Stationary while the wave moves</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Perpendicular.</strong> In a transverse wave, particles move up and down (or side to side) while the wave travels forward — like a wave on a string. Longitudinal waves (like sound) have particles vibrating parallel to the direction of travel in compressions and rarefactions.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q13</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A wave has a frequency of 200 Hz and a wavelength of 1.7 m. What is its speed?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 200 m/s</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 117.6 m/s</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 340 m/s</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 1.7 m/s</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — 340 m/s.</strong> Wave speed v = fλ = 200 × 1.7 = 340 m/s. This is approximately the speed of sound in air at room temperature — a useful value to remember.</div>
+    </div>
+  </div>
+
+  <!-- LIGHT & OPTICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🔭</div>
+      <div>
+        <span class="practice-section-title">Light & Optics</span>
+        <span class="practice-section-tag" style="background:rgba(110,255,204,0.15);color:#6effcc;border:1px solid rgba(110,255,204,0.3);">Waves</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q14</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which scientist first demonstrated that white light is composed of all colors of the spectrum?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> James Clerk Maxwell</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Thomas Young</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Christiaan Huygens</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Isaac Newton</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Newton.</strong> Newton used a prism to disperse white light into its spectrum of colors and then used a second prism to recombine them — proving white light is not pure but is made of all visible wavelengths. Young later proved the wave nature of light through his double-slit experiment.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q15</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">When light passes from air into glass (a denser medium), it:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Speeds up and bends away from the normal</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Slows down and bends toward the normal</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Maintains the same speed and direction</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Reflects completely back into air</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> When light enters a denser medium, it slows down and bends toward the normal line (the line perpendicular to the surface). This is refraction. The opposite happens when leaving a dense medium — it speeds up and bends away from the normal.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q16</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A concave mirror can produce a real, inverted image. Which type of mirror always produces a virtual, upright, and smaller image?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Convex mirror</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Concave mirror</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Plane mirror</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Both concave and convex</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Convex mirror.</strong> A convex (diverging) mirror always produces a virtual, upright, and smaller image — regardless of where the object is. This is why they're used for wide-angle views in car side mirrors and security cameras. Plane mirrors produce virtual, upright, same-size images.</div>
+    </div>
+  </div>
+
+  <!-- ELECTROSTATICS & CIRCUITS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⚡</div>
+      <div>
+        <span class="practice-section-title">Electrostatics & Circuits</span>
+        <span class="practice-section-tag" style="background:rgba(255,228,110,0.15);color:#ffe46e;border:1px solid rgba(255,228,110,0.3);">Electric</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q17</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Who discovered that electric and magnetic phenomena are related, unifying them into electromagnetism?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Benjamin Franklin</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> André-Marie Ampère</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> James Clerk Maxwell</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Michael Faraday</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Maxwell.</strong> James Clerk Maxwell formulated the four equations that unified electricity, magnetism, and light into one theory of electromagnetism (1865). Faraday discovered electromagnetic induction experimentally; Ampère studied the magnetic effects of current; but Maxwell created the complete mathematical framework.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q18</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Two objects are charged by rubbing. One gains electrons; the other loses them. The one that loses electrons becomes:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Positively charged</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Negatively charged</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Neutral</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Magnetically charged</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Positively charged.</strong> Electrons carry negative charge. Losing electrons means losing negative charge, leaving an excess of positive (protons), making the object net positive. The object that gains electrons becomes negatively charged. Charge is always conserved — what one gains, the other loses.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q19</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A circuit has a voltage of 12 V and a resistance of 4 Ω. What is the current flowing through it?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 48 A</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 0.33 A</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 8 A</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 3 A</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — 3 A.</strong> Ohm's Law: I = V/R = 12/4 = 3 A. Voltage (V) is the push; Resistance (Ω) is the opposition; Current (A) is the flow. Always identify the two known values and solve for the third.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q20</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Electromagnetic induction is the process of generating an electric current by:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Applying a constant voltage to a wire</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Moving a conductor through a changing magnetic field</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Rubbing two conductors together</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Connecting a battery to a resistor</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> Faraday's Law: a changing magnetic flux through a conductor induces an EMF (and therefore a current). This is the principle behind generators, transformers, and wireless charging. A static magnetic field induces nothing — it must be changing.</div>
+    </div>
+  </div>
+
+</div><!-- end #practicePage -->
+
+<footer>Physics · Grade 8 Champaca · Click any topic to review</footer>
+
+<!-- MODAL DATA -->
+<script>
+const descriptions = {
+  "History of the Ideas of Motion": {q:"Q1", field:"mechanics", desc:"From Aristotle's belief that heavier objects fall faster, to Galileo's experiments disproving this, to Newton's three laws — this topic traces how humans fundamentally changed their understanding of why things move. Key figures: Aristotle, Galileo, Descartes, Newton."},
+  "Kinematic Quantities": {q:"Q1", field:"mechanics", desc:"Kinematics describes motion without asking why it happens. Core quantities: distance vs displacement, speed vs velocity, and acceleration. Understanding the difference between scalar quantities (speed, distance) and vector quantities (velocity, displacement) is the foundation of this topic."},
+  "Forces and Laws of Motion": {q:"Q1", field:"mechanics", desc:"Newton's three laws: (1) Inertia — objects resist changes in motion. (2) F = ma — net force equals mass times acceleration. (3) Action-Reaction — every force has an equal and opposite counterpart. Free body diagrams help visualize all forces acting on an object."},
+  "Vectors": {q:"Q1", field:"mechanics", desc:"Vectors have both magnitude and direction, unlike scalars which have magnitude only. Vectors can be added graphically using the polygon method (tip-to-tail for multiple vectors) or the parallelogram method (for two vectors). The resultant is the single vector that represents the combined effect of all vectors added."},
+  "Impulse and Momentum": {q:"Q1", field:"mechanics", desc:"Momentum (p = mv) is the quantity of motion. Impulse (J = FΔt) is the change in momentum. A large force over a short time or a small force over a long time can produce the same impulse. Airbags and crumple zones work by increasing Δt to reduce force on passengers."},
+  "Conservation of Momentum": {q:"Q1", field:"mechanics", desc:"In a closed system with no external forces, total momentum is conserved. In elastic collisions, both momentum and kinetic energy are conserved. In inelastic collisions, only momentum is conserved — some KE is lost to heat or deformation. The explosion of a rocket is a classic example."},
+  "Scientists of Gravitation": {q:"Q2", field:"grav", desc:"Tycho Brahe collected precise planetary data. Kepler used that data to formulate his three laws of planetary motion. Newton unified it all into his Law of Universal Gravitation (F = Gm₁m₂/r²). Einstein later redefined gravity as spacetime curvature in General Relativity."},
+  "Gravitational Field Force & Potential Energy": {q:"Q2", field:"grav", desc:"Gravitational field strength g = F/m (≈9.8 N/kg near Earth's surface). Gravitational potential energy GPE = mgh. The higher an object, the more stored potential energy. In orbit, objects are in continuous free fall — they move fast enough sideways that the ground curves away beneath them."},
+  "Conservation of Mechanical Energy": {q:"Q2", field:"grav", desc:"Mechanical energy = KE + PE. In the absence of friction, total mechanical energy is conserved: as an object falls, PE converts to KE and vice versa. At the bottom of a swing: max KE, min PE. At the top: max PE, min KE. Work done by friction converts ME into thermal energy."},
+  "Heat Transfer — Convection, Conduction, Radiation": {q:"Q2", field:"thermo", desc:"Three mechanisms: Conduction (particle-to-particle contact, e.g. metal rod), Convection (bulk movement of fluid, e.g. ocean currents, weather), Radiation (electromagnetic waves, e.g. sunlight, infrared). Vacuum flasks use all three strategies to minimize heat loss."},
+  "Consequences of Heat Transfer": {q:"Q2", field:"thermo", desc:"Heat transfer drives weather systems, ocean circulation, and climate. Thermal expansion (solids, liquids, gases all expand when heated) causes cracks in roads, requires expansion joints in bridges, and causes sea level rise. Thermostats and heat engines exploit controlled heat transfer."},
+  "Introduction to Waves": {q:"Q3", field:"waves", desc:"A wave is a disturbance that transfers energy without transferring matter. Waves are classified by type: transverse waves (particle vibration is perpendicular to wave travel, e.g. light), longitudinal waves (particle vibration is parallel to wave travel, e.g. sound), and pulse waves (a single disturbance rather than a repeating pattern). Key properties: amplitude, wavelength, frequency, and period."},
+  "Characteristic Behaviors of Waves": {q:"Q3", field:"waves", desc:"All waves exhibit: reflection (bouncing off surfaces), refraction (bending when entering a new medium), diffraction (spreading around obstacles), interference (constructive when in phase, destructive when out of phase), and the Doppler effect (frequency shift due to relative motion)."},
+  "Sound as a Wave": {q:"Q3", field:"waves", desc:"Sound is a longitudinal mechanical wave — it needs a medium (cannot travel through vacuum). Speed in air ≈ 340 m/s at room temperature (faster in solids). Pitch = frequency; loudness = amplitude. Echoes are reflections; resonance occurs at natural frequencies. The Doppler effect explains why a siren pitch changes as it passes."},
+  "Evolution of Understanding of Light": {q:"Q3", field:"waves", desc:"Newton proposed a corpuscular (particle) theory. Huygens argued for waves. Young's double-slit experiment confirmed wave behavior. Maxwell showed light is an electromagnetic wave. Einstein's photoelectric effect proved light also behaves as particles (photons) — leading to wave-particle duality."},
+  "Wave Nature of Light, Electromagnetic Waves & Color": {q:"Q3", field:"waves", desc:"Visible light is a small part of the electromagnetic spectrum: radio, microwave, infrared, visible, UV, X-ray, gamma. All EM waves travel at c ≈ 3×10⁸ m/s in vacuum. Color is determined by wavelength (red: ~700nm, violet: ~400nm). White light contains all visible wavelengths."},
+  "Reflection and Refraction of Light": {q:"Q3", field:"waves", desc:"Reflection: angle of incidence = angle of reflection. Refraction: light bends when changing speed in a new medium (Snell's Law: n₁sinθ₁ = n₂sinθ₂). Total internal reflection occurs when light hits a boundary at an angle greater than the critical angle — the basis of fiber optics."},
+  "Different Types of Mirrors and Lenses": {q:"Q3", field:"waves", desc:"Concave mirrors and convex lenses converge light — they can produce real, inverted images (useful in telescopes, cameras). Convex mirrors and concave lenses diverge light — always produce virtual, upright, smaller images (car side mirrors, peepholes). Lens/mirror equations: 1/f = 1/do + 1/di."},
+  "History of Electromagnetism": {q:"Q4", field:"electric", desc:"Franklin showed lightning is electrical. Coulomb quantified electric force. Oersted found that current produces a magnetic field. Faraday discovered induction. Maxwell unified everything mathematically. Edison and Tesla applied it — and had a famous rivalry over AC vs DC power."},
+  "Electric Charge and Charging Methods": {q:"Q4", field:"electric", desc:"Charge is quantized (±1.6×10⁻¹⁹ C per electron/proton) and conserved. Three charging methods: friction (triboelectric), conduction (contact), induction (no contact). Like charges repel; opposite charges attract. Grounding neutralizes a charged object by connecting to Earth."},
+  "Coulomb's Law": {q:"Q4", field:"electric", desc:"F = kq₁q₂/r² where k ≈ 9×10⁹ N·m²/C². Structurally identical to Newton's gravity but can be repulsive. Electric force is ~10³⁶ times stronger than gravitational force — gravity only dominates at large scales because most matter is electrically neutral."},
+  "Voltage, Current and Resistance": {q:"Q4", field:"electric", desc:"Voltage (V) is electric potential difference — the 'push'. Current (I) is the flow of charge — measured in amperes. Resistance (R) opposes flow — measured in ohms. Ohm's Law: V = IR. Series circuits: current same everywhere, voltages add. Parallel circuits: voltage same, currents add."},
+  "Electromagnetic Induction": {q:"Q4", field:"electric", desc:"Faraday's Law: a changing magnetic flux induces an EMF. Lenz's Law: the induced current opposes the change that caused it. Applications: generators (motion → electricity), transformers (change AC voltage), electric motors (electricity → motion), wireless charging, MRI machines."}
+};
+
+const tagColors = {
+  mechanics: {bg:'rgba(110,198,255,0.15)', color:'#6ec6ff', border:'rgba(110,198,255,0.3)'},
+  grav:      {bg:'rgba(255,159,110,0.15)', color:'#ff9f6e', border:'rgba(255,159,110,0.3)'},
+  thermo:    {bg:'rgba(255,110,176,0.15)', color:'#ff6eb0', border:'rgba(255,110,176,0.3)'},
+  waves:     {bg:'rgba(110,255,204,0.15)', color:'#6effcc', border:'rgba(110,255,204,0.3)'},
+  electric:  {bg:'rgba(255,228,110,0.15)', color:'#ffe46e', border:'rgba(255,228,110,0.3)'},
+};
+const tagLabels = {
+  mechanics:'Mechanics', grav:'Gravity', thermo:'Thermo', waves:'Waves', electric:'Electric'
+};
+const quarterLabels = {Q1:'Quarter 1 · Mechanics', Q2:'Quarter 2 · Gravitation & Thermo', Q3:'Quarter 3 · Waves & Light', Q4:'Quarter 4 · The Electric Force'};
+
+const backdrop = document.getElementById('modalBackdrop');
+
+function openModal(title, field, q) {
+  const data = descriptions[title] || {};
+  const c = tagColors[field] || tagColors.mechanics;
+  const tag = document.getElementById('modalTag');
+  tag.textContent = tagLabels[field] || field;
+  tag.style.background = c.bg; tag.style.color = c.color; tag.style.border = `1px solid ${c.border}`;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalQuarter').textContent = quarterLabels[q] || q;
+  const desc = document.getElementById('modalDesc');
+  if (data.desc) { desc.innerHTML = data.desc; desc.classList.remove('modal-placeholder'); }
+  else { desc.innerHTML = '<em>Reviewer coming soon.</em>'; desc.classList.add('modal-placeholder'); }
+  backdrop.classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => backdrop.classList.remove('open'));
+backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('open'); });
+
+document.querySelectorAll('.topic-name').forEach(el => {
+  el.addEventListener('click', () => {
+    const item = el.closest('.topic-item');
+    openModal(item.dataset.title, item.dataset.field, item.dataset.q);
+  });
+});
+
+// Quarter filter & search
+const quarters = document.querySelectorAll('.quarter-pill');
+const cards    = document.querySelectorAll('.field');
+const search   = document.getElementById('searchBox');
+let activeQ = 'all';
+
+function applyFilters() {
+  const term = search.value.toLowerCase().trim();
+  cards.forEach(card => {
+    const topics = card.querySelectorAll('.topic-item');
+    topics.forEach(t => {
+      const topicQ = t.dataset.q;
+      const qMatch = activeQ === 'all' || topicQ === activeQ;
+      const termMatch = !term || t.textContent.toLowerCase().includes(term);
+      t.style.display = (qMatch && termMatch) ? '' : 'none';
+      t.style.opacity = '1';
+    });
+    const anyVisible = Array.from(topics).some(t => t.style.display !== 'none');
+    card.classList.toggle('dimmed', !anyVisible);
+  });
+}
+
+quarters.forEach(btn => {
+  btn.addEventListener('click', () => {
+    quarters.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeQ = btn.dataset.q;
+    applyFilters();
+  });
+});
+search.addEventListener('input', applyFilters);
+
+// Page tab switching
+const tabMap       = document.getElementById('tabMap');
+const tabPractice  = document.getElementById('tabPractice');
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+
+tabMap.addEventListener('click', () => {
+  tabMap.classList.add('active'); tabPractice.classList.remove('active');
+  mapPage.classList.remove('hidden'); practicePage.classList.remove('visible');
+});
+tabPractice.addEventListener('click', () => {
+  tabPractice.classList.add('active'); tabMap.classList.remove('active');
+  practicePage.classList.add('visible'); mapPage.classList.add('hidden');
+});
+
+// Practice interactions
+document.querySelectorAll('.question-card').forEach(card => {
+  const correct     = card.dataset.answer;
+  const choices     = card.querySelectorAll('.choice');
+  const revealBtn   = card.querySelector('.reveal-btn');
+  const explanation = card.querySelector('.explanation');
+  let answered = false;
+
+  choices.forEach(choice => {
+    choice.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        if (c.dataset.val === correct) c.classList.add('correct');
+        else c.classList.add('wrong');
+      });
+      explanation.classList.add('visible');
+      revealBtn.disabled = true;
+    });
+  });
+
+  revealBtn.addEventListener('click', () => {
+    if (answered) return;
+    answered = true;
+    choices.forEach(c => {
+      if (c.dataset.val === correct) c.classList.add('correct');
+      else c.classList.add('wrong');
+    });
+    explanation.classList.add('visible');
+    revealBtn.disabled = true;
+  });
+});
+
+// Starfield
+(function() {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    stars = [];
+    for (let i = 0; i < 280; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4 + 0.2,
+        a: Math.random(),
+        speed: Math.random() * 0.4 + 0.1,
+        twinkle: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.twinkle += s.speed * 0.02;
+      const alpha = s.a * (0.5 + 0.5 * Math.sin(s.twinkle));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,180,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  init();
+  window.addEventListener('resize', () => { resize(); init(); });
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
