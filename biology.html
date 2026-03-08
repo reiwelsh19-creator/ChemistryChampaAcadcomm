@@ -1,0 +1,2813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Map of Biology</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #050e07;
+      --surface:  #091410;
+      --surface2: #0f1f18;
+      --border:   rgba(80,200,100,0.15);
+      --border2:  rgba(80,200,100,0.32);
+      --green:    #50c864;
+      --green2:   #7edc8a;
+      --lime:     #aaee55;
+      --text:     #e0f0e4;
+      --muted:    #5a8a65;
+      --dim:      #1a3020;
+
+      --nature:   #50c864;
+      --nature-bg: rgba(80,200,100,0.07);
+      --evolution:#a8e060;
+      --evolution-bg: rgba(168,224,96,0.07);
+      --cell:     #40d4b0;
+      --cell-bg:  rgba(64,212,176,0.07);
+      --diversity:#f0c040;
+      --diversity-bg: rgba(240,192,64,0.07);
+      --ecology:  #e08050;
+      --ecology-bg: rgba(224,128,80,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 80px;
+      overflow-x: hidden;
+    }
+
+    /* ── Leaf particle canvas ── */
+    #leaves {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+
+    header, .page-tabs, #mapPage, #practicePage, .modal-backdrop {
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 64px 40px 44px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(30,80,40,0.25) 0%, transparent 100%);
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: 'DNA · RNA · ATP · CELL · GENE · EVOLUTION · ECOLOGY · MITOSIS · PHOTOSYNTHESIS';
+      position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+      font-size: 10px; letter-spacing: 0.22em; color: var(--dim);
+      white-space: nowrap; overflow: hidden;
+    }
+    .label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    h1 {
+      font-family: 'Lora', serif;
+      font-weight: 400; font-size: clamp(2.4rem, 5.5vw, 4rem);
+      line-height: 1.05; color: var(--text);
+      text-shadow: 0 0 60px rgba(80,200,100,0.35);
+    }
+    h1 em {
+      font-style: italic; font-weight: 600;
+      background: linear-gradient(135deg, var(--green2), var(--lime));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.08em; }
+
+    /* ── Tabs ── */
+    .page-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .page-tab {
+      padding: 14px 28px; font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+      color: var(--muted); user-select: none;
+    }
+    .page-tab:hover { color: var(--text); }
+    .page-tab.active { color: var(--green2); border-bottom-color: var(--green); }
+
+    /* ── Quarter nav ── */
+    .quarters {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface); overflow-x: auto;
+    }
+    .quarter-pill {
+      flex: 1; min-width: 150px; padding: 13px 18px;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: background 0.2s; text-align: center;
+      user-select: none; color: var(--muted);
+    }
+    .quarter-pill:last-child { border-right: none; }
+    .quarter-pill:hover { background: rgba(80,200,100,0.06); color: var(--text); }
+    .quarter-pill.active {
+      background: rgba(80,200,100,0.12);
+      color: var(--green2);
+      box-shadow: inset 0 -2px 0 var(--green);
+    }
+    .quarter-pill span { display: block; font-size: 8px; opacity: 0.55; margin-top: 3px; }
+
+    /* ── Search ── */
+    .search-wrap { padding: 28px 32px 0; max-width: 1200px; margin: 0 auto; }
+    .search-wrap input {
+      width: 100%; max-width: 440px; padding: 10px 16px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 4px; outline: none; color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(80,200,100,0.12); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    /* ── Card grid ── */
+    main {
+      max-width: 1200px; margin: 0 auto; padding: 32px 32px 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px;
+    }
+
+    .field {
+      border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      background: var(--surface);
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+      animation: rise 0.45s ease both;
+    }
+    .field:hover {
+      border-color: var(--border2);
+      box-shadow: 0 0 28px rgba(80,200,100,0.1), 0 4px 24px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .field.dimmed { display: none; }
+    .field:nth-child(1){animation-delay:.05s} .field:nth-child(2){animation-delay:.10s}
+    .field:nth-child(3){animation-delay:.15s} .field:nth-child(4){animation-delay:.20s}
+    .field:nth-child(5){animation-delay:.25s} .field:nth-child(6){animation-delay:.30s}
+    .field:nth-child(7){animation-delay:.35s}
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    .field-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 13px;
+    }
+    .field-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .field-title {
+      font-family: 'Lora', serif;
+      font-weight: 600; font-size: 1rem; line-height: 1.25; color: var(--text);
+    }
+    .field-tag {
+      display: inline-block; margin-top: 5px; font-size: 8px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* field colors */
+    .field[data-field="nature"]    .field-header { background: var(--nature-bg); }
+    .field[data-field="nature"]    .field-tag    { background: rgba(80,200,100,0.15); color: var(--nature); border: 1px solid rgba(80,200,100,0.3); }
+    .field[data-field="evolution"] .field-header { background: var(--evolution-bg); }
+    .field[data-field="evolution"] .field-tag    { background: rgba(168,224,96,0.15); color: var(--evolution); border: 1px solid rgba(168,224,96,0.3); }
+    .field[data-field="cell"]      .field-header { background: var(--cell-bg); }
+    .field[data-field="cell"]      .field-tag    { background: rgba(64,212,176,0.15); color: var(--cell); border: 1px solid rgba(64,212,176,0.3); }
+    .field[data-field="diversity"] .field-header { background: var(--diversity-bg); }
+    .field[data-field="diversity"] .field-tag    { background: rgba(240,192,64,0.15); color: var(--diversity); border: 1px solid rgba(240,192,64,0.3); }
+    .field[data-field="ecology"]   .field-header { background: var(--ecology-bg); }
+    .field[data-field="ecology"]   .field-tag    { background: rgba(224,128,80,0.15); color: var(--ecology); border: 1px solid rgba(224,128,80,0.3); }
+
+    .topic-list { padding: 8px 20px 14px; list-style: none; }
+    .topic-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      border-bottom: 1px solid rgba(80,200,100,0.07);
+      font-size: 12px; line-height: 1.45;
+    }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .field[data-field="nature"]    .topic-dot { background: var(--nature);    box-shadow: 0 0 5px var(--nature); }
+    .field[data-field="evolution"] .topic-dot { background: var(--evolution); box-shadow: 0 0 5px var(--evolution); }
+    .field[data-field="cell"]      .topic-dot { background: var(--cell);      box-shadow: 0 0 5px var(--cell); }
+    .field[data-field="diversity"] .topic-dot { background: var(--diversity); box-shadow: 0 0 5px var(--diversity); }
+    .field[data-field="ecology"]   .topic-dot { background: var(--ecology);   box-shadow: 0 0 5px var(--ecology); }
+
+    .topic-name {
+      cursor: pointer; flex: 1; color: var(--text);
+      border-bottom: 1px dashed transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .field[data-field="nature"]    .topic-name:hover { color: var(--nature);    border-color: var(--nature); }
+    .field[data-field="evolution"] .topic-name:hover { color: var(--evolution); border-color: var(--evolution); }
+    .field[data-field="cell"]      .topic-name:hover { color: var(--cell);      border-color: var(--cell); }
+    .field[data-field="diversity"] .topic-name:hover { color: var(--diversity); border-color: var(--diversity); }
+    .field[data-field="ecology"]   .topic-name:hover { color: var(--ecology);   border-color: var(--ecology); }
+
+    .topic-quarter { font-size: 8px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(2,8,4,0.78); backdrop-filter: blur(6px);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 10px; max-width: 480px; width: 100%;
+      padding: 32px 28px 28px; position: relative;
+      animation: popIn 0.22s ease;
+      box-shadow: 0 0 60px rgba(80,200,100,0.15), 0 20px 60px rgba(0,0,0,0.6);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-tag {
+      font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+      display: inline-block; margin-bottom: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .modal-title {
+      font-family: 'Lora', serif; font-weight: 600;
+      font-size: 1.25rem; line-height: 1.25; margin-bottom: 10px; color: var(--text);
+    }
+    .modal-quarter { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .modal-desc {
+      font-size: 12.5px; line-height: 1.8; color: #a8c8b0;
+      border-top: 1px solid var(--border); padding-top: 16px;
+    }
+    .modal-placeholder { font-style: italic; color: var(--muted); font-size: 12px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 18px;
+      font-size: 20px; cursor: pointer; color: var(--muted);
+      background: none; border: none; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── Practice page ── */
+    #practicePage { display: none; max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+    #practicePage.visible { display: block; }
+    #mapPage.hidden { display: none; }
+    #toolsPage { display: none; max-width: 1000px; margin: 0 auto; padding: 40px 32px 80px; position: relative; z-index:1; }
+    #toolsPage.visible { display: block; }
+
+    /* ── Phylo Tree Tool ── */
+    .ptool-header { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1.5px solid var(--border2); margin-bottom:28px; }
+    .ptool-icon { font-size:28px; }
+    .ptool-title { font-family:'Lora',serif; font-size:1.3rem; font-weight:600; color:var(--green2); }
+    .ptool-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+    .ptool-panel { display:grid; grid-template-columns:260px 1fr; gap:20px; min-height:520px; }
+    .ptool-sidebar { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px 16px; display:flex; flex-direction:column; gap:14px; }
+    .ptool-section-label { font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+    .ptool-taxon-list { display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; }
+    .ptool-taxon-item { display:flex; align-items:center; gap:8px; padding:7px 10px; border:1px solid var(--border); border-radius:5px; cursor:pointer; font-size:11px; transition:.15s; }
+    .ptool-taxon-item:hover { border-color:var(--green); background:var(--nature-bg); }
+    .ptool-taxon-item.selected { border-color:var(--green); background:var(--nature-bg); color:var(--green2); }
+    .ptool-taxon-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .ptool-taxon-name { flex:1; }
+    .ptool-taxon-sciname { font-size:9px; color:var(--muted); font-style:italic; }
+    .ptool-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .ptool-btn { background:transparent; border:1px solid var(--border2); color:var(--text); padding:7px 14px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:10px; cursor:pointer; transition:.15s; }
+    .ptool-btn:hover { border-color:var(--green); color:var(--green2); }
+    .ptool-btn.primary { border-color:var(--green); color:var(--green); }
+    .ptool-btn.primary:hover { background:var(--green); color:var(--bg); }
+    .ptool-canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; position:relative; }
+    #phyloCanvas { display:block; width:100%; }
+    .ptool-info { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; margin-top:16px; font-size:11.5px; line-height:1.8; min-height:80px; }
+    .ptool-info strong { color:var(--green2); }
+    .ptool-trait-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+    .ptool-trait { border:1px solid var(--border); border-radius:5px; padding:8px 10px; font-size:10px; }
+    .ptool-trait .trait-name { color:var(--green2); font-weight:500; margin-bottom:3px; }
+    .ptool-trait .trait-taxa { color:var(--muted); font-size:9px; }
+    @media(max-width:700px){
+      .ptool-panel{grid-template-columns:1fr;}
+    }
+
+    .practice-section { margin-bottom: 56px; }
+    .practice-section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .practice-section-icon { font-size: 22px; }
+    .practice-section-title {
+      font-family: 'Lora', serif; font-weight: 600;
+      font-size: 1.15rem; color: var(--text);
+    }
+    .practice-section-tag {
+      font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 9px; border-radius: 20px; margin-left: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .question-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 22px 24px; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .question-card:hover { border-color: var(--border2); }
+    .question-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .q-num { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .q-type {
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 1px 7px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted);
+    }
+    .question-text { font-size: 13px; line-height: 1.75; margin-bottom: 16px; color: var(--text); }
+    .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .choice {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+      font-size: 12px; line-height: 1.5; transition: all 0.15s; user-select: none;
+      color: var(--text);
+    }
+    .choice:hover { border-color: var(--green); background: rgba(80,200,100,0.07); }
+    .choice.correct { border-color: var(--green); background: rgba(80,200,100,0.1); color: var(--green2); }
+    .choice.wrong   { border-color: #e05050; background: rgba(224,80,80,0.07); color: #e08080; }
+    .choice-letter  { font-size: 9px; width: 18px; flex-shrink: 0; margin-top: 1px; opacity: 0.45; }
+    .choice.correct .choice-letter, .choice.wrong .choice-letter { opacity: 1; }
+
+    .reveal-btn {
+      margin-top: 14px; padding: 8px 18px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid var(--border2); border-radius: 5px;
+      background: none; cursor: pointer; color: var(--green2);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .reveal-btn:hover { background: rgba(80,200,100,0.1); box-shadow: 0 0 12px rgba(80,200,100,0.18); }
+    .reveal-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+    .explanation {
+      display: none; margin-top: 14px; padding: 14px 16px;
+      background: rgba(80,200,100,0.05); border-radius: 6px;
+      font-size: 12.5px; line-height: 1.75; color: #a8d8b0;
+      border-left: 3px solid var(--green);
+    }
+    .explanation.visible { display: block; }
+
+    .back-btn {
+      position: fixed; top: 16px; left: 18px; z-index: 100;
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 20px;
+      background: rgba(80,200,100,0.1); border: 1px solid rgba(80,200,100,0.3);
+      color: #7edc8a; font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; transition: background 0.15s, box-shadow 0.15s;
+    }
+    .back-btn:hover { background: rgba(80,200,100,0.2); box-shadow: 0 0 14px rgba(80,200,100,0.2); }
+
+    footer {
+      text-align: center; padding: 48px 20px 0;
+      font-size: 9px; letter-spacing: 0.2em; color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 20px 28px; }
+      main, .search-wrap { padding-left: 16px; padding-right: 16px; }
+      #practicePage { padding: 28px 16px 60px; }
+      .page-tab { padding: 12px 14px; font-size: 9px; }
+    }
+
+    /* ══ PAGE VISIBILITY ══ */
+    #natselPage, #microPage {
+      display: none; max-width: 1000px; margin: 0 auto; padding: 40px 32px 80px;
+    }
+    #natselPage.visible, #microPage.visible { display: block; }
+
+    /* ══ SHARED BIO-TOOL STYLES ══ */
+    .bio-tool-header {
+      padding-bottom: 16px; border-bottom: 1px solid var(--border2); margin-bottom: 28px;
+    }
+    .bio-tool-title {
+      font-size: 1.35rem; font-weight: 700; color: var(--text); margin-bottom: 4px;
+    }
+    .bio-tool-sub { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .bio-btn {
+      padding: 9px 20px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      border: 1px solid var(--green); border-radius: 3px; background: transparent;
+      color: var(--green); cursor: pointer; font-family: 'IBM Plex Mono', monospace;
+      transition: all .15s; white-space: nowrap;
+    }
+    .bio-btn:hover, .bio-btn.active { background: var(--green); color: var(--bg); }
+    .bio-btn.danger { border-color: #e05050; color: #e05050; }
+    .bio-btn.danger:hover { background: #e05050; color: #fff; }
+    .bio-panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px;
+    }
+    .bio-label {
+      font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px;
+    }
+    .bio-note {
+      font-size: 11.5px; color: var(--muted); line-height: 1.7;
+      padding: 12px 16px; background: var(--surface2); border-radius: 4px;
+      border-left: 2px solid var(--green);
+    }
+
+    /* ══ NATURAL SELECTION SIMULATOR ══ */
+    .ns-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .ns-layout { grid-template-columns: 1fr; } }
+
+    #nsCanvas {
+      width: 100%; border-radius: 6px; display: block;
+      border: 1px solid var(--border); cursor: crosshair;
+    }
+    .ns-controls { display: flex; flex-direction: column; gap: 12px; }
+    .ns-slider-row { display: flex; flex-direction: column; gap: 4px; }
+    .ns-slider-row label { font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; }
+    .ns-slider {
+      -webkit-appearance: none; width: 100%; height: 4px;
+      border-radius: 2px; background: var(--border2); outline: none;
+    }
+    .ns-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: var(--green); cursor: pointer;
+    }
+    .ns-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ns-stat {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 4px;
+      padding: 10px 12px; text-align: center;
+    }
+    .ns-stat .ns-stat-val { font-size: 1.4rem; font-weight: 700; color: var(--green2); line-height: 1; }
+    .ns-stat .ns-stat-lbl { font-size: 9px; color: var(--muted); margin-top: 3px; letter-spacing: .1em; text-transform: uppercase; }
+    #nsChartCanvas { width: 100%; height: 120px; display: block; margin-top: 12px; border-radius: 4px; }
+    .ns-gen-label { font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+    .ns-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+    .ns-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+    /* ══ MICROSCOPE SIMULATOR ══ */
+    .micro-layout { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .micro-layout { grid-template-columns: 1fr; } }
+
+    .micro-scope-wrap {
+      position: relative; border-radius: 50%; overflow: hidden;
+      border: 6px solid #1a2e20; box-shadow: 0 0 0 3px var(--border2), 0 0 40px rgba(80,200,100,.15);
+      aspect-ratio: 1; background: #000; cursor: crosshair;
+    }
+    #microCanvas { width: 100%; height: 100%; display: block; }
+    .micro-vignette {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle, transparent 55%, rgba(0,0,0,.85) 80%, #000 100%);
+      pointer-events: none;
+    }
+    .micro-crosshair {
+      position: absolute; inset: 0; pointer-events: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .micro-crosshair::before, .micro-crosshair::after {
+      content: ''; position: absolute; background: rgba(80,200,100,.25);
+    }
+    .micro-crosshair::before { width: 1px; height: 60%; }
+    .micro-crosshair::after  { width: 60%; height: 1px; }
+
+    .micro-controls { display: flex; flex-direction: column; gap: 14px; }
+    .micro-mag-btns { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px; }
+    .micro-mag-btn {
+      padding: 8px 4px; text-align: center; font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; border: 1px solid var(--border); border-radius: 3px;
+      background: var(--surface2); color: var(--muted); cursor: pointer; transition: all .15s;
+      line-height: 1.4;
+    }
+    .micro-mag-btn:hover { border-color: var(--green); color: var(--green); }
+    .micro-mag-btn.active { background: var(--green); color: var(--bg); border-color: var(--green); font-weight: 700; }
+    .micro-specimen-btns { display: flex; flex-direction: column; gap: 6px; }
+    .micro-spec-btn {
+      padding: 8px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      border: 1px solid var(--border); border-radius: 3px; background: var(--surface2);
+      color: var(--muted); cursor: pointer; text-align: left; transition: all .15s;
+    }
+    .micro-spec-btn:hover { border-color: var(--green); color: var(--green); }
+    .micro-spec-btn.active { border-color: var(--green2); color: var(--green2); background: var(--nature-bg); }
+    .micro-focus-row { display: flex; flex-direction: column; gap: 4px; }
+    .micro-focus-row label { font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; }
+    .micro-info {
+      margin-top: 12px; padding: 12px 14px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 4px; font-size: 11.5px;
+      color: var(--muted); line-height: 1.7;
+    }
+    .micro-info strong { color: var(--green2); }
+    .micro-scale-bar {
+      position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .micro-scale-line {
+      height: 2px; background: rgba(80,200,100,.7);
+      box-shadow: 0 0 4px var(--green);
+    }
+    .micro-scale-txt {
+      font-size: 9px; color: rgba(80,200,100,.8); text-align: center;
+      font-family: 'IBM Plex Mono', monospace; margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="leaves"></canvas>
+
+<a class="back-btn" href="index.html">← Home</a>
+
+<header>
+  <p class="label">Curriculum Map · Grade 8 · Champaca</p>
+  <h1>The Map of <em>Biology</em></h1>
+  <p class="subtitle">Click any topic for a description · organized by field</p>
+</header>
+
+<div class="page-tabs">
+  <div class="page-tab active" id="tabMap">&#128203; Curriculum Map</div>
+  <div class="page-tab" id="tabPractice">&#9999;&#65039; Practice Exercises</div>
+  <div class="page-tab" id="tabTools">&#127807; Phylogenetic Tree</div>
+  <div class="page-tab" id="tabNatSel">&#129418; Natural Selection</div>
+  <div class="page-tab" id="tabMicro">&#128300; Microscope</div>
+</div>
+
+<div id="mapPage">
+
+  <nav class="quarters" id="quarterNav">
+    <div class="quarter-pill active" data-q="all">All Topics <span>4 quarters · 20 SGs</span></div>
+    <div class="quarter-pill" data-q="Q1">Quarter 1 <span>Foundations of Biology</span></div>
+    <div class="quarter-pill" data-q="Q2">Quarter 2 <span>Evolution & Classification</span></div>
+    <div class="quarter-pill" data-q="Q3">Quarter 3 <span>Microscopy, Cells & Diversity</span></div>
+    <div class="quarter-pill" data-q="Q4">Quarter 4 <span>Diversity of Life & Ecology</span></div>
+  </nav>
+
+  <div class="search-wrap">
+    <input type="text" id="searchBox" placeholder="Search a topic, e.g. 'cell' or 'natural selection'…"/>
+  </div>
+
+  <main id="cardGrid">
+
+    <!-- SG 1–2: FOUNDATIONS OF BIOLOGY (Q1) -->
+    <div class="field" data-field="nature" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🔬</div>
+        <div>
+          <div class="field-title">Foundations of Biology</div>
+          <span class="field-tag">SG 1–2 · Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Biology as the Study of Life">
+          <span class="topic-dot"></span><span class="topic-name">Biology as the Study of Life</span><span class="topic-quarter">SG1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Branches of Biology">
+          <span class="topic-dot"></span><span class="topic-name">Branches of Biology</span><span class="topic-quarter">SG1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Characteristics of Life">
+          <span class="topic-dot"></span><span class="topic-name">Characteristics of Life</span><span class="topic-quarter">SG2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 3–4: THEMES & INQUIRY (Q1) -->
+    <div class="field" data-field="nature" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🧪</div>
+        <div>
+          <div class="field-title">Unifying Themes & Science as Inquiry</div>
+          <span class="field-tag">SG 3–4 · Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Organization">
+          <span class="topic-dot"></span><span class="topic-name">Organization</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Information">
+          <span class="topic-dot"></span><span class="topic-name">Information</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Flow of Energy and Cycling of Matter">
+          <span class="topic-dot"></span><span class="topic-name">Flow of Energy and Cycling of Matter</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Interaction">
+          <span class="topic-dot"></span><span class="topic-name">Interaction</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Evolutionary Theory">
+          <span class="topic-dot"></span><span class="topic-name">Evolutionary Theory</span><span class="topic-quarter">SG3</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Science as Inquiry">
+          <span class="topic-dot"></span><span class="topic-name">Science as Inquiry</span><span class="topic-quarter">SG4</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="nature" data-title="Scientific Method and Lab Skills">
+          <span class="topic-dot"></span><span class="topic-name">Scientific Method and Lab Skills</span><span class="topic-quarter">SG4</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 5–6: EVOLUTION INTRO (Q2) -->
+    <div class="field" data-field="evolution" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🦕</div>
+        <div>
+          <div class="field-title">Evolution & Descent with Modification</div>
+          <span class="field-tag">SG 5–6 · Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Classifying the Diversity of Life">
+          <span class="topic-dot"></span><span class="topic-name">Classifying the Diversity of Life</span><span class="topic-quarter">SG5</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Darwin and the Theory of Natural Selection">
+          <span class="topic-dot"></span><span class="topic-name">Darwin and the Theory of Natural Selection</span><span class="topic-quarter">SG5</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="The Tree of Life">
+          <span class="topic-dot"></span><span class="topic-name">The Tree of Life</span><span class="topic-quarter">SG5</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Lamarck's Hypothesis of Evolution">
+          <span class="topic-dot"></span><span class="topic-name">Lamarck's Hypothesis of Evolution</span><span class="topic-quarter">SG6</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Descent with Modification by Natural Selection">
+          <span class="topic-dot"></span><span class="topic-name">Descent with Modification by Natural Selection</span><span class="topic-quarter">SG6</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Evolutionary Evidence">
+          <span class="topic-dot"></span><span class="topic-name">Evolutionary Evidence</span><span class="topic-quarter">SG6</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Mutation as Raw Material for Evolution">
+          <span class="topic-dot"></span><span class="topic-name">Mutation as Raw Material for Evolution</span><span class="topic-quarter">SG6</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 7–8: POPULATIONS & SPECIATION (Q2) -->
+    <div class="field" data-field="evolution" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🧬</div>
+        <div>
+          <div class="field-title">Populations, Genetics & Speciation</div>
+          <span class="field-tag">SG 7–8 · Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Genetic Variation and Its Sources">
+          <span class="topic-dot"></span><span class="topic-name">Genetic Variation and Its Sources</span><span class="topic-quarter">SG7</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Natural Selection, Genetic Drift, and Gene Flow">
+          <span class="topic-dot"></span><span class="topic-name">Natural Selection, Genetic Drift, and Gene Flow</span><span class="topic-quarter">SG7</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Natural Selection and Adaptive Evolution">
+          <span class="topic-dot"></span><span class="topic-name">Natural Selection and Adaptive Evolution</span><span class="topic-quarter">SG7</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="The Biological Species Concept">
+          <span class="topic-dot"></span><span class="topic-name">The Biological Species Concept</span><span class="topic-quarter">SG8</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="evolution" data-title="Allopatric and Sympatric Speciation">
+          <span class="topic-dot"></span><span class="topic-name">Allopatric and Sympatric Speciation</span><span class="topic-quarter">SG8</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 9–11: MICROSCOPY & THE CELL (Q3) -->
+    <div class="field" data-field="cell" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">🧫</div>
+        <div>
+          <div class="field-title">Microscopy & The Cell</div>
+          <span class="field-tag">SG 9–11 · Q3</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="The Microscope — Parts, Types and Power">
+          <span class="topic-dot"></span><span class="topic-name">The Microscope — Parts, Types and Power</span><span class="topic-quarter">SG9</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Cell Theory and Germ Theory">
+          <span class="topic-dot"></span><span class="topic-name">Cell Theory and Germ Theory</span><span class="topic-quarter">SG10</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Cell Structure and Function">
+          <span class="topic-dot"></span><span class="topic-name">Cell Structure and Function</span><span class="topic-quarter">SG10</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Cell Membrane and Transport Mechanisms">
+          <span class="topic-dot"></span><span class="topic-name">Cell Membrane and Transport Mechanisms</span><span class="topic-quarter">SG11</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 12–13: DIVERSITY OF CELLULAR LIFE & PHYLOGENY (Q3) -->
+    <div class="field" data-field="cell" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">🌳</div>
+        <div>
+          <div class="field-title">Diversity of Cellular Life & Phylogeny</div>
+          <span class="field-tag">SG 12–13 · Q3</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Prokaryotic and Eukaryotic Cells">
+          <span class="topic-dot"></span><span class="topic-name">Prokaryotic and Eukaryotic Cells</span><span class="topic-quarter">SG12</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Endosymbiotic Theory">
+          <span class="topic-dot"></span><span class="topic-name">Endosymbiotic Theory</span><span class="topic-quarter">SG12</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Evolution of Plant and Animal Cells">
+          <span class="topic-dot"></span><span class="topic-name">Evolution of Plant and Animal Cells</span><span class="topic-quarter">SG12</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Classification and Phylogeny">
+          <span class="topic-dot"></span><span class="topic-name">Classification and Phylogeny</span><span class="topic-quarter">SG13</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Schemes of Biological Classification">
+          <span class="topic-dot"></span><span class="topic-name">Schemes of Biological Classification</span><span class="topic-quarter">SG13</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="cell" data-title="Introduction to Biodiversity">
+          <span class="topic-dot"></span><span class="topic-name">Introduction to Biodiversity</span><span class="topic-quarter">SG13</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 14–17: PROKARYOTES, EUKARYOTES, PROTISTS, FUNGI (Q4) -->
+    <div class="field" data-field="diversity" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🦠</div>
+        <div>
+          <div class="field-title">Prokaryotes, Eukaryotes, Protists & Fungi</div>
+          <span class="field-tag">SG 14–17 · Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Prokaryotic Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Prokaryotic Diversity</span><span class="topic-quarter">SG14</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Eukaryotic Diversity and the Volvocine Series">
+          <span class="topic-dot"></span><span class="topic-name">Eukaryotic Diversity and the Volvocine Series</span><span class="topic-quarter">SG15</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Protist Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Protist Diversity</span><span class="topic-quarter">SG16</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Fungal Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Fungal Diversity</span><span class="topic-quarter">SG17</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 18–19: ANIMALS & PLANTS (Q4) -->
+    <div class="field" data-field="diversity" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🌿</div>
+        <div>
+          <div class="field-title">Animal and Plant Diversity</div>
+          <span class="field-tag">SG 18–19 · Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Animal Body Plan and Diversification">
+          <span class="topic-dot"></span><span class="topic-name">Animal Body Plan and Diversification</span><span class="topic-quarter">SG18</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Key Animal Groups and Phylogeny">
+          <span class="topic-dot"></span><span class="topic-name">Key Animal Groups and Phylogeny</span><span class="topic-quarter">SG18</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Evolution of Plants">
+          <span class="topic-dot"></span><span class="topic-name">Evolution of Plants</span><span class="topic-quarter">SG19</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Key Plant Groups and Phylogeny">
+          <span class="topic-dot"></span><span class="topic-name">Key Plant Groups and Phylogeny</span><span class="topic-quarter">SG19</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="diversity" data-title="Threats to Plant Diversity">
+          <span class="topic-dot"></span><span class="topic-name">Threats to Plant Diversity</span><span class="topic-quarter">SG19</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SG 20: ECOLOGY (Q4) -->
+    <div class="field" data-field="ecology" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🌍</div>
+        <div>
+          <div class="field-title">Ecology & Human Impact</div>
+          <span class="field-tag">SG 20 · Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Ecosystem Dynamics — Population vs. Species">
+          <span class="topic-dot"></span><span class="topic-name">Ecosystem Dynamics — Population vs. Species</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Population Ecology">
+          <span class="topic-dot"></span><span class="topic-name">Population Ecology</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Ecosystem Disruptions and Human Impact">
+          <span class="topic-dot"></span><span class="topic-name">Ecosystem Disruptions and Human Impact</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Habitat Destruction and Fragmentation">
+          <span class="topic-dot"></span><span class="topic-name">Habitat Destruction and Fragmentation</span><span class="topic-quarter">SG20</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="ecology" data-title="Biodiversity Loss and Its Consequences">
+          <span class="topic-dot"></span><span class="topic-name">Biodiversity Loss and Its Consequences</span><span class="topic-quarter">SG20</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+</div><!-- end #mapPage -->
+
+<!-- TOPIC MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-quarter" id="modalQuarter"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+  </div>
+</div>
+
+<!-- PRACTICE PAGE -->
+<div id="practicePage">
+
+  <!-- FOUNDATIONS OF BIOLOGY -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🔬</div>
+      <div>
+        <span class="practice-section-title">Foundations of Biology</span>
+        <span class="practice-section-tag" style="background:rgba(80,200,100,0.15);color:#50c864;border:1px solid rgba(80,200,100,0.3);">Nature</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q1</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following is NOT a recognized branch of biology?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Zoology</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Botany</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Geology</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Microbiology</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Geology.</strong> Geology is the study of Earth's physical structure — a branch of Earth Science, not Biology. Zoology (animals), Botany (plants), and Microbiology (microscopic organisms) are all branches of Biology. Biology itself branches by type of organism, biological process, level of organization, and application.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q2</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the 8 characteristics of life describes an organism maintaining a stable internal environment?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Heredity</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Regulation and Homeostasis</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Growth and Development</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Energy Processing</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Regulation and Homeostasis.</strong> Homeostasis is the process of keeping the internal environment stable. Regulation is how it's achieved — e.g. sweating to cool down, or a single-celled organism using vacuoles to balance internal salt and water. All 8 characteristics: Order/Organization, Heredity, Evolutionary Adaptation, Energy Processing, Response to Stimuli, Reproduction, Regulation & Homeostasis, Growth & Development.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q3</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Viruses are a tricky edge case for the definition of life. Why?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> They can reproduce but only inside a host cell — they can't on their own</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> They have cells but no DNA</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> They are made of cells but cannot reproduce</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> They respond to stimuli but have no metabolism</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> Viruses have some characteristics of life (they can reproduce, they carry genetic information) but they cannot reproduce on their own — only inside a host cell. They also have no cells, no metabolism, and no homeostasis. This is why biologists debate whether viruses are truly "alive."</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q4</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which unifying theme of biology states that energy flows in one direction and cannot be recycled, while matter can be cycled?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Information</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Organization</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Evolution</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Energy and Matter</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Energy and Matter.</strong> Energy moves in one direction only and is lost as heat at every level (it cannot be recycled). Matter, however, is cycled — due to the conservation of matter, it can only be converted into new forms. The five unifying themes from your reviewer are: Organization, Information, Energy and Matter, Interaction, and Evolution.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q5</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In the Information unifying theme, DNA cannot leave the nucleus. What does it get transcribed into to carry information to the cytoplasm?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> ATP</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Protein</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> mRNA</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> tRNA</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — mRNA.</strong> The flow of information is: DNA → (transcription) → mRNA → (translation) → Proteins. DNA is transcribed into mRNA, which leaves the nucleus and carries the code to ribosomes in the cytoplasm where proteins are built. In transcription: A→U, G→C, C→G, T→A.</div>
+    </div>
+  </div>
+
+  <!-- TAXONOMY & CLASSIFICATION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌳</div>
+      <div>
+        <span class="practice-section-title">Taxonomy & Classification</span>
+        <span class="practice-section-tag" style="background:rgba(168,224,96,0.15);color:#a8e060;border:1px solid rgba(168,224,96,0.3);">Evolution</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q6</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Who is known as the Father of Modern Taxonomy and created binomial nomenclature?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Aristotle</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Carolus Linnaeus</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Ernst Haeckel</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Carl Woese</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Carolus Linnaeus (1707–1778).</strong> Linnaeus created binomial nomenclature (Genus species), introduced the hierarchical ranks (Kingdom → Phylum → Class → Order → Family → Genus → Species — remember: King Philip Came Over For Good Soup), and wrote Systema Naturae classifying thousands of species. Aristotle came first but his system was simpler; Haeckel proposed 3 kingdoms; Woese revolutionized taxonomy with rRNA genetics.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q7</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Carl Woese's Three-Domain System divided life into Bacteria, Archaea, and Eukarya. What revolutionary method did Woese use to propose this system?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Comparing physical body structures</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Fossil record analysis</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Microscope observations of cell shape</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> rRNA (ribosomal RNA) genetics</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — rRNA genetics.</strong> Woese compared ribosomal RNA sequences across organisms to determine evolutionary relationships at the molecular level. This revealed that Bacteria and Archaea — although both prokaryotes — are as different from each other as either is from eukaryotes, leading to the Three-Domain System replacing Whittaker's 5-kingdom system.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q8</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the correct order of Linnaean classification from broadest to most specific?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Species → Genus → Family → Order → Class → Phylum → Kingdom → Domain</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Kingdom → Domain → Class → Phylum → Order → Family → Genus → Species</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Domain → Species → Genus → Family → Order → Class → Phylum → Kingdom</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> Broadest to most specific: Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Mnemonic: <em>King Philip Came Over For Good Soup</em> (Kingdom, Phylum, Class, Order, Family, Genus, Species). Species is the most specific level; Domain is the broadest.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following is a common misconception about phylogenetic trees?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Branch points represent common ancestors</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Chimps and humans are sister taxa sharing a common ancestor</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Species at the top of a tree are "more evolved" than those at the bottom</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Phylogenetic trees show descent with modification</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — This is a misconception.</strong> Position on a phylogenetic tree does not indicate how "advanced" or "evolved" an organism is. All organisms alive today are equally evolved — they have all survived to the present. Other misconceptions: "modern species evolved from other modern species" and "species closest on the page are closest relatives."</div>
+    </div>
+  </div>
+
+  <!-- EVOLUTION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🦕</div>
+      <div>
+        <span class="practice-section-title">Evolution</span>
+        <span class="practice-section-tag" style="background:rgba(168,224,96,0.15);color:#a8e060;border:1px solid rgba(168,224,96,0.3);">Evolution</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Darwin's two main contributions to evolutionary theory are:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Genetics and taxonomy</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Natural selection (mechanism) and descent with modification (outcome)</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Phylogeny and binomial nomenclature</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Inheritance of acquired traits and the ladder of life</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> Darwin's two contributions: (1) <em>Natural selection</em> — the mechanism, individuals with favorable traits survive and reproduce more. (2) <em>Descent with modification</em> — the outcome, species accumulate differences from their ancestors over generations. He developed these ideas from his voyage on the HMS Beagle (1831–1836), especially observations on the Galápagos Islands.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q11</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which was a prevailing idea during Darwin's time that he directly challenged?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Species share common ancestors</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> The Earth is billions of years old</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Species are fixed and do not change over time</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Natural selection drives evolution</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Species are fixed.</strong> The prevailing idea was that species were created as they are and don't evolve or go extinct. Darwin challenged this directly. Other prevailing ideas he countered: that life was specially created, that the Earth was only a few thousand years old, and that humans are separate from animals.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q12</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Natural selection has 4 main principles. Which principle states that better traits lead to surviving and reproducing more?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Survival and Reproduction</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Variation</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Adaptation</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Competition</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Survival and Reproduction.</strong> The four principles of natural selection are: (1) Variation — individuals have different traits, (2) Competition — organisms compete for resources, (3) Survival and Reproduction — better traits = survive and reproduce more, (4) Adaptation — beneficial traits become more common over time.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q13</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the key difference between Lamarck's and Darwin's ideas about how evolution works?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Lamarck believed in evolution; Darwin did not</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Darwin believed traits acquired during life are inherited; Lamarck did not</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Both had identical ideas about how traits are passed on</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Lamarck believed changes during an organism's lifetime are inherited; Darwin focused on heritable variation already present in a population</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D.</strong> Lamarck's key ideas: use and disuse (body parts change when used/not used) and inheritance of acquired characteristics (changes during life are passed on). Darwin's key ideas: evolution acts on <em>heritable</em> variation already present in a population — traits acquired during life are NOT passed on. Both agreed species change over time and that organisms can become better adapted, but disagreed fundamentally on the mechanism.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q14</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which type of natural selection favors the average trait and selects against extremes, narrowing the distribution?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Directional selection</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Stabilizing selection</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Disruptive selection</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Artificial selection</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Stabilizing selection.</strong> The three patterns: (1) <em>Stabilizing</em> — the average is favored, extremes are selected against, narrows distribution. (2) <em>Directional</em> — one extreme is favored, shifts distribution left or right. (3) <em>Disruptive</em> — both extremes are favored, the middle does poorly, creates a bimodal distribution.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q15</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Mutation and sexual reproduction are both sources of genetic variation. What is the key difference between them?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Only mutations affect the gene pool</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Sexual reproduction creates entirely new alleles</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Mutation creates new alleles; sexual reproduction reshuffles existing ones</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Sexual reproduction is the only source of new variation</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Mutation is a change in DNA when it is copied or repaired — it creates <em>new alleles</em> for the gene pool. Sexual reproduction (through crossing over, independent assortment, and fertilization) reshuffles <em>existing alleles</em> into new combinations. Both contribute to the genetic variation that natural selection acts on.</div>
+    </div>
+  </div>
+
+  <!-- THE CELL -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🧫</div>
+      <div>
+        <span class="practice-section-title">The Cell</span>
+        <span class="practice-section-tag" style="background:rgba(64,212,176,0.15);color:#40d4b0;border:1px solid rgba(64,212,176,0.3);">Cell</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q16</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A compound microscope uses two lenses: the ocular lens (10×) and the objective lens (40×). What is the total magnification?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 50×</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 400×</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 4×</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 14×</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 400×.</strong> Total magnification = ocular × objective = 10 × 40 = 400×. The two lenses multiply (not add) their magnifications. This is why microscopes can achieve very high magnifications by combining lenses.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q17</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which organelle is known as the "powerhouse of the cell" because it produces ATP through cellular respiration?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Ribosome</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Nucleus</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Mitochondria</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Golgi apparatus</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Mitochondria.</strong> The mitochondria convert glucose and oxygen into ATP (adenosine triphosphate) — the cell's energy currency — through cellular respiration. Cells with high energy demands (like muscle cells) have more mitochondria. The nucleus stores DNA; ribosomes make proteins; the Golgi packages and ships proteins.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q18</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the main difference between a prokaryotic and a eukaryotic cell?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Prokaryotes have no membrane-bound nucleus; eukaryotes do</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Eukaryotes have no cell membrane; prokaryotes do</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Prokaryotes have more organelles than eukaryotes</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Eukaryotes are always smaller than prokaryotes</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> The defining difference is the nucleus. Prokaryotes (like bacteria) have no membrane-bound nucleus — their DNA floats freely in the cytoplasm. Eukaryotes (like plant, animal, and fungal cells) have a true nucleus enclosed by a membrane. Eukaryotes also generally have more organelles.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q19</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The movement of water from an area of high water concentration to low water concentration across a semi-permeable membrane is called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Active transport</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Facilitated diffusion</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Endocytosis</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Osmosis</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Osmosis.</strong> Osmosis is the passive movement of water across a semi-permeable membrane from high to low water concentration (or equivalently, from low to high solute concentration). It requires no energy. Active transport moves substances against their gradient and requires ATP.</div>
+    </div>
+  </div>
+
+  <!-- DIVERSITY OF LIFE -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌿</div>
+      <div>
+        <span class="practice-section-title">Diversity of Life</span>
+        <span class="practice-section-tag" style="background:rgba(240,192,64,0.15);color:#f0c040;border:1px solid rgba(240,192,64,0.3);">Diversity</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q20</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Bacteria are classified as prokaryotes. Which of the following is a unique feature of bacterial cells?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> They have a membrane-bound nucleus</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> They have a cell wall made of peptidoglycan</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> They contain chloroplasts</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> They reproduce only sexually</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Peptidoglycan cell wall.</strong> Bacterial cell walls are made of peptidoglycan, a unique polymer not found in eukaryotes. This is why antibiotics like penicillin can target bacteria without harming human cells — they attack peptidoglycan synthesis. Bacteria reproduce asexually through binary fission.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q21</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Protists are best described as:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Prokaryotic organisms with no nucleus</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Multicellular organisms only</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Mostly unicellular eukaryotes that don't fit into other kingdoms</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Fungi that live in water</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Protists are a diverse group of mostly unicellular eukaryotes that are essentially defined by what they are not — not animals, plants, or fungi. They include amoeba, paramecia, algae, and plasmodium (the malaria parasite). Some are photosynthetic, some are heterotrophic.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q22</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which characteristic distinguishes fungi from plants?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Fungi are heterotrophs — they cannot make their own food</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Fungi have chloroplasts</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Fungi have no cell wall</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Fungi are prokaryotes</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Fungi are heterotrophs.</strong> Unlike plants which photosynthesize (autotrophs), fungi cannot make their own food. They are decomposers — they secrete enzymes to break down organic matter externally and absorb the nutrients. Fungi do have cell walls, but made of chitin (not cellulose like plants), and they are eukaryotes.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q23</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following animal groups is characterized by having a backbone (vertebral column)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Insects</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Mollusks</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Arthropods</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Vertebrates</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Vertebrates.</strong> Vertebrates (fish, amphibians, reptiles, birds, mammals) are defined by their vertebral column (backbone). Insects, mollusks, and arthropods are all invertebrates — they make up the vast majority of animal species on Earth.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q24</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What structure in plant cells allows them to perform photosynthesis?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Mitochondria</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Chloroplast</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Cell wall</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Vacuole</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Chloroplast.</strong> Chloroplasts contain chlorophyll, the green pigment that absorbs sunlight. They convert light energy, CO₂, and water into glucose and oxygen through photosynthesis. Animal cells have no chloroplasts — this is a key feature that distinguishes plant and animal cells.</div>
+    </div>
+  </div>
+
+  <!-- ECOLOGY -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌍</div>
+      <div>
+        <span class="practice-section-title">Ecology</span>
+        <span class="practice-section-tag" style="background:rgba(224,128,80,0.15);color:#e08050;border:1px solid rgba(224,128,80,0.3);">Ecology</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q25</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The nonliving (physical and chemical) factors of an environment are called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Biotic factors</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Ecosystems</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Abiotic factors</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Populations</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Abiotic factors.</strong> Abiotic (non-living) factors include temperature, water, sunlight, soil, and pH. Biotic factors are the living components (organisms, their interactions). Together, biotic and abiotic factors make up an ecosystem — every living thing is shaped by both.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q26</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">In a food chain, which organisms are the primary producers?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Plants and photosynthetic organisms</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Herbivores</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Carnivores</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Decomposers</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Plants and photosynthetic organisms.</strong> Producers (autotrophs) form the base of every food chain — they capture solar energy and convert it into chemical energy (glucose). All other organisms ultimately depend on producers. Herbivores are primary consumers; carnivores are secondary or tertiary consumers; decomposers break down dead matter.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q27</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A relationship where one organism benefits and the other is neither harmed nor helped is called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Mutualism</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Parasitism</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Predation</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Commensalism</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Commensalism.</strong> In commensalism, one organism benefits while the other is unaffected (e.g. barnacles on a whale). Mutualism = both benefit (e.g. bees and flowers). Parasitism = one benefits, one is harmed (e.g. tapeworm in a host). Predation = one organism eats another.</div>
+    </div>
+  </div>
+
+</div><!-- end #practicePage -->
+
+<!-- ══════════════════════════════════ TOOLS PAGE -->
+<div id="toolsPage">
+  <div class="ptool-header">
+    <div class="ptool-icon">🌿</div>
+    <div>
+      <div class="ptool-title">Phylogenetic Tree Maker</div>
+      <div class="ptool-sub">Select organisms · build a cladogram · explore shared derived characters</div>
+    </div>
+  </div>
+
+  <div class="ptool-panel">
+    <!-- Sidebar -->
+    <div class="ptool-sidebar">
+      <div>
+        <div class="ptool-section-label">Choose Organisms (up to 10)</div>
+        <div class="ptool-taxon-list" id="taxonList"></div>
+      </div>
+      <div>
+        <div class="ptool-section-label">Presets</div>
+        <div class="ptool-btn-row">
+          <button class="ptool-btn" id="presetAnimals">Vertebrates</button>
+          <button class="ptool-btn" id="presetDomains">3 Domains</button>
+          <button class="ptool-btn" id="presetPlants">Plant Evolution</button>
+          <button class="ptool-btn" id="presetCells">Cell Types</button>
+        </div>
+      </div>
+      <div>
+        <div class="ptool-section-label">Actions</div>
+        <div class="ptool-btn-row">
+          <button class="ptool-btn primary" id="buildTreeBtn">Build Tree ▶</button>
+          <button class="ptool-btn" id="clearSelBtn">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="ptool-section-label">Selected: <span id="selCount">0</span></div>
+        <div id="selNames" style="font-size:10px;color:var(--muted);line-height:1.8"></div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="ptool-canvas-wrap">
+      <canvas id="phyloCanvas" height="500"></canvas>
+    </div>
+  </div>
+
+  <!-- Info panel -->
+  <div class="ptool-info" id="phyloInfo">
+    <strong>How to use:</strong> Select 2–10 organisms from the list, then click <em>Build Tree</em> to generate a cladogram based on shared derived characters (synapomorphies). Click any node on the tree to see what traits unite that clade.
+  </div>
+
+  <!-- Trait legend -->
+  <div style="margin-top:20px">
+    <div class="ptool-section-label" style="margin-bottom:10px">Character Legend</div>
+    <div class="ptool-trait-grid" id="traitGrid"></div>
+  </div>
+</div><!-- end #toolsPage -->
+
+<!-- ══════════════════════ NATURAL SELECTION SIMULATOR -->
+<div id="natselPage">
+  <div class="bio-tool-header">
+    <div class="bio-tool-title">🦎 Natural Selection Simulator</div>
+    <div class="bio-tool-sub">Watch a population of prey evolve over generations as a predator hunts. Adjust mutation rate, selection pressure, and environment to see how traits shift — or how populations go extinct.</div>
+  </div>
+
+  <div class="ns-layout">
+    <!-- Canvas -->
+    <div>
+      <canvas id="nsCanvas" height="420"></canvas>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="bio-btn active" id="nsBtnRun">▶ Run</button>
+        <button class="bio-btn" id="nsBtnStep">Step +1</button>
+        <button class="bio-btn" id="nsBtnReset">↺ Reset</button>
+        <div style="flex:1;"></div>
+        <span id="nsGenLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);align-self:center;">Generation 0</span>
+      </div>
+      <!-- Population trend chart -->
+      <canvas id="nsChartCanvas" height="100"></canvas>
+      <div class="ns-legend" style="margin-top:6px;">
+        <span><span class="ns-legend-dot" style="background:#50c864"></span><span style="font-size:11px;color:var(--muted);">Camouflaged</span></span>
+        <span><span class="ns-legend-dot" style="background:#e05050"></span><span style="font-size:11px;color:var(--muted);">Conspicuous</span></span>
+        <span><span class="ns-legend-dot" style="background:#f0c040"></span><span style="font-size:11px;color:var(--muted);">Intermediate</span></span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="ns-controls">
+      <div class="bio-panel">
+        <div class="bio-label">Environment</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="bio-btn active" id="nsEnvForest" data-env="forest">🌿 Forest</button>
+          <button class="bio-btn" id="nsEnvDesert" data-env="desert">🏜️ Desert</button>
+          <button class="bio-btn" id="nsEnvSnow"   data-env="snow">❄️ Snow</button>
+          <button class="bio-btn" id="nsEnvChange" data-env="change">🌦️ Changing</button>
+        </div>
+      </div>
+
+      <div class="bio-panel">
+        <div class="bio-label">Parameters</div>
+        <div class="ns-slider-row">
+          <label><span>Population size</span><span id="nsPopVal">60</span></label>
+          <input type="range" class="ns-slider" id="nsPopSlider" min="20" max="120" value="60"/>
+        </div>
+        <div class="ns-slider-row" style="margin-top:10px;">
+          <label><span>Mutation rate</span><span id="nsMutVal">0.05</span></label>
+          <input type="range" class="ns-slider" id="nsMutSlider" min="0" max="0.3" step="0.01" value="0.05"/>
+        </div>
+        <div class="ns-slider-row" style="margin-top:10px;">
+          <label><span>Predator pressure</span><span id="nsPresVal">0.30</span></label>
+          <input type="range" class="ns-slider" id="nsPresSlider" min="0" max="0.8" step="0.05" value="0.3"/>
+        </div>
+        <div class="ns-slider-row" style="margin-top:10px;">
+          <label><span>Reproduction rate</span><span id="nsReproVal">1.5</span></label>
+          <input type="range" class="ns-slider" id="nsReproSlider" min="1.0" max="3.0" step="0.1" value="1.5"/>
+        </div>
+      </div>
+
+      <div class="bio-panel">
+        <div class="bio-label">Live Stats</div>
+        <div class="ns-stat-grid">
+          <div class="ns-stat"><div class="ns-stat-val" id="nsTotalPop">60</div><div class="ns-stat-lbl">Total</div></div>
+          <div class="ns-stat"><div class="ns-stat-val" id="nsAvgFit" style="color:var(--lime)">—</div><div class="ns-stat-lbl">Avg Fitness</div></div>
+          <div class="ns-stat"><div class="ns-stat-val" id="nsCamoCount" style="color:#50c864">—</div><div class="ns-stat-lbl">Camouflaged</div></div>
+          <div class="ns-stat"><div class="ns-stat-val" id="nsConsCount" style="color:#e05050">—</div><div class="ns-stat-lbl">Conspicuous</div></div>
+        </div>
+      </div>
+
+      <div class="bio-note" id="nsEventLog">Simulation ready. Press ▶ Run or Step to begin.</div>
+    </div>
+  </div>
+</div><!-- end #natselPage -->
+
+<!-- ══════════════════════ MICROSCOPE SIMULATOR -->
+<div id="microPage">
+  <div class="bio-tool-header">
+    <div class="bio-tool-title">🔬 Virtual Microscope</div>
+    <div class="bio-tool-sub">Explore six biological specimens at four magnifications. Use the X/Y stage sliders to move the slide — just like a real microscope, the view moves <em>opposite</em> to the slider direction.</div>
+  </div>
+
+  <div class="micro-layout">
+    <!-- Eyepiece view -->
+    <div>
+      <div class="micro-scope-wrap" id="microScopeWrap">
+        <canvas id="microCanvas" width="500" height="500"></canvas>
+        <div class="micro-vignette"></div>
+        <div class="micro-crosshair"></div>
+        <div class="micro-scale-bar" id="microScaleBar">
+          <div class="micro-scale-line" id="microScaleLine" style="width:60px;"></div>
+          <div class="micro-scale-txt"  id="microScaleTxt">100 µm</div>
+        </div>
+      </div>
+      <div class="micro-info" id="microInfo">
+        <strong>Select a specimen</strong> and magnification to begin.
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="micro-controls">
+      <div class="bio-panel">
+        <div class="bio-label">Magnification</div>
+        <div class="micro-mag-btns">
+          <div class="micro-mag-btn" data-mag="40">Scanning<br><span style="font-size:8px;opacity:.7">4× obj · 40×</span></div>
+          <div class="micro-mag-btn active" data-mag="100">LPO<br><span style="font-size:8px;opacity:.7">10× obj · 100×</span></div>
+          <div class="micro-mag-btn" data-mag="400">HPO<br><span style="font-size:8px;opacity:.7">40× obj · 400×</span></div>
+          <div class="micro-mag-btn" data-mag="1000">Oil Imm.<br><span style="font-size:8px;opacity:.7">100× obj · 1000×</span></div>
+        </div>
+      </div>
+
+      <div class="bio-panel">
+        <div class="bio-label">Specimen</div>
+        <div class="micro-specimen-btns" id="microSpecBtns">
+          <button class="micro-spec-btn active" data-spec="cheek">Cheek Cells</button>
+          <button class="micro-spec-btn" data-spec="onion">Onion Epidermis</button>
+          <button class="micro-spec-btn" data-spec="blood">Blood Smear</button>
+          <button class="micro-spec-btn" data-spec="leaf">Leaf Cross-section</button>
+          <button class="micro-spec-btn" data-spec="bacteria">Bacteria (rod)</button>
+          <button class="micro-spec-btn" data-spec="paramecium">Paramecium</button>
+        </div>
+      </div>
+
+      <div class="bio-panel">
+        <div class="bio-label">Mechanical Stage</div>
+        <div class="micro-focus-row">
+          <label><span>X-axis</span><span style="font-size:9px;color:var(--muted);">◀ slide moves opposite ▶</span></label>
+          <input type="range" class="ns-slider" id="microStageX" min="-200" max="200" value="0"/>
+        </div>
+        <div class="micro-focus-row" style="margin-top:10px;">
+          <label><span>Y-axis</span><span style="font-size:9px;color:var(--muted);">▲ slide moves opposite ▼</span></label>
+          <input type="range" class="ns-slider" id="microStageY" min="-200" max="200" value="0"/>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="bio-btn" id="microStageReset" style="font-size:9px;padding:5px 12px;">↺ Center</button>
+          <button class="bio-btn" id="microPauseBtn" style="font-size:9px;padding:5px 12px;">⏸ Pause</button>
+        </div>
+      </div>
+
+      <div class="bio-panel">
+        <div class="bio-label">Coarse Focus</div>
+        <div class="micro-focus-row">
+          <label><span>Focus</span><span id="microFocusVal">50%</span></label>
+          <input type="range" class="ns-slider" id="microFocusSlider" min="0" max="100" value="50"/>
+        </div>
+        <div class="bio-label" style="margin-top:12px;">Brightness</div>
+        <div class="micro-focus-row">
+          <label><span>Light</span><span id="microBrightVal">70%</span></label>
+          <input type="range" class="ns-slider" id="microBrightSlider" min="20" max="100" value="70"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end #microPage -->
+
+<footer>Biology · Grade 8 Champaca · Click any topic to review</footer>
+
+<script>
+const descriptions = {
+  // SG1
+  "Biology as the Study of Life": {q:"Q1", field:"nature", desc:"Biology (from Greek bios = life, logos = study) is the scientific study of life. It examines how living organisms are structured, grow, function, reproduce, interact, and evolve. Life is described as an emergent — the parts alone (atoms, molecules) are not alive, but when combined and organized, life emerges. Biology has real-world applications in agriculture, climate science, biotechnology, conservation, and health."},
+  "Branches of Biology": {q:"Q1", field:"nature", desc:"Because life is so vast, biology branches into specializations. Branches by <em>type of organism</em>: Microbiology (microscopic organisms), Botany (plants), Zoology (animals). Branches by <em>process</em>: Genetics (genes and heredity), Physiology (how organisms function), Cell Biology (cell structure and function). Branches by <em>level of organization</em>: Ecology (organism-environment interactions), Evolutionary Biology (change over time), Developmental Biology (growth from single cell). Branches by <em>application</em>: Biotechnology, Bioinformatics."},
+  // SG2
+  "Characteristics of Life": {q:"Q1", field:"nature", desc:"All living things share 8 characteristics: (1) <strong>Order/Organization</strong> — parts work together (e.g. leaf cells, stem cells, and root cells all transport energy). (2) <strong>Response to Stimuli</strong> — react to the environment (e.g. moving hand from heat). (3) <strong>Reproduction</strong> — makes new life; sexual (2 parents), asexual (1 parent/clone), or binary fission (single-celled). (4) <strong>Growth and Development</strong> — organisms mature and change (e.g. tadpole → frog). (5) <strong>Regulation</strong> — processes that maintain homeostasis. (6) <strong>Homeostasis</strong> — maintaining a stable internal environment (e.g. sweating to cool down). (7) <strong>Energy Processing</strong> — photosynthesis (plants: CO₂ + H₂O → glucose + O₂) or cellular respiration (glucose → ATP). (8) <strong>Evolutionary Adaptation</strong> — heritable traits that aid survival build up over time. Plus <strong>Heredity</strong> — passing traits via genes to offspring. Viruses are a borderline case — they can replicate but only inside a host cell."},
+  // SG3
+  "Organization": {q:"Q1", field:"nature", desc:"Organization is the unifying theme that says life is hierarchical and structured — the whole is more than the sum of its parts. The levels of life's organization from smallest to largest: molecule → organelle → cell → tissue → organ → organ system → organism → population → community → ecosystem → biosphere. Each level has properties that emerge from the combination of lower levels."},
+  "Information": {q:"Q1", field:"nature", desc:"All living things store and transmit information via DNA. A <em>gene</em> is a specific segment of DNA; the complete set of genes is the <em>genome</em>. DNA cannot leave the nucleus, so it is <em>transcribed</em> into mRNA (messenger RNA), which carries the instructions to ribosomes in the cytoplasm where <em>translation</em> builds proteins. The flow: DNA → (transcription) → mRNA → (translation) → Protein. Transcription base pairing: A→U, G→C, C→G, T→A."},
+  "Flow of Energy and Cycling of Matter": {q:"Q1", field:"nature", desc:"Energy and matter behave differently in living systems. <strong>Energy</strong> flows in one direction — it cannot be recycled. Sunlight is captured by producers through photosynthesis and passed along food chains, losing heat at every step. <strong>Matter</strong> is cycled — due to the law of conservation of matter, it cannot be created or destroyed, only converted. Carbon, nitrogen, and water all cycle through ecosystems indefinitely."},
+  "Interaction": {q:"Q1", field:"nature", desc:"No organism is isolated — all living systems, from the molecular level to ecosystems, are interconnected and interdependent. Organisms interact with each other (predation, competition, mutualism) and with their physical environment (temperature, water, light). These interactions form complex communities and ecosystems where survival depends on the whole network."},
+  "Evolutionary Theory": {q:"Q1", field:"nature", desc:"Evolution is described as the core unifying theme of all biology because it explains both the <em>unity</em> of life (shared ancestry, common biochemistry — all life uses DNA) and its <em>diversity</em> (natural selection produces the variety of species). Evolution connects all levels of biology from molecular genetics to ecosystems. In the words of biologist Theodosius Dobzhansky: 'Nothing in biology makes sense except in the light of evolution.'"},
+  // SG4
+  "Science as Inquiry": {q:"Q1", field:"nature", desc:"Science as Inquiry involves four core skills: <strong>Observing</strong> (gathering information using senses or tools), <strong>Inferring</strong> (drawing conclusions from observations), <strong>Predicting</strong> (forecasting outcomes based on patterns), and <strong>Identifying variables</strong> (the independent variable is what you change, the dependent variable is what you measure, and the controlled variables are kept constant). A hypothesis is a testable prediction. A scientific theory is not a guess — it is a well-tested explanation supported by extensive evidence from multiple fields."},
+  "Scientific Method and Lab Skills": {q:"Q1", field:"nature", desc:"The steps of the scientific method: (1) Observation, (2) Question, (3) Research/Gather Information, (4) Hypothesis, (5) Experiment/Data Collection, (6) Analysis, (7) Conclusion, (8) Communication of Results. Good scientific writing is clear, objective, and structured. A lab report includes: Title, Introduction, Materials & Methods, Results (data tables, graphs), Discussion, and Conclusion. Lab safety rules apply at all times."},
+  // SG5
+  "Classifying the Diversity of Life": {q:"Q2", field:"evolution", desc:"Taxonomy is the science of classifying and naming living organisms. The modern system uses <strong>Linnaean classification</strong>: Kingdom → Phylum → Class → Order → Family → Genus → Species (mnemonic: <em>King Philip Came Over For Good Soup</em>). Carolus Linnaeus (1707–1778), the Father of Modern Taxonomy, created <strong>binomial nomenclature</strong> — every species has a two-part Latin name (Genus species). Carl Woese later proposed the Three-Domain System (Bacteria, Archaea, Eukarya) based on rRNA genetics."},
+  "Darwin and the Theory of Natural Selection": {q:"Q2", field:"evolution", desc:"Charles Darwin developed his theory during his voyage on the HMS Beagle (1831–1836), especially from observations on the Galápagos Islands. His two main contributions: (1) <strong>Natural selection</strong> (the mechanism) — individuals with favorable traits survive and reproduce more. (2) <strong>Descent with modification</strong> (the outcome) — species accumulate differences from ancestors over generations. The 4 principles of natural selection: Variation, Competition, Survival & Reproduction, Adaptation. Darwin published these ideas in <em>On the Origin of Species</em> (1859)."},
+  "The Tree of Life": {q:"Q2", field:"evolution", desc:"The Tree of Life is a visual representation of evolutionary relationships among all organisms, showing that all life shares common ancestors — a concept called <strong>universal common descent</strong>. <strong>Phylogenetic trees</strong> show branch points (common ancestors) and lineages (evolutionary paths). Common misconceptions: species at the top are NOT 'more evolved,' modern species did NOT evolve from other modern species, and species closest on the page are NOT necessarily the closest relatives."},
+  // SG6
+  "Lamarck's Hypothesis of Evolution": {q:"Q2", field:"evolution", desc:"Jean-Baptiste Lamarck proposed an early but incorrect mechanism of evolution. His ideas: <strong>Use and disuse</strong> — body parts change when heavily used or not used. <strong>Inheritance of acquired characteristics</strong> — changes an organism undergoes during its lifetime are passed to offspring. Lamarck was right that species change over time but wrong about the mechanism. Darwin showed that only <em>heritable genetic traits</em> — not traits acquired during life — are passed on. Both agreed species are not fixed and can become better adapted."},
+  "Descent with Modification by Natural Selection": {q:"Q2", field:"evolution", desc:"Descent with modification means all species have descended from earlier ancestors, accumulating changes (modifications) over generations. Natural selection is the mechanism: (1) <strong>Variation</strong> — individuals differ in traits, (2) <strong>Competition</strong> — organisms compete for resources, (3) <strong>Survival & Reproduction</strong> — better-suited individuals reproduce more, (4) <strong>Adaptation</strong> — beneficial traits spread through the population over time. Evolution happens in <em>populations</em>, not in individuals during their lifetime."},
+  "Evolutionary Evidence": {q:"Q2", field:"evolution", desc:"Multiple lines of evidence support evolution: <strong>Fossil Records</strong> — historical sequence of organisms showing gradual changes over time. <strong>Comparative Anatomy</strong> — homologous structures (same origin, different function, e.g. human arm and whale flipper) suggest common ancestry. <strong>Molecular Biology</strong> — DNA, RNA, and protein sequences; species with more similar sequences are more closely related. <strong>Biogeography</strong> — distribution of species across regions supports descent with modification (mainland → islands). <strong>Direct Observation</strong> — real-time evolution, e.g. antibiotic resistance in bacteria, beak adaptation in finches."},
+  "Mutation as Raw Material for Evolution": {q:"Q2", field:"evolution", desc:"Mutation is a change in DNA sequence when DNA is copied or repaired. Mutations create <em>new alleles</em> — they are the original source of all genetic variation in a population. Many mutations have little or no effect; some are harmful; a few are beneficial in a specific environment. Beneficial mutations that improve survival and reproduction are acted upon by natural selection. Without mutation, there would be no new variation for evolution to work with."},
+  // SG7
+  "Genetic Variation and Its Sources": {q:"Q2", field:"evolution", desc:"<strong>Genetic variation</strong> = inherited differences in genes and alleles between individuals. A <em>gene</em> is a segment of DNA for a specific heritable feature; <em>alleles</em> are different forms of the same gene (e.g. A, B, O blood type). The <em>gene pool</em> = all alleles in a population. Sources of variation: (1) <strong>Mutation</strong> — creates new alleles, (2) <strong>Sexual reproduction</strong> — reshuffles existing alleles through crossing over (chromosomes swap pieces in meiosis), independent assortment (chromosome pairs separate randomly), and fertilization (unique offspring combination)."},
+  "Natural Selection, Genetic Drift, and Gene Flow": {q:"Q2", field:"evolution", desc:"Three mechanisms that change allele frequencies in a population: (1) <strong>Natural selection</strong> — non-random; traits that improve survival/reproduction become more common. (2) <strong>Genetic drift</strong> — random changes in allele frequency due to chance, strongest in small populations (e.g. bottleneck or founder effect). (3) <strong>Gene flow</strong> — movement of alleles between populations when individuals migrate; reduces differences between populations. Allele frequency changes over generations = evolution of the population."},
+  "Natural Selection and Adaptive Evolution": {q:"Q2", field:"evolution", desc:"<strong>Adaptive evolution</strong> occurs when natural selection increases the frequency of alleles that improve fitness (survival and reproduction). Three patterns of natural selection: (1) <strong>Stabilizing selection</strong> — average is favored, extremes selected against, narrows distribution. (2) <strong>Directional selection</strong> — one extreme is favored, shifts distribution left or right. (3) <strong>Disruptive selection</strong> — both extremes are favored, middle does poorly, creates a bimodal distribution."},
+  // SG8
+  "The Biological Species Concept": {q:"Q2", field:"evolution", desc:"Ernst Mayr (1942) defined a species as 'groups of interbreeding natural populations which are reproductively isolated from other such groups.' Reproductive isolation means members of different species cannot successfully interbreed and produce fertile offspring. Species and Domains are the only taxonomic levels with a true biological identity (natural classification). Higher levels like Kingdom are more artificial — different scientists may group organisms differently."},
+  "Allopatric and Sympatric Speciation": {q:"Q2", field:"evolution", desc:"<strong>Speciation</strong> is the formation of new species. <strong>Allopatric speciation</strong> (allo = different, patri = homeland) — populations become geographically separated (e.g. by a mountain range or ocean), evolve independently, and eventually become reproductively isolated. <strong>Sympatric speciation</strong> (sym = same) — new species evolve within the same geographic area, often through polyploidy, habitat differentiation, or sexual selection. Both result in reproductive isolation, which is the key criterion for being a separate species."},
+  // SG9
+  "The Microscope — Parts, Types and Power": {q:"Q3", field:"cell", desc:"The microscope is the essential tool for studying cells. Types: <strong>Light (compound) microscope</strong> — uses lenses and visible light; total magnification = ocular lens × objective lens (e.g. 10× × 40× = 400×). <strong>Electron microscope</strong> — uses electrons for far greater magnification and resolution. Key concepts: <strong>Magnification</strong> = how much larger the image appears; <strong>Resolving power (resolution)</strong> = ability to distinguish two close points as separate (more important than magnification alone). Proper use: coarse focus first, then fine focus."},
+  // SG10
+  "Cell Theory and Germ Theory": {q:"Q3", field:"cell", desc:"<strong>Cell Theory</strong> (three principles): (1) All living things are made of cells. (2) The cell is the basic structural and functional unit of life. (3) All cells come from pre-existing cells (Virchow). Key contributors: Hooke (described cells in cork, 1665), Schleiden (plants are made of cells), Schwann (animals are made of cells). <strong>Germ Theory</strong>: infectious diseases are caused by microorganisms (pathogens), not 'bad air' or spontaneous generation. Pasteur and Koch developed germ theory through controlled experiments."},
+  "Cell Structure and Function": {q:"Q3", field:"cell", desc:"Key organelles and their functions: <strong>Nucleus</strong> (stores DNA, control center), <strong>Mitochondria</strong> (ATP production via cellular respiration — the powerhouse), <strong>Ribosomes</strong> (protein synthesis), <strong>Endoplasmic Reticulum</strong> (rough ER: protein processing; smooth ER: lipid synthesis), <strong>Golgi Apparatus</strong> (packaging and shipping proteins), <strong>Lysosomes</strong> (digestion via enzymes), <strong>Cell Membrane</strong> (selective barrier). Plant cells additionally have: <strong>Cell Wall</strong> (structural support, cellulose), <strong>Chloroplasts</strong> (photosynthesis), <strong>Central Vacuole</strong> (storage, turgor pressure)."},
+  // SG11
+  "Cell Membrane and Transport Mechanisms": {q:"Q3", field:"cell", desc:"The cell membrane is a <strong>phospholipid bilayer</strong> — selectively permeable, controlling what enters and exits. Transport types: <strong>Passive transport</strong> (no energy/ATP needed): Simple diffusion (small nonpolar molecules move freely), Facilitated diffusion (uses protein channels for polar/large molecules), Osmosis (water moves from high to low water concentration across a semi-permeable membrane). <strong>Active transport</strong> (requires ATP): moves substances against their concentration gradient (low → high). <strong>Endocytosis</strong> (cell engulfs large particles) and <strong>Exocytosis</strong> (cell expels large particles)."},
+  // SG12
+  "Prokaryotic and Eukaryotic Cells": {q:"Q3", field:"cell", desc:"The fundamental division of cellular life: <strong>Prokaryotes</strong> — no membrane-bound nucleus, DNA floats freely in cytoplasm, no membrane-bound organelles, generally smaller (~1–10 µm). Examples: Bacteria and Archaea. <strong>Eukaryotes</strong> — have a true, membrane-bound nucleus; have membrane-bound organelles; generally larger and more complex. Examples: plants, animals, fungi, protists. Key difference: the nucleus. Both have ribosomes and a cell membrane."},
+  "Endosymbiotic Theory": {q:"Q3", field:"cell", desc:"The endosymbiotic theory (proposed by Lynn Margulis) explains the origin of mitochondria and chloroplasts in eukaryotic cells. An ancestral prokaryote engulfed smaller aerobic bacteria — rather than digesting them, they formed a mutually beneficial relationship. Over time, these engulfed bacteria evolved into <strong>mitochondria</strong> (from aerobic bacteria) and <strong>chloroplasts</strong> (from photosynthetic cyanobacteria). Evidence: both organelles have their own DNA, divide by binary fission, and have double membranes."},
+  "Evolution of Plant and Animal Cells": {q:"Q3", field:"cell", desc:"Plant and animal cells share a common eukaryotic ancestor but have diverged. <strong>Plant cells</strong> gained chloroplasts (via endosymbiosis of cyanobacteria), cell walls (cellulose), and large central vacuoles — adaptations for a sessile, photosynthetic lifestyle. <strong>Animal cells</strong> lack cell walls and chloroplasts, giving them flexibility for movement. Both retained mitochondria. These specializations reflect the different ecological niches and survival strategies of plants and animals."},
+  // SG13
+  "Classification and Phylogeny": {q:"Q3", field:"cell", desc:"<strong>Phylogeny</strong> is the evolutionary history and relationships of organisms (from Greek: tribe + origin). <strong>Systematics</strong> combines taxonomy (naming and describing) with phylogeny (evolutionary relationships) to create an accurate picture of how life is related. Classical taxonomy grouped by appearance (artificial — e.g. dolphins and fish look alike but are not close relatives). Modern systematics uses DNA data and common ancestry (natural — more accurate). Homologous characters — traits inherited from a common ancestor — are the basis for grouping."},
+  "Schemes of Biological Classification": {q:"Q3", field:"cell", desc:"Classification systems have evolved over time: Aristotle (2 groups: plants/animals) → Linnaeus (hierarchical kingdoms) → Haeckel (3 kingdoms) → Whittaker (5 kingdoms: Monera, Protista, Fungi, Plantae, Animalia) → Woese (3 domains: Bacteria, Archaea, Eukarya based on rRNA). Phylogenetic tree terminology: <em>Taxa</em> = groups at branch tips; <em>Branch points</em> = common ancestors; <em>Sister taxa</em> = groups sharing a most recent common ancestor; <em>Outgroup</em> = distant relative used as a reference."},
+  "Introduction to Biodiversity": {q:"Q3", field:"cell", desc:"Biodiversity refers to the variety of life on Earth at all levels — genetic diversity (variation within a species), species diversity (number of different species), and ecosystem diversity (variety of habitats and ecosystems). Scientists estimate there are 8–10 million species on Earth, but only ~1.8 million have been formally described. Biodiversity is essential for ecosystem stability, resilience, and the services ecosystems provide to humans (clean air, water, food, medicine)."},
+  // SG14
+  "Prokaryotic Diversity": {q:"Q4", field:"diversity", desc:"Prokaryotes (Domains Bacteria and Archaea) are the oldest and most abundant life forms. <strong>Bacteria</strong>: diverse metabolisms, cell walls of peptidoglycan, found everywhere. <strong>Archaea</strong>: no peptidoglycan, often found in extreme environments (hot springs, salt lakes, deep ocean). Both reproduce by binary fission. Ecological importance: decomposers, nitrogen fixers, base of food chains. Economic importance: fermentation (yogurt, bread), antibiotics, biotechnology. Prokaryotes are essential for nutrient cycling in all ecosystems."},
+  "Eukaryotic Diversity and the Volvocine Series": {q:"Q4", field:"diversity", desc:"Eukaryotes include four kingdoms: Protista, Fungi, Plantae, Animalia — all sharing membrane-bound nuclei and organelles. A key evolutionary question is how multicellularity arose. The <strong>Volvocine series</strong> (Chlamydomonas → Gonium → Pandorina → Eudorina → Volvox) illustrates a progression from unicellular to colonial to multicellular green algae, demonstrating how cell specialization and division of labor may have evolved. This series shows that multicellularity likely evolved multiple times independently."},
+  "Protist Diversity": {q:"Q4", field:"diversity", desc:"Protists are a diverse catch-all kingdom of mostly unicellular eukaryotes that don't fit neatly into other kingdoms. Major groups: <strong>Algae</strong> (photosynthetic; produce ~50% of Earth's oxygen; e.g. diatoms, kelp), <strong>Protozoa</strong> (animal-like, heterotrophic; e.g. amoeba, paramecium, Plasmodium — which causes malaria), <strong>Slime molds</strong> (fungus-like decomposers). Ecological role: base of aquatic food webs, primary oxygen producers, nutrient cycling. Climate change is altering protist distributions and threatening reef-building algae."},
+  "Fungal Diversity": {q:"Q4", field:"diversity", desc:"Fungi are heterotrophic decomposers — they secrete digestive enzymes externally and absorb nutrients. Bodies made of <em>hyphae</em> (thread-like filaments) forming a <em>mycelium</em>. Cell walls of chitin (not cellulose). Reproduce sexually and asexually via spores. Major groups: Zygomycetes (bread mold), Ascomycetes (yeasts, morels, truffles), Basidiomycetes (mushrooms, puffballs). Ecological importance: primary decomposers, mycorrhizal partnerships with plant roots (aid nutrient uptake). Economic importance: food (bread, beer, cheese), medicine (penicillin). Climate change is shifting fungal distributions and increasing fungal diseases."},
+  // SG18
+  "Animal Body Plan and Diversification": {q:"Q4", field:"diversity", desc:"Animals are multicellular, heterotrophic eukaryotes. Key body plan features used to classify them: presence/absence of tissues, body symmetry (radial vs. bilateral), body cavity (coelom), and embryonic development patterns. Animals are divided into <strong>Invertebrates</strong> (no backbone — ~97% of all animal species; includes Porifera, Cnidaria, Platyhelminthes, Annelida, Mollusca, Arthropoda, Echinodermata) and <strong>Vertebrates</strong> (backbone; includes fish, amphibians, reptiles, birds, mammals)."},
+  "Key Animal Groups and Phylogeny": {q:"Q4", field:"diversity", desc:"Animal phylogeny is based on shared derived characters. Key groups: <strong>Porifera</strong> (sponges — no true tissues), <strong>Cnidaria</strong> (jellyfish, coral — radial symmetry), <strong>Arthropoda</strong> (insects, crustaceans, spiders — largest phylum by species count), <strong>Mollusca</strong> (snails, clams, octopuses), <strong>Echinodermata</strong> (sea stars — deuterostomes, closely related to vertebrates), <strong>Chordata</strong> (vertebrates). Each group has unifying characteristics that define it."},
+  // SG19
+  "Evolution of Plants": {q:"Q4", field:"diversity", desc:"Plants evolved from freshwater green algae ancestors approximately 470 million years ago. The major challenge was surviving on land — needing protection from drying out, structural support against gravity, and new reproduction methods. Key evolutionary innovations: cuticle (waxy coating), stomata (gas exchange), vascular tissue (xylem and phloem), seeds (protected embryos), and flowers/fruits (attract pollinators, aid seed dispersal). Each innovation opened new ecological niches."},
+  "Key Plant Groups and Phylogeny": {q:"Q4", field:"diversity", desc:"Plant groups in evolutionary order: <strong>Non-vascular plants</strong> (Bryophytes: mosses, liverworts — no transport tissue, need moist environments, small). <strong>Vascular seedless plants</strong> (Ferns — have xylem and phloem, reproduce by spores). <strong>Gymnosperms</strong> (conifers, cycads — seeds in cones, no flowers; dominated Mesozoic era). <strong>Angiosperms</strong> (flowering plants — seeds in fruit; the most diverse group today, ~300,000 species). Each level builds on the adaptations of the previous."},
+  "Threats to Plant Diversity": {q:"Q4", field:"diversity", desc:"Plant diversity is under serious threat globally. Major threats: <strong>Habitat destruction</strong> (deforestation, agriculture, urbanization), <strong>Invasive species</strong> (outcompete native plants), <strong>Climate change</strong> (shifting temperature and rainfall patterns, more frequent droughts and fires), <strong>Overexploitation</strong> (overharvesting of wild plants for food, medicine, timber). Consequences: loss of ecosystem services (oxygen production, carbon storage, soil stabilization), loss of potential medicines, and collapse of dependent animal species."},
+  // SG20
+  "Ecosystem Dynamics — Population vs. Species": {q:"Q4", field:"ecology", desc:"Key ecological terms: A <strong>population</strong> = all individuals of the same species living in the same area at the same time. A <strong>species</strong> = a group of organisms that can interbreed and produce fertile offspring. A <strong>community</strong> = all populations of different species in an area. An <strong>ecosystem</strong> = community + abiotic (nonliving) factors. <strong>Abiotic factors</strong>: temperature, water, light, soil, pH. <strong>Biotic factors</strong>: all living organisms and their interactions (competition, predation, symbiosis)."},
+  "Population Ecology": {q:"Q4", field:"ecology", desc:"Population ecology studies the size, density, and dynamics of populations. Key concepts: <strong>Population density</strong> = number of individuals per unit area. <strong>Limiting factors</strong> = abiotic or biotic factors that cap population growth (food, space, predators, disease). <strong>Carrying capacity (K)</strong> = maximum population size an environment can sustainably support. Growth patterns: <em>Exponential growth</em> (J-curve, unlimited resources) and <em>Logistic growth</em> (S-curve, growth slows as K is reached). Energy flows through ecosystems: producers → consumers → decomposers, with ~10% transferred at each level."},
+  "Ecosystem Disruptions and Human Impact": {q:"Q4", field:"ecology", desc:"Human activities are the primary driver of ecosystem disruption. Major disruptions: <strong>Pollution</strong> (air, water, soil contamination), <strong>Climate change</strong> (altered temperature and precipitation, ocean acidification), <strong>Invasive species</strong> (outcompete and displace native organisms), <strong>Overexploitation</strong> (overfishing, overhunting). These disruptions cascade through food webs — the removal or addition of a species can drastically alter the entire ecosystem."},
+  "Habitat Destruction and Fragmentation": {q:"Q4", field:"ecology", desc:"<strong>Habitat destruction</strong> is the most significant cause of biodiversity loss globally. Primary causes: deforestation (especially tropical rainforests), agricultural expansion, urbanization, and mining. <strong>Habitat fragmentation</strong> occurs when large, continuous habitats are broken into smaller, isolated patches. Effects: reduced genetic diversity (small isolated populations), increased edge effects, barriers to migration, local extinction of species unable to survive in fragments. Conservation corridors can help connect fragmented habitats."},
+  "Biodiversity Loss and Its Consequences": {q:"Q4", field:"ecology", desc:"Earth is currently experiencing a sixth mass extinction, primarily driven by human activity. Biodiversity provides essential <strong>ecosystem services</strong>: oxygen production, water purification, pollination, soil formation, disease regulation, and climate regulation. Loss of biodiversity reduces ecosystem resilience — ecosystems with fewer species are less able to recover from disturbances. Consequences extend to human welfare: loss of potential medicines (most drugs originate from natural compounds), food security threats, and ecosystem collapse."}
+};
+
+const tagColors = {
+  nature:    {bg:'rgba(80,200,100,0.15)',  color:'#50c864', border:'rgba(80,200,100,0.3)'},
+  evolution: {bg:'rgba(168,224,96,0.15)', color:'#a8e060', border:'rgba(168,224,96,0.3)'},
+  cell:      {bg:'rgba(64,212,176,0.15)', color:'#40d4b0', border:'rgba(64,212,176,0.3)'},
+  diversity: {bg:'rgba(240,192,64,0.15)', color:'#f0c040', border:'rgba(240,192,64,0.3)'},
+  ecology:   {bg:'rgba(224,128,80,0.15)', color:'#e08050', border:'rgba(224,128,80,0.3)'},
+};
+const tagLabels = {nature:'Nature', evolution:'Evolution', cell:'Cell', diversity:'Diversity', ecology:'Ecology'};
+const quarterLabels = {Q1:'Quarter 1 · Foundations of Biology', Q2:'Quarter 2 · Evolution & Classification', Q3:'Quarter 3 · Microscopy, Cells & Diversity', Q4:'Quarter 4 · Diversity of Life & Ecology'};
+
+const backdrop = document.getElementById('modalBackdrop');
+
+function openModal(title, field, q) {
+  const data = descriptions[title] || {};
+  const c = tagColors[field] || tagColors.nature;
+  const tag = document.getElementById('modalTag');
+  tag.textContent = tagLabels[field] || field;
+  tag.style.background = c.bg; tag.style.color = c.color; tag.style.border = `1px solid ${c.border}`;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalQuarter').textContent = quarterLabels[q] || q;
+  const desc = document.getElementById('modalDesc');
+  if (data.desc) { desc.innerHTML = data.desc; desc.classList.remove('modal-placeholder'); }
+  else { desc.innerHTML = '<em>Reviewer coming soon.</em>'; desc.classList.add('modal-placeholder'); }
+  backdrop.classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => backdrop.classList.remove('open'));
+backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('open'); });
+
+document.querySelectorAll('.topic-name').forEach(el => {
+  el.addEventListener('click', () => {
+    const item = el.closest('.topic-item');
+    openModal(item.dataset.title, item.dataset.field, item.dataset.q);
+  });
+});
+
+// Quarter filter & search
+const quarters = document.querySelectorAll('.quarter-pill');
+const cards    = document.querySelectorAll('.field');
+const search   = document.getElementById('searchBox');
+let activeQ = 'all';
+
+function applyFilters() {
+  const term = search.value.toLowerCase().trim();
+  cards.forEach(card => {
+    // Filter individual topic rows by quarter
+    const topics = card.querySelectorAll('.topic-item');
+    topics.forEach(t => {
+      const topicQ = t.dataset.q;
+      const qMatch = activeQ === 'all' || topicQ === activeQ;
+      const termMatch = !term || t.textContent.toLowerCase().includes(term);
+      t.style.display = (qMatch && termMatch) ? '' : 'none';
+      t.style.opacity = '1';
+    });
+
+    // Hide the whole card if no visible topics remain
+    const anyVisible = Array.from(topics).some(t => t.style.display !== 'none');
+    card.classList.toggle('dimmed', !anyVisible);
+  });
+}
+
+quarters.forEach(btn => {
+  btn.addEventListener('click', () => {
+    quarters.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeQ = btn.dataset.q;
+    applyFilters();
+  });
+});
+search.addEventListener('input', applyFilters);
+
+// Page tabs
+const tabMap       = document.getElementById('tabMap');
+const tabPractice  = document.getElementById('tabPractice');
+const tabTools     = document.getElementById('tabTools');
+const tabNatSel    = document.getElementById('tabNatSel');
+const tabMicro     = document.getElementById('tabMicro');
+
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+const toolsPage    = document.getElementById('toolsPage');
+const natselPage   = document.getElementById('natselPage');
+const microPage    = document.getElementById('microPage');
+
+const allBioTabs  = [tabMap, tabPractice, tabTools, tabNatSel, tabMicro];
+const allBioPages = [mapPage, practicePage, toolsPage, natselPage, microPage];
+
+function showBioTab(tab, page) {
+  allBioTabs.forEach(t => t.classList.remove('active'));
+  allBioPages.forEach(p => {
+    p.classList.remove('visible');
+    if (p !== mapPage) p.style.display = '';
+  });
+  tab.classList.add('active');
+  if (page === mapPage) {
+    mapPage.classList.remove('hidden');
+  } else {
+    mapPage.classList.add('hidden');
+    page.classList.add('visible');
+  }
+}
+
+tabMap.addEventListener('click',      () => showBioTab(tabMap,      mapPage));
+tabPractice.addEventListener('click', () => showBioTab(tabPractice, practicePage));
+tabTools.addEventListener('click',    () => { showBioTab(tabTools,    toolsPage); initPhyloTool(); });
+tabNatSel.addEventListener('click',   () => showBioTab(tabNatSel,   natselPage));
+tabMicro.addEventListener('click',    () => showBioTab(tabMicro,    microPage));
+
+// Practice interactions
+document.querySelectorAll('.question-card').forEach(card => {
+  const correct     = card.dataset.answer;
+  const choices     = card.querySelectorAll('.choice');
+  const revealBtn   = card.querySelector('.reveal-btn');
+  const explanation = card.querySelector('.explanation');
+  let answered = false;
+
+  choices.forEach(choice => {
+    choice.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        if (c.dataset.val === correct) c.classList.add('correct');
+        else c.classList.add('wrong');
+      });
+      explanation.classList.add('visible');
+      revealBtn.disabled = true;
+    });
+  });
+
+  revealBtn.addEventListener('click', () => {
+    if (answered) return;
+    answered = true;
+    choices.forEach(c => {
+      if (c.dataset.val === correct) c.classList.add('correct');
+      else c.classList.add('wrong');
+    });
+    explanation.classList.add('visible');
+    revealBtn.disabled = true;
+  });
+});
+
+// Animated leaf particles
+(function() {
+  const canvas = document.getElementById('leaves');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function randomParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.6 + 0.3,
+      a: Math.random() * 0.5 + 0.1,
+      speedX: (Math.random() - 0.5) * 0.15,
+      speedY: Math.random() * 0.12 + 0.04,
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: Math.random() * 0.015 + 0.005,
+      hue: Math.floor(Math.random() * 60 + 100) // greens to yellow-greens
+    };
+  }
+
+  function init() {
+    particles = [];
+    for (let i = 0; i < 220; i++) particles.push(randomParticle());
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.twinkle += p.twinkleSpeed;
+      p.x += p.speedX;
+      p.y += p.speedY;
+      if (p.y > H + 5) { p.y = -5; p.x = Math.random() * W; }
+      if (p.x < -5) p.x = W + 5;
+      if (p.x > W + 5) p.x = -5;
+      const alpha = p.a * (0.4 + 0.6 * Math.abs(Math.sin(p.twinkle)));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  init();
+  window.addEventListener('resize', () => { resize(); init(); });
+  requestAnimationFrame(draw);
+})();
+
+// ══════════════════════════════════════ PHYLOGENETIC TREE TOOL
+let phyloInited = false;
+
+const TAXA = [
+  { id:'bacteria',   name:'Bacteria',       sci:'Eubacteria',         color:'#e06050', domain:'Bacteria',   traits:[] },
+  { id:'archaea',    name:'Archaea',         sci:'Archaebacteria',     color:'#e09030', domain:'Archaea',    traits:['membrane-bound histones'] },
+  { id:'amoeba',     name:'Amoeba',          sci:'Amoeba proteus',     color:'#c0b040', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles'] },
+  { id:'mushroom',   name:'Mushroom (Fungi)',sci:'Agaricus bisporus',  color:'#c08858', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','cell wall (chitin)','heterotroph'] },
+  { id:'moss',       name:'Moss',            sci:'Bryophyta',          color:'#60c050', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','cell wall (cellulose)','photosynthesis','embryophyte'] },
+  { id:'fern',       name:'Fern',            sci:'Pteridophyta',       color:'#50b050', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','cell wall (cellulose)','photosynthesis','embryophyte','vascular tissue'] },
+  { id:'conifer',    name:'Conifer',         sci:'Pinus sp.',          color:'#408040', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','cell wall (cellulose)','photosynthesis','embryophyte','vascular tissue','seeds','pollen'] },
+  { id:'flower',     name:'Flowering Plant', sci:'Angiosperms',        color:'#d060a0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','cell wall (cellulose)','photosynthesis','embryophyte','vascular tissue','seeds','pollen','flowers/fruit'] },
+  { id:'sponge',     name:'Sponge',          sci:'Porifera',           color:'#d0a050', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular'] },
+  { id:'jellyfish',  name:'Jellyfish',       sci:'Cnidaria',           color:'#80c0e0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','radial symmetry'] },
+  { id:'flatworm',   name:'Flatworm',        sci:'Platyhelminthes',    color:'#c0a0d0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry'] },
+  { id:'earthworm',  name:'Earthworm',       sci:'Oligochaeta',        color:'#c07050', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','coelom','segmentation'] },
+  { id:'insect',     name:'Insect',          sci:'Insecta',            color:'#90c040', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','coelom','segmentation','exoskeleton','jointed legs'] },
+  { id:'seastar',    name:'Sea Star',        sci:'Echinodermata',      color:'#e07070', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry (larva)','deuterostome','radial symmetry (adult)'] },
+  { id:'lamprey',    name:'Lamprey',         sci:'Petromyzontida',     color:'#a0a0c0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord'] },
+  { id:'shark',      name:'Shark',           sci:'Chondrichthyes',     color:'#6090b0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','cartilaginous skeleton'] },
+  { id:'tuna',       name:'Bony Fish',       sci:'Osteichthyes',       color:'#4090c0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','bony skeleton','scales'] },
+  { id:'frog',       name:'Frog',            sci:'Anura',              color:'#60b060', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','bony skeleton','tetrapod','moist skin'] },
+  { id:'lizard',     name:'Lizard',          sci:'Squamata',           color:'#a0b050', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','bony skeleton','tetrapod','amniotic egg','scales (reptile)'] },
+  { id:'bird',       name:'Bird',            sci:'Aves',               color:'#e0b020', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','bony skeleton','tetrapod','amniotic egg','feathers','endothermy'] },
+  { id:'human',      name:'Human',           sci:'Homo sapiens',       color:'#d07090', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','bony skeleton','tetrapod','amniotic egg','mammary glands','hair/fur','live birth'] },
+  { id:'whale',      name:'Whale',           sci:'Cetacea',            color:'#5080c0', domain:'Eukarya',    traits:['nucleus','membrane-bound organelles','multicellular','tissues','bilateral symmetry','deuterostome','vertebral column','notochord','jaws','bony skeleton','tetrapod','amniotic egg','mammary glands','hair/fur','aquatic adaptation'] },
+];
+
+const PRESETS = {
+  animals: ['lamprey','shark','tuna','frog','lizard','bird','human'],
+  domains: ['bacteria','archaea','amoeba','mushroom','flower','insect','human'],
+  plants:  ['moss','fern','conifer','flower'],
+  cells:   ['bacteria','archaea','amoeba','mushroom','flower','human'],
+};
+
+let selectedTaxa = new Set();
+
+function initPhyloTool() {
+  if (phyloInited) { resizePhyloCanvas(); return; }
+  phyloInited = true;
+
+  const list = document.getElementById('taxonList');
+  TAXA.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'ptool-taxon-item';
+    item.dataset.id = t.id;
+    item.innerHTML = `<span class="ptool-taxon-dot" style="background:${t.color}"></span>
+      <span class="ptool-taxon-name">${t.name}<br><span class="ptool-taxon-sciname">${t.sci}</span></span>`;
+    item.addEventListener('click', () => toggleTaxon(t.id));
+    list.appendChild(item);
+  });
+
+  document.getElementById('presetAnimals').addEventListener('click',()=>applyPreset('animals'));
+  document.getElementById('presetDomains').addEventListener('click',()=>applyPreset('domains'));
+  document.getElementById('presetPlants').addEventListener('click',()=>applyPreset('plants'));
+  document.getElementById('presetCells').addEventListener('click',()=>applyPreset('cells'));
+  document.getElementById('buildTreeBtn').addEventListener('click', buildTree);
+  document.getElementById('clearSelBtn').addEventListener('click', clearSel);
+
+  // Canvas click for node info
+  document.getElementById('phyloCanvas').addEventListener('click', onCanvasClick);
+
+  resizePhyloCanvas();
+  window.addEventListener('resize', resizePhyloCanvas);
+  applyPreset('animals');
+}
+
+function resizePhyloCanvas() {
+  const canvas = document.getElementById('phyloCanvas');
+  const wrap = canvas.parentElement;
+  canvas.width  = wrap.clientWidth || 600;
+  canvas.height = 500;
+  if (lastTree) drawTree(lastTree, document.getElementById('phyloCanvas'));
+}
+
+function toggleTaxon(id) {
+  if (selectedTaxa.has(id)) {
+    selectedTaxa.delete(id);
+  } else if (selectedTaxa.size < 10) {
+    selectedTaxa.add(id);
+  }
+  updateSelDisplay();
+}
+
+function clearSel() {
+  selectedTaxa.clear();
+  updateSelDisplay();
+  const canvas = document.getElementById('phyloCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById('phyloInfo').innerHTML = '<strong>How to use:</strong> Select 2–10 organisms from the list, then click <em>Build Tree</em>.';
+  document.getElementById('traitGrid').innerHTML = '';
+}
+
+function applyPreset(key) {
+  selectedTaxa.clear();
+  PRESETS[key].forEach(id => selectedTaxa.add(id));
+  updateSelDisplay();
+  buildTree();
+}
+
+function updateSelDisplay() {
+  document.querySelectorAll('.ptool-taxon-item').forEach(el => {
+    el.classList.toggle('selected', selectedTaxa.has(el.dataset.id));
+  });
+  document.getElementById('selCount').textContent = selectedTaxa.size;
+  const names = [...selectedTaxa].map(id => TAXA.find(t=>t.id===id)?.name || id);
+  document.getElementById('selNames').textContent = names.join(', ');
+}
+
+// Build a simple cladogram using shared traits as a proxy for relatedness
+// More shared traits = more closely related
+let lastTree = null;
+let nodeMap = [];
+
+function buildTree() {
+  if (selectedTaxa.size < 2) {
+    document.getElementById('phyloInfo').innerHTML = '<strong>Select at least 2 organisms</strong> to build a tree.';
+    return;
+  }
+  const taxa = TAXA.filter(t => selectedTaxa.has(t.id));
+  const tree = buildNJ(taxa);
+  lastTree = { tree, taxa };
+  const canvas = document.getElementById('phyloCanvas');
+  canvas.width = canvas.parentElement.clientWidth || 600;
+  canvas.height = Math.max(500, taxa.length * 44 + 80);
+  nodeMap = [];
+  drawTree(lastTree, canvas);
+  buildTraitLegend(taxa);
+  document.getElementById('phyloInfo').innerHTML = `<strong>Tree built</strong> for ${taxa.length} organisms. Branching is based on number of shared derived characters (synapomorphies). <em>Click any branch node to see which traits define that clade.</em>`;
+}
+
+function taxonSimilarity(a, b) {
+  // Count shared traits
+  const setA = new Set(a.traits);
+  let shared = 0;
+  b.traits.forEach(t => { if (setA.has(t)) shared++; });
+  return shared;
+}
+
+// Build tree using a simple UPGMA-like grouping
+function buildNJ(taxa) {
+  // Start with leaf nodes
+  let clusters = taxa.map((t,i) => ({ type:'leaf', taxon:t, id:i }));
+  let nextId = taxa.length;
+
+  while (clusters.length > 1) {
+    // Find most similar pair
+    let bestSim = -1, bestI = 0, bestJ = 1;
+    for (let i = 0; i < clusters.length; i++) {
+      for (let j = i+1; j < clusters.length; j++) {
+        const leavesI = getLeaves(clusters[i]);
+        const leavesJ = getLeaves(clusters[j]);
+        let sim = 0;
+        leavesI.forEach(a => leavesJ.forEach(b => { sim += taxonSimilarity(a.taxon, b.taxon); }));
+        sim /= (leavesI.length * leavesJ.length);
+        if (sim > bestSim) { bestSim = sim; bestI = i; bestJ = j; }
+      }
+    }
+    const merged = { type:'node', children:[clusters[bestI], clusters[bestJ]], id:nextId++, sharedTraits: getSharedTraits(clusters[bestI], clusters[bestJ]) };
+    clusters.splice(bestJ, 1);
+    clusters.splice(bestI, 1);
+    clusters.push(merged);
+  }
+  return clusters[0];
+}
+
+function getLeaves(node) {
+  if (node.type === 'leaf') return [node];
+  return node.children.flatMap(getLeaves);
+}
+
+function getSharedTraits(a, b) {
+  const leavesA = getLeaves(a).map(l => new Set(l.taxon.traits));
+  const leavesB = getLeaves(b).map(l => new Set(l.taxon.traits));
+  if (!leavesA.length || !leavesB.length) return [];
+  // intersection of all traits present in ALL members of both clades
+  let shared = new Set(leavesA[0]);
+  [...leavesA, ...leavesB].forEach(s => {
+    for (let t of shared) { if (!s.has(t)) shared.delete(t); }
+  });
+  return [...shared];
+}
+
+function drawTree(data, canvas) {
+  const { tree, taxa } = data;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const leaves = getLeaves(tree);
+  const numLeaves = leaves.length;
+  const leafSpacing = (H - 80) / numLeaves;
+  const leftPad = 180, rightPad = 40;
+  const treeW = W - leftPad - rightPad;
+
+  // Assign y positions to leaves
+  const leafY = {};
+  leaves.forEach((leaf, i) => {
+    leafY[leaf.id] = 50 + i * leafSpacing + leafSpacing/2;
+  });
+
+  // Compute x and y for all nodes by depth
+  const depth = getDepth(tree);
+
+  function posNode(node) {
+    if (node.type === 'leaf') {
+      return { x: leftPad + treeW, y: leafY[node.id] };
+    }
+    const childPos = node.children.map(posNode);
+    const y = childPos.reduce((s,p) => s+p.y,0) / childPos.length;
+    const myDepth = getNodeDepth(tree, node.id);
+    const x = leftPad + treeW * (myDepth / depth);
+    return { x, y, childPos, node };
+  }
+
+  function getDepth(n, d=0) {
+    if (n.type==='leaf') return d;
+    return Math.max(...n.children.map(c => getDepth(c, d+1)));
+  }
+  function getNodeDepth(root, id, d=0) {
+    if (root.id===id) return d;
+    if (root.type==='leaf') return -1;
+    for (const c of root.children) {
+      const r = getNodeDepth(c, id, d+1);
+      if (r >= 0) return r;
+    }
+    return -1;
+  }
+
+  nodeMap = [];
+
+  function drawNode(node, pos) {
+    const { x, y, childPos } = pos;
+    ctx.strokeStyle = '#2a5535';
+    ctx.lineWidth = 1.5;
+
+    if (node.type === 'leaf') {
+      // Draw leaf label
+      ctx.fillStyle = node.taxon.color;
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#d0e8d8';
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(node.taxon.name, x + 10, y + 4);
+      ctx.fillStyle = '#5a8a65';
+      ctx.font = 'italic 9px "IBM Plex Mono", monospace';
+      ctx.fillText(node.taxon.sci, x + 10, y + 16);
+    } else {
+      // Draw vertical connecting bar
+      const minY = Math.min(...childPos.map(p=>p.y));
+      const maxY = Math.max(...childPos.map(p=>p.y));
+      ctx.beginPath(); ctx.moveTo(x, minY); ctx.lineTo(x, maxY); ctx.stroke();
+
+      // Draw horizontal lines to children
+      childPos.forEach((cp, i) => {
+        ctx.beginPath(); ctx.moveTo(x, cp.y); ctx.lineTo(cp.x, cp.y); ctx.stroke();
+        drawNode(node.children[i], cp);
+      });
+
+      // Node circle
+      const traits = node.sharedTraits || [];
+      ctx.fillStyle = traits.length > 0 ? '#306040' : '#1a3028';
+      ctx.strokeStyle = traits.length > 0 ? '#50c864' : '#2a5535';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+      nodeMap.push({ x, y, r:10, traits, leaves: getLeaves(node).map(l=>l.taxon.name) });
+
+      if (traits.length > 0) {
+        ctx.fillStyle = '#50c864';
+        ctx.font = 'bold 10px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(traits.length.toString(), x, y + 3.5);
+      }
+    }
+  }
+
+  const pos = posNode(tree);
+  // Draw root horizontal line
+  ctx.strokeStyle = '#2a5535'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(leftPad - 20, pos.y); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+  // Root node
+  ctx.fillStyle = '#1a3028'; ctx.strokeStyle = '#50c864'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(leftPad-20, pos.y, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+  drawNode(tree, pos);
+
+  // Draw "Root / Common Ancestor" label
+  ctx.fillStyle = '#5a8a65';
+  ctx.font = '9px "IBM Plex Mono",monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('Root', 8, pos.y - 8);
+  ctx.fillText('(common ancestor)', 8, pos.y + 12);
+}
+
+function onCanvasClick(e) {
+  const canvas = document.getElementById('phyloCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+
+  for (const n of nodeMap) {
+    const dx = mx - n.x, dy = my - n.y;
+    if (Math.sqrt(dx*dx+dy*dy) <= n.r) {
+      const info = document.getElementById('phyloInfo');
+      if (n.traits.length > 0) {
+        info.innerHTML = `<strong>Clade includes:</strong> ${n.leaves.join(', ')}<br>
+          <strong>Shared derived characters (${n.traits.length}):</strong><br>
+          ${n.traits.map(t=>`• ${t}`).join('<br>')}`;
+      } else {
+        info.innerHTML = `<strong>Clade includes:</strong> ${n.leaves.join(', ')}<br><em>No strongly shared derived characters identified for this grouping.</em>`;
+      }
+      return;
+    }
+  }
+}
+
+function buildTraitLegend(taxa) {
+  // Count how many selected taxa share each trait
+  const traitCount = {};
+  taxa.forEach(t => t.traits.forEach(tr => {
+    if (!traitCount[tr]) traitCount[tr] = 0;
+    traitCount[tr]++;
+  }));
+  // Only show traits shared by 2+ taxa
+  const shared = Object.entries(traitCount).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
+  const grid = document.getElementById('traitGrid');
+  grid.innerHTML = '';
+  shared.forEach(([trait, count]) => {
+    const taxa_with = taxa.filter(t=>t.traits.includes(trait)).map(t=>t.name);
+    const div = document.createElement('div');
+    div.className = 'ptool-trait';
+    div.innerHTML = `<div class="trait-name">${trait}</div><div class="trait-taxa">Shared by: ${taxa_with.join(', ')}</div>`;
+    grid.appendChild(div);
+  });
+  if (!shared.length) grid.innerHTML = '<div style="font-size:10px;color:var(--muted)">No shared characters among selected organisms.</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// NATURAL SELECTION SIMULATOR
+// ══════════════════════════════════════════════════════════════
+(function() {
+  const canvas   = document.getElementById('nsCanvas');
+  const ctx      = canvas.getContext('2d');
+  const chart    = document.getElementById('nsChartCanvas');
+  const chartCtx = chart.getContext('2d');
+
+  // Environment backgrounds & predator optimal color (hue)
+  const ENVS = {
+    forest: { bg: '#0a1f0d', ground: '#1a3a1a', label: 'Forest',  optHue: 120 },
+    desert: { bg: '#2a1f0a', ground: '#3a2f1a', label: 'Desert',  optHue: 35  },
+    snow:   { bg: '#0d1520', ground: '#1a2a3a', label: 'Snow',    optHue: 210 },
+    change: { bg: '#0a0a1a', ground: '#1a1a2a', label: 'Changing',optHue: 120 },
+  };
+
+  let env         = 'forest';
+  let generation  = 0;
+  let running     = false;
+  let rafId       = null;
+  let lastTick    = 0;
+  let tickInterval= 800; // ms per generation
+  let population  = [];
+  let history     = [];  // [{camo, cons, inter}]
+
+  function W() { return canvas.width; }
+  function H() { return canvas.height; }
+
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width  = rect.width || 560;
+    canvas.height = 420;
+    chart.width   = canvas.width;
+    chart.height  = 100;
+  }
+
+  function getParams() {
+    return {
+      popSize: parseInt(document.getElementById('nsPopSlider').value),
+      mutRate: parseFloat(document.getElementById('nsMutSlider').value),
+      pressure: parseFloat(document.getElementById('nsPresSlider').value),
+      repro: parseFloat(document.getElementById('nsReproSlider').value),
+    };
+  }
+
+  // Organism: {x, y, hue, size}
+  // hue 0–360; fitness = how close to environment's optHue (lower hue diff = fitter)
+  function fitness(hue) {
+    const optHue = ENVS[env].optHue;
+    const diff = Math.min(Math.abs(hue - optHue), 360 - Math.abs(hue - optHue));
+    return 1 - (diff / 180); // 0..1
+  }
+
+  function classify(hue) {
+    const optHue = ENVS[env].optHue;
+    const diff = Math.min(Math.abs(hue - optHue), 360 - Math.abs(hue - optHue));
+    if (diff < 30)  return 'camo';
+    if (diff > 90)  return 'cons';
+    return 'inter';
+  }
+
+  function randomOrg(hue = null) {
+    return {
+      x: 20 + Math.random() * (W() - 40),
+      y: 20 + Math.random() * (H() - 40),
+      hue: hue ?? Math.random() * 360,
+      size: 5 + Math.random() * 3,
+    };
+  }
+
+  function initPop() {
+    const { popSize } = getParams();
+    population = Array.from({ length: popSize }, () => randomOrg());
+    generation = 0;
+    history = [];
+    updateStats();
+    render();
+    drawChart();
+    document.getElementById('nsGenLabel').textContent = 'Generation 0';
+    document.getElementById('nsEventLog').textContent = 'Simulation reset. Press ▶ Run or Step to begin.';
+  }
+
+  function step() {
+    if (population.length === 0) {
+      document.getElementById('nsEventLog').textContent = '💀 Population went extinct!';
+      stopSim(); return;
+    }
+
+    const { mutRate, pressure, repro } = getParams();
+    const envData = ENVS[env];
+
+    // Changing env: shift optHue every 5 gens
+    if (env === 'change') {
+      ENVS.change.optHue = (120 + generation * 18) % 360;
+    }
+
+    // Selection: kill least fit based on pressure
+    population.sort((a, b) => fitness(a.hue) - fitness(b.hue));
+    const killCount = Math.floor(population.length * pressure);
+    // Probabilistic kill — lowest fitness most likely to die
+    const survivors = population.filter((org, i) => {
+      const deathProb = pressure * (1 - fitness(org.hue));
+      return Math.random() > deathProb;
+    });
+
+    // Reproduction with mutation
+    const children = [];
+    const targetSize = Math.min(120, Math.floor(survivors.length * repro));
+    while (children.length < targetSize - survivors.length && survivors.length > 0) {
+      const parent = survivors[Math.floor(Math.random() * survivors.length)];
+      let newHue = parent.hue + (Math.random() - 0.5) * mutRate * 360;
+      newHue = ((newHue % 360) + 360) % 360;
+      children.push(randomOrg(newHue));
+    }
+
+    population = [...survivors, ...children];
+    generation++;
+
+    // Record history
+    const camoC = population.filter(o => classify(o.hue) === 'camo').length;
+    const consC = population.filter(o => classify(o.hue) === 'cons').length;
+    const interC = population.filter(o => classify(o.hue) === 'inter').length;
+    history.push({ camo: camoC, cons: consC, inter: interC });
+    if (history.length > 60) history.shift();
+
+    // Scramble positions slightly each gen
+    population.forEach(o => {
+      o.x = Math.max(20, Math.min(W()-20, o.x + (Math.random()-0.5)*30));
+      o.y = Math.max(20, Math.min(H()-20, o.y + (Math.random()-0.5)*30));
+    });
+
+    // Log event
+    const avgFit = population.reduce((s,o) => s + fitness(o.hue), 0) / population.length;
+    let log = `Gen ${generation} · Pop: ${population.length} · Avg fitness: ${(avgFit*100).toFixed(0)}%`;
+    if (camoC / population.length > 0.7) log += ' · Camouflage dominant ✓';
+    if (population.length < 10) log += ' · ⚠️ Near extinction!';
+    document.getElementById('nsEventLog').textContent = log;
+    document.getElementById('nsGenLabel').textContent = `Generation ${generation}`;
+
+    updateStats();
+    render();
+    drawChart();
+  }
+
+  function updateStats() {
+    const total = population.length;
+    document.getElementById('nsTotalPop').textContent = total;
+    if (total === 0) {
+      document.getElementById('nsAvgFit').textContent = '—';
+      document.getElementById('nsCamoCount').textContent = '—';
+      document.getElementById('nsConsCount').textContent = '—';
+      return;
+    }
+    const avgFit = population.reduce((s,o) => s + fitness(o.hue), 0) / total;
+    document.getElementById('nsAvgFit').textContent = (avgFit*100).toFixed(0)+'%';
+    document.getElementById('nsCamoCount').textContent = population.filter(o=>classify(o.hue)==='camo').length;
+    document.getElementById('nsConsCount').textContent = population.filter(o=>classify(o.hue)==='cons').length;
+  }
+
+  function render() {
+    const envData = ENVS[env];
+    ctx.fillStyle = envData.bg;
+    ctx.fillRect(0, 0, W(), H());
+
+    // Ground texture dots
+    ctx.fillStyle = envData.ground;
+    for (let i = 0; i < 200; i++) {
+      ctx.beginPath();
+      ctx.arc(
+        (i * 137.5 + generation * 7) % W(),
+        (i * 93.7 + generation * 3) % H(),
+        1.5, 0, Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // Draw organisms
+    population.forEach(org => {
+      const f = fitness(org.hue);
+      ctx.beginPath();
+      ctx.arc(org.x, org.y, org.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsl(${org.hue}, 80%, ${35 + f*20}%)`;
+      ctx.fill();
+      ctx.strokeStyle = `hsla(${org.hue}, 60%, 80%, 0.4)`;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    });
+
+    // Env label
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.font = '11px IBM Plex Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(envData.label.toUpperCase(), W() - 10, H() - 10);
+    ctx.textAlign = 'left';
+  }
+
+  function drawChart() {
+    const w = chart.width, h = chart.height;
+    chartCtx.fillStyle = '#0a150d';
+    chartCtx.fillRect(0, 0, w, h);
+    if (history.length < 2) return;
+
+    const maxPop = Math.max(...history.map(d => d.camo + d.cons + d.inter), 1);
+    const colors = { camo: '#50c864', cons: '#e05050', inter: '#f0c040' };
+
+    ['inter','cons','camo'].forEach(key => {
+      chartCtx.beginPath();
+      chartCtx.strokeStyle = colors[key];
+      chartCtx.lineWidth = 1.5;
+      history.forEach((d, i) => {
+        const x = (i / (history.length - 1)) * w;
+        const y = h - (d[key] / maxPop) * (h - 10) - 4;
+        i === 0 ? chartCtx.moveTo(x, y) : chartCtx.lineTo(x, y);
+      });
+      chartCtx.stroke();
+    });
+
+    // Axis label
+    chartCtx.fillStyle = 'rgba(255,255,255,0.2)';
+    chartCtx.font = '9px IBM Plex Mono, monospace';
+    chartCtx.fillText('population trend', 6, 12);
+  }
+
+  // Controls
+  let autoRunLoop = null;
+  function startSim() {
+    if (autoRunLoop) return;
+    autoRunLoop = setInterval(() => {
+      if (population.length === 0) { stopSim(); return; }
+      step();
+    }, tickInterval);
+    document.getElementById('nsBtnRun').textContent = '⏸ Pause';
+    document.getElementById('nsBtnRun').classList.add('active');
+  }
+  function stopSim() {
+    clearInterval(autoRunLoop);
+    autoRunLoop = null;
+    document.getElementById('nsBtnRun').textContent = '▶ Run';
+  }
+
+  document.getElementById('nsBtnRun').addEventListener('click', () => {
+    autoRunLoop ? stopSim() : startSim();
+  });
+  document.getElementById('nsBtnStep').addEventListener('click', () => { stopSim(); step(); });
+  document.getElementById('nsBtnReset').addEventListener('click', () => { stopSim(); initPop(); });
+
+  // Env buttons
+  document.querySelectorAll('[data-env]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      env = btn.dataset.env;
+      document.querySelectorAll('[data-env]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      initPop();
+    });
+  });
+
+  // Sliders live update
+  [['nsPopSlider','nsPopVal',''],['nsMutSlider','nsMutVal',''],
+   ['nsPresSlider','nsPresVal',''],['nsReproSlider','nsReproVal','']].forEach(([sid,vid]) => {
+    const sl = document.getElementById(sid);
+    sl.addEventListener('input', () => {
+      document.getElementById(vid).textContent = sl.value;
+    });
+  });
+
+  resizeCanvas();
+  initPop();
+  window.addEventListener('resize', () => { resizeCanvas(); render(); });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// MICROSCOPE SIMULATOR
+// ══════════════════════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('microCanvas');
+  const ctx    = canvas.getContext('2d');
+  const W = 500, H = 500;
+
+  let currentSpec = 'cheek';
+  let currentMag  = 100;   // actual total mag value
+  let focusLevel  = 50;
+  let brightness  = 70;
+  let panX = 0, panY = 0;
+  let paused = false;
+  let animId = null;
+  let tick = 0;
+
+  // Objective lens definitions — label, total mag (ocular 10×), zoom scale
+  // zoom = how much bigger cells appear vs. base (40× = 1×, 100× = 2.5×, 400× = 10×, 1000× = 25×)
+  const LENSES = [
+    { label: 'Scanning',    sublabel: '4×',   mag: 40,   zoom: 1.0  },
+    { label: 'LPO',         sublabel: '10×',  mag: 100,  zoom: 2.5  },
+    { label: 'HPO',         sublabel: '40×',  mag: 400,  zoom: 10.0 },
+    { label: 'Oil Imm.',    sublabel: '100×', mag: 1000, zoom: 25.0 },
+  ];
+
+  // Scale bar: field diameter in µm at each total magnification
+  const FIELD_UM = { 40: 4500, 100: 1800, 400: 450, 1000: 180 };
+
+  function getZoom() { return LENSES.find(l => l.mag === currentMag)?.zoom ?? 1; }
+
+  // ── Movement config per specimen ──────────────────────────────
+  // Each specimen can have animated entities with their own positions/velocities
+  const MOTION = {
+    cheek:      { type: 'none' },   // fixed slide
+    onion:      { type: 'none' },
+    blood:      { type: 'flow',     entities: [] },   // cells flowing
+    leaf:       { type: 'none' },
+    bacteria:   { type: 'brownian', entities: [] },   // random walk
+    paramecium: { type: 'swim',     entities: [] },   // directed swim
+  };
+
+  function initMotion() {
+    // Blood: ~60 RBCs + 2 WBCs flowing right
+    MOTION.blood.entities = [];
+    for (let i = 0; i < 60; i++) {
+      MOTION.blood.entities.push({
+        x: Math.random() * W * 3 - W,
+        y: 30 + Math.random() * (H - 60),
+        r: 9 + Math.random() * 3,
+        hue: Math.random() * 20,
+        speed: 0.4 + Math.random() * 0.6,
+        type: 'rbc'
+      });
+    }
+    for (let i = 0; i < 3; i++) {
+      MOTION.blood.entities.push({
+        x: Math.random() * W * 2,
+        y: 80 + Math.random() * (H - 160),
+        r: 18 + Math.random() * 4,
+        speed: 0.2 + Math.random() * 0.2,
+        type: 'wbc'
+      });
+    }
+    for (let i = 0; i < 15; i++) {
+      MOTION.blood.entities.push({
+        x: Math.random() * W * 3 - W,
+        y: 30 + Math.random() * (H - 60),
+        r: 3,
+        speed: 0.5 + Math.random() * 0.5,
+        type: 'platelet'
+      });
+    }
+
+    // Bacteria: random brownian walk
+    MOTION.bacteria.entities = [];
+    for (let i = 0; i < 80; i++) {
+      MOTION.bacteria.entities.push({
+        x: 20 + Math.random() * (W * 2 - 40),
+        y: 20 + Math.random() * (H * 2 - 40),
+        rot: Math.random() * Math.PI,
+        len: 14 + Math.random() * 8,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        vrot: (Math.random() - 0.5) * 0.015,
+        gramPos: Math.random() > 0.35,
+      });
+    }
+
+    // Paramecia: directed swim with tumbling
+    MOTION.paramecium.entities = [];
+    for (let i = 0; i < 4; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      MOTION.paramecium.entities.push({
+        x: 80 + Math.random() * (W * 1.5 - 160),
+        y: 80 + Math.random() * (H * 1.5 - 160),
+        angle: ang,
+        speed: 0.5 + Math.random() * 0.4,
+        tumbleTimer: 60 + Math.random() * 120,
+        ciliaPhase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function stepMotion() {
+    const zoom = getZoom();
+
+    // Blood flow
+    MOTION.blood.entities.forEach(e => {
+      e.x += e.speed * (1 / zoom) * 1.5;
+      if (e.x > W * 1.5) e.x = -W * 0.5;
+    });
+
+    // Bacteria brownian
+    MOTION.bacteria.entities.forEach(e => {
+      // Random kick each frame
+      e.vx += (Math.random() - 0.5) * 0.08;
+      e.vy += (Math.random() - 0.5) * 0.08;
+      e.vrot += (Math.random() - 0.5) * 0.004;
+      // Damping
+      e.vx *= 0.96; e.vy *= 0.96; e.vrot *= 0.95;
+      e.x += e.vx; e.y += e.vy; e.rot += e.vrot;
+      // Wrap
+      if (e.x < -50) e.x = W * 2 + 50;
+      if (e.x > W * 2 + 50) e.x = -50;
+      if (e.y < -50) e.y = H * 2 + 50;
+      if (e.y > H * 2 + 50) e.y = -50;
+    });
+
+    // Paramecium swim
+    MOTION.paramecium.entities.forEach(e => {
+      e.tumbleTimer--;
+      if (e.tumbleTimer <= 0) {
+        e.angle += (Math.random() - 0.5) * 1.8;  // tumble
+        e.tumbleTimer = 80 + Math.random() * 100;
+      }
+      e.x += Math.cos(e.angle) * e.speed * (1 / zoom) * 1.2;
+      e.y += Math.sin(e.angle) * e.speed * (1 / zoom) * 1.2;
+      e.ciliaPhase += 0.18;
+      // Wrap
+      if (e.x < -100) e.x = W * 1.5 + 100;
+      if (e.x > W * 1.5 + 100) e.x = -100;
+      if (e.y < -100) e.y = H * 1.5 + 100;
+      if (e.y > H * 1.5 + 100) e.y = -100;
+    });
+
+    tick++;
+  }
+
+  // ── Draw helpers ──────────────────────────────────────────────
+  function blurAmount() {
+    return Math.max(0, Math.abs(focusLevel - 50) / 8 - 0.3);
+  }
+
+  function drawBackground() {
+    const bf = brightness / 100;
+    ctx.fillStyle = `rgb(${Math.floor(242*bf)},${Math.floor(237*bf)},${Math.floor(215*bf)})`;
+    ctx.fillRect(-W, -H, W * 4, H * 4);
+    // grain
+    ctx.fillStyle = `rgba(160,150,120,${0.06 * bf})`;
+    for (let i = 0; i < 400; i++) {
+      ctx.fillRect(((i*173+tick*3)%600)-50, ((i*97+tick*2)%600)-50, 2, 2);
+    }
+  }
+
+  // ── Specimen draw functions (all drawn in world-space, zoom applied via ctx transform) ──
+
+  function drawCheek() {
+    const cells = [
+      {cx:120,cy:110,rx:55,ry:38,rot:0.3},
+      {cx:310,cy:130,rx:48,ry:32,rot:1.1},
+      {cx:200,cy:260,rx:60,ry:40,rot:0.7},
+      {cx:390,cy:290,rx:44,ry:30,rot:1.8},
+      {cx:80, cy:360,rx:50,ry:35,rot:0.1},
+      {cx:290,cy:400,rx:52,ry:36,rot:2.2},
+      {cx:450,cy:160,rx:46,ry:31,rot:0.9},
+      {cx:160,cy:450,rx:42,ry:29,rot:1.5},
+    ];
+    cells.forEach(({cx,cy,rx,ry,rot}) => {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(180,215,255,0.22)'; ctx.fill();
+      ctx.strokeStyle='rgba(90,150,220,0.75)'; ctx.lineWidth=1.4; ctx.stroke();
+      // nucleus
+      ctx.beginPath(); ctx.ellipse(0,0,rx*0.28,ry*0.32,0.2,0,Math.PI*2);
+      ctx.fillStyle='rgba(50,90,200,0.6)'; ctx.fill();
+      ctx.strokeStyle='rgba(70,110,220,0.85)'; ctx.lineWidth=0.9; ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawOnion() {
+    const cW = 80, cH = 42;
+    for (let r = -1; r < Math.ceil(H/cH)+1; r++) {
+      for (let c = -1; c < Math.ceil(W/cW)+1; c++) {
+        const x = c*cW + (r%2)*cW*0.5;
+        const y = r*cH;
+        ctx.fillStyle = 'rgba(230,195,70,0.07)';
+        ctx.fillRect(x, y, cW-2, cH-2);
+        ctx.strokeStyle='rgba(200,155,20,0.8)'; ctx.lineWidth=1.6;
+        ctx.strokeRect(x, y, cW-2, cH-2);
+        // nucleus
+        ctx.beginPath(); ctx.arc(x+cW*0.5, y+cH*0.5, 5, 0, Math.PI*2);
+        ctx.fillStyle='rgba(170,110,10,0.65)'; ctx.fill();
+      }
+    }
+  }
+
+  function drawBlood() {
+    MOTION.blood.entities.forEach(e => {
+      if (e.type === 'rbc') {
+        ctx.beginPath(); ctx.ellipse(e.x, e.y, e.r, e.r*0.82, e.hue*0.1, 0, Math.PI*2);
+        ctx.fillStyle='rgba(215,75,55,0.52)'; ctx.fill();
+        ctx.strokeStyle='rgba(195,45,35,0.72)'; ctx.lineWidth=0.9; ctx.stroke();
+        // central pallor
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.r*0.32, 0, Math.PI*2);
+        ctx.fillStyle='rgba(255,185,165,0.32)'; ctx.fill();
+      } else if (e.type === 'wbc') {
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
+        ctx.fillStyle='rgba(155,115,200,0.28)'; ctx.fill();
+        ctx.strokeStyle='rgba(130,90,180,0.7)'; ctx.lineWidth=1.3; ctx.stroke();
+        // lobed nucleus
+        ctx.beginPath(); ctx.arc(e.x-5, e.y-3, e.r*0.42, 0, Math.PI*2);
+        ctx.arc(e.x+5, e.y+2, e.r*0.37, 0, Math.PI*2);
+        ctx.fillStyle='rgba(90,55,160,0.58)'; ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.ellipse(e.x, e.y, 4, 2.5, tick*0.03, 0, Math.PI*2);
+        ctx.fillStyle='rgba(195,155,95,0.58)'; ctx.fill();
+      }
+    });
+  }
+
+  function drawLeaf() {
+    // Upper epidermis
+    ctx.fillStyle='rgba(100,200,120,0.28)'; ctx.fillRect(0,20,W,26);
+    ctx.strokeStyle='rgba(75,175,95,0.6)'; ctx.lineWidth=1;
+    for (let x=0;x<W;x+=42) ctx.strokeRect(x,20,42,26);
+
+    // Palisade cells
+    for (let x=0;x<W;x+=24) {
+      ctx.fillStyle='rgba(55,175,75,0.22)'; ctx.fillRect(x+1,46,22,85);
+      ctx.strokeStyle='rgba(45,155,65,0.6)'; ctx.lineWidth=1.2; ctx.strokeRect(x+1,46,22,85);
+      for (let j=0;j<5;j++) {
+        ctx.beginPath(); ctx.ellipse(x+7+(j%2)*10, 56+j*16, 4.5, 2.8, 0.3, 0, Math.PI*2);
+        ctx.fillStyle='rgba(25,135,45,0.75)'; ctx.fill();
+      }
+    }
+
+    // Spongy mesophyll
+    for (let i=0;i<35;i++) {
+      const cx=15+(i*127)%(W-30), cy=140+(i*83)%75;
+      ctx.beginPath(); ctx.ellipse(cx,cy,14+(i%3)*5,9+(i%4)*4,i*0.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(70,195,95,0.14)'; ctx.fill();
+      ctx.strokeStyle='rgba(55,175,75,0.38)'; ctx.lineWidth=0.8; ctx.stroke();
+    }
+
+    // Vascular bundle
+    ctx.beginPath(); ctx.ellipse(W/2,182,32,22,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(195,155,55,0.28)'; ctx.fill();
+    ctx.strokeStyle='rgba(175,135,45,0.6)'; ctx.lineWidth=1.6; ctx.stroke();
+    ctx.beginPath(); ctx.arc(W/2-9,180,7.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(215,185,75,0.55)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(W/2+9,184,5.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(155,95,175,0.45)'; ctx.fill();
+
+    // Lower epidermis + stomata
+    ctx.fillStyle='rgba(75,165,95,0.22)'; ctx.fillRect(0,222,W,22);
+    ctx.strokeStyle='rgba(55,145,75,0.5)'; ctx.lineWidth=1;
+    for (let x=0;x<W;x+=42) ctx.strokeRect(x,222,42,22);
+    for (let i=0;i<4;i++) {
+      const sx=55+i*105;
+      ctx.beginPath(); ctx.ellipse(sx,233,9,4.5,0,0,Math.PI*2);
+      ctx.strokeStyle='rgba(35,135,55,0.8)'; ctx.lineWidth=1.3; ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx-5,233,4.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(35,135,55,0.5)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(sx+5,233,4.5,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  function drawBacteria() {
+    MOTION.bacteria.entities.forEach(e => {
+      ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
+      ctx.beginPath(); ctx.ellipse(0,0,e.len,e.len*0.38,0,0,Math.PI*2);
+      ctx.fillStyle = e.gramPos ? 'rgba(135,55,195,0.62)' : 'rgba(215,155,55,0.52)';
+      ctx.fill();
+      ctx.strokeStyle = e.gramPos ? 'rgba(155,75,215,0.82)' : 'rgba(195,135,35,0.72)';
+      ctx.lineWidth=0.9; ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawParamecium() {
+    MOTION.paramecium.entities.forEach(e => {
+      ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
+      const rx=80, ry=34;
+
+      // Cilia (animated)
+      for (let a=0; a<Math.PI*2; a+=0.22) {
+        const bx=Math.cos(a)*rx, by=Math.sin(a)*ry;
+        const nx=Math.cos(a), ny=Math.sin(a);
+        const wave=Math.sin(a*3 + e.ciliaPhase)*5;
+        ctx.beginPath(); ctx.moveTo(bx,by);
+        ctx.lineTo(bx+nx*9+wave*ny, by+ny*9-wave*nx);
+        ctx.strokeStyle='rgba(35,195,155,0.45)'; ctx.lineWidth=0.8; ctx.stroke();
+      }
+
+      // Body
+      ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
+      ctx.fillStyle='rgba(45,195,165,0.22)'; ctx.fill();
+      ctx.strokeStyle='rgba(35,190,155,0.72)'; ctx.lineWidth=1.6; ctx.stroke();
+
+      // Macronucleus
+      ctx.beginPath(); ctx.ellipse(0,-ry*0.18,rx*0.33,ry*0.4,0.2,0,Math.PI*2);
+      ctx.fillStyle='rgba(25,155,125,0.52)'; ctx.fill();
+      ctx.strokeStyle='rgba(35,175,145,0.7)'; ctx.lineWidth=1; ctx.stroke();
+
+      // Contractile vacuoles — pulsate
+      const pulse=0.8+Math.sin(tick*0.08)*0.2;
+      ctx.beginPath(); ctx.arc(-rx*0.56,0,ry*0.19*pulse,0,Math.PI*2);
+      ctx.strokeStyle='rgba(75,215,185,0.65)'; ctx.lineWidth=1.3; ctx.stroke();
+      ctx.beginPath(); ctx.arc(rx*0.56,0,ry*0.16*pulse,0,Math.PI*2); ctx.stroke();
+
+      // Oral groove
+      ctx.beginPath();
+      ctx.moveTo(rx*0.1,-ry*0.05);
+      ctx.quadraticCurveTo(-rx*0.18,ry*0.28,-rx*0.08,ry*0.52);
+      ctx.strokeStyle='rgba(25,175,145,0.5)'; ctx.lineWidth=3.5; ctx.stroke();
+
+      ctx.restore();
+    });
+  }
+
+  // ── Main render ───────────────────────────────────────────────
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    const zoom = getZoom();
+    const blur = blurAmount();
+
+    ctx.save();
+    // Apply zoom centered on canvas + pan
+    ctx.translate(W/2 + panX, H/2 + panY);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-W/2, -H/2);
+
+    if (blur > 0.2) ctx.filter = `blur(${blur.toFixed(1)}px)`;
+    drawBackground();
+
+    switch(currentSpec) {
+      case 'cheek':      drawCheek();      break;
+      case 'onion':      drawOnion();      break;
+      case 'blood':      drawBlood();      break;
+      case 'leaf':       drawLeaf();       break;
+      case 'bacteria':   drawBacteria();   break;
+      case 'paramecium': drawParamecium(); break;
+    }
+
+    ctx.filter = 'none';
+    ctx.restore();
+
+    // Scale bar (overlay, not zoomed)
+    document.getElementById('microScaleTxt').textContent = getScaleLabel(currentMag);
+  }
+
+  function getScaleLabel(mag) {
+    const fw = FIELD_UM[mag];
+    const µm = Math.round(fw * 0.2 / 10) * 10;
+    return µm >= 1000 ? `${(µm/1000).toFixed(1)} mm` : `${µm} µm`;
+  }
+
+  // ── Animation loop ────────────────────────────────────────────
+  function hasMotion() {
+    return ['blood','bacteria','paramecium'].includes(currentSpec);
+  }
+
+  function loop() {
+    if (!paused) stepMotion();
+    render();
+    animId = requestAnimationFrame(loop);
+  }
+
+  function startAnim() {
+    if (animId) cancelAnimationFrame(animId);
+    paused = false;
+    document.getElementById('microPauseBtn').textContent = '⏸ Pause';
+    document.getElementById('microPauseBtn').classList.remove('active');
+    if (hasMotion()) {
+      loop();
+    } else {
+      animId = null;
+      render();
+    }
+  }
+
+  // ── Controls ──────────────────────────────────────────────────
+  document.querySelectorAll('.micro-mag-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentMag = parseInt(btn.dataset.mag);
+      document.querySelectorAll('.micro-mag-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      panX = panY = 0;
+      document.getElementById('microStageX').value = 0;
+      document.getElementById('microStageY').value = 0;
+      updateInfo();
+      startAnim();
+    });
+  });
+
+  document.querySelectorAll('.micro-spec-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentSpec = btn.dataset.spec;
+      document.querySelectorAll('.micro-spec-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      panX = panY = 0;
+      document.getElementById('microStageX').value = 0;
+      document.getElementById('microStageY').value = 0;
+      focusLevel = 50;
+      document.getElementById('microFocusSlider').value = 50;
+      document.getElementById('microFocusVal').textContent = '50%';
+      updateInfo();
+      startAnim();
+    });
+  });
+
+  document.getElementById('microFocusSlider').addEventListener('input', function() {
+    focusLevel = parseInt(this.value);
+    document.getElementById('microFocusVal').textContent = this.value + '%';
+    if (!hasMotion()) render();
+  });
+
+  document.getElementById('microBrightSlider').addEventListener('input', function() {
+    brightness = parseInt(this.value);
+    document.getElementById('microBrightVal').textContent = this.value + '%';
+    if (!hasMotion()) render();
+  });
+
+  // Stage sliders — reversed: slider right → pan LEFT (view moves opposite)
+  function applyStage() {
+    const sx = parseInt(document.getElementById('microStageX').value);
+    const sy = parseInt(document.getElementById('microStageY').value);
+    panX = -sx;
+    panY = -sy;
+    if (!hasMotion()) render();
+  }
+  document.getElementById('microStageX').addEventListener('input', applyStage);
+  document.getElementById('microStageY').addEventListener('input', applyStage);
+  document.getElementById('microStageReset').addEventListener('click', () => {
+    document.getElementById('microStageX').value = 0;
+    document.getElementById('microStageY').value = 0;
+    panX = panY = 0;
+    if (!hasMotion()) render();
+  });
+
+  document.getElementById('microPauseBtn').addEventListener('click', () => {
+    if (!hasMotion()) return; // no motion = nothing to pause
+    paused = !paused;
+    const btn = document.getElementById('microPauseBtn');
+    btn.textContent = paused ? '▶ Resume' : '⏸ Pause';
+    btn.classList.toggle('active', paused);
+  });
+
+  const SPEC_INFO = {
+    cheek:      { name: 'Human Cheek Cells',      desc: 'Squamous epithelial cells from the inner cheek. Flat and irregular with a visible nucleus. Stained with methylene blue.' },
+    onion:      { name: 'Onion Epidermis',         desc: 'Single-layered cells in a brick-like pattern. Clear cell walls visible. No chloroplasts. Large central vacuole.' },
+    blood:      { name: 'Blood Smear',             desc: 'Red blood cells (biconcave), white blood cells (with nucleus), and platelets. Cells flow as in a capillary. Wright\'s stain.' },
+    leaf:       { name: 'Leaf Cross-section',      desc: 'Epidermis, palisade mesophyll (columnar, chloroplast-rich), spongy mesophyll, vascular bundle (xylem + phloem), and stomata.' },
+    bacteria:   { name: 'Bacteria (Bacilli)',       desc: 'Gram-stained rods. Purple = Gram-positive (thick peptidoglycan wall). Yellow = Gram-negative. Brownian motion visible.' },
+    paramecium: { name: 'Paramecium',              desc: 'Ciliate protozoan. Slipper-shaped with oral groove, macronucleus, pulsing contractile vacuoles, and beating cilia.' },
+  };
+
+  function updateInfo() {
+    const spec = SPEC_INFO[currentSpec];
+    const lens = LENSES.find(l => l.mag === currentMag);
+    const fd   = FIELD_UM[currentMag];
+    document.getElementById('microInfo').innerHTML =
+      `<strong>${spec.name}</strong> · ${lens.label} objective (${lens.sublabel}) · Total ${currentMag}×<br>
+       Field diameter ≈ ${fd >= 1000 ? (fd/1000).toFixed(1)+' mm' : fd+' µm'}<br>
+       ${spec.desc}`;
+  }
+
+  initMotion();
+  updateInfo();
+  startAnim();
+})();
+
+
+</script>
+</body>
+</html>
