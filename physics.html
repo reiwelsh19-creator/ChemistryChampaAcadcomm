@@ -1,0 +1,2952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Map of Physics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #09060f;
+      --surface:   #110d1e;
+      --surface2:  #1a1430;
+      --border:    rgba(160,120,255,0.18);
+      --border2:   rgba(160,120,255,0.35);
+      --purple:    #a078ff;
+      --purple2:   #c4a0ff;
+      --violet:    #7b4fff;
+      --text:      #e8e0ff;
+      --muted:     #7a6a9a;
+      --dim:       #3a2e55;
+
+      --mechanics:    #6ec6ff;
+      --mechanics-bg: rgba(110,198,255,0.07);
+      --grav:         #ff9f6e;
+      --grav-bg:      rgba(255,159,110,0.07);
+      --thermo:       #ff6eb0;
+      --thermo-bg:    rgba(255,110,176,0.07);
+      --waves:        #6effcc;
+      --waves-bg:     rgba(110,255,204,0.07);
+      --electric:     #ffe46e;
+      --electric-bg:  rgba(255,228,110,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 80px;
+      overflow-x: hidden;
+    }
+
+    /* ── Starfield canvas ── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+
+    /* everything above the canvas */
+    header, .page-tabs, #mapPage, #practicePage, .modal-backdrop {
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 64px 40px 44px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(123,79,255,0.12) 0%, transparent 100%);
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: 'v = u + at  ·  F = ma  ·  E = mc²  ·  p = mv  ·  λ = h/p  ·  F = kq₁q₂/r²';
+      position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+      font-size: 10px; letter-spacing: 0.2em; color: var(--dim); white-space: nowrap; overflow: hidden;
+    }
+    .label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 300; font-size: clamp(2.4rem, 5.5vw, 4rem);
+      line-height: 1.05; color: var(--text);
+      text-shadow: 0 0 60px rgba(160,120,255,0.4);
+    }
+    h1 em {
+      font-style: italic; font-weight: 600;
+      background: linear-gradient(135deg, var(--purple2), #ff9fff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.08em; }
+
+    /* ── Tabs ── */
+    .page-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .page-tab {
+      padding: 14px 28px; font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+      color: var(--muted); user-select: none;
+    }
+    .page-tab:hover { color: var(--text); }
+    .page-tab.active { color: var(--purple2); border-bottom-color: var(--purple); }
+
+    /* ── Quarter nav ── */
+    .quarters {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface); overflow-x: auto;
+    }
+    .quarter-pill {
+      flex: 1; min-width: 150px; padding: 13px 18px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: background 0.2s; text-align: center;
+      user-select: none; color: var(--muted);
+    }
+    .quarter-pill:last-child { border-right: none; }
+    .quarter-pill:hover { background: rgba(160,120,255,0.06); color: var(--text); }
+    .quarter-pill.active {
+      background: rgba(160,120,255,0.14);
+      color: var(--purple2);
+      box-shadow: inset 0 -2px 0 var(--purple);
+    }
+    .quarter-pill span { display: block; font-size: 8px; opacity: 0.55; margin-top: 3px; }
+
+    /* ── Search ── */
+    .search-wrap { padding: 28px 32px 0; max-width: 1200px; margin: 0 auto; }
+    .search-wrap input {
+      width: 100%; max-width: 440px; padding: 10px 16px;
+      font-family: 'Space Mono', monospace; font-size: 12px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 4px; outline: none; color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(160,120,255,0.15); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    /* ── Card grid ── */
+    main {
+      max-width: 1200px; margin: 0 auto; padding: 32px 32px 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px;
+    }
+
+    .field {
+      border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      background: var(--surface);
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+      animation: rise 0.45s ease both;
+    }
+    .field:hover {
+      border-color: var(--border2);
+      box-shadow: 0 0 28px rgba(160,120,255,0.12), 0 4px 24px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+    }
+    .field.dimmed { display: none; }
+    .field:nth-child(1){animation-delay:.05s} .field:nth-child(2){animation-delay:.10s}
+    .field:nth-child(3){animation-delay:.15s} .field:nth-child(4){animation-delay:.20s}
+    .field:nth-child(5){animation-delay:.25s}
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    .field-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 13px;
+    }
+    .field-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .field-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 1rem; line-height: 1.25; color: var(--text);
+    }
+    .field-tag {
+      display: inline-block; margin-top: 5px; font-size: 8px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* field colors */
+    .field[data-field="mechanics"]  .field-header { background: var(--mechanics-bg); }
+    .field[data-field="mechanics"]  .field-tag    { background: rgba(110,198,255,0.15); color: var(--mechanics); border: 1px solid rgba(110,198,255,0.3); }
+    .field[data-field="grav"]       .field-header { background: var(--grav-bg); }
+    .field[data-field="grav"]       .field-tag    { background: rgba(255,159,110,0.15); color: var(--grav); border: 1px solid rgba(255,159,110,0.3); }
+    .field[data-field="thermo"]     .field-header { background: var(--thermo-bg); }
+    .field[data-field="thermo"]     .field-tag    { background: rgba(255,110,176,0.15); color: var(--thermo); border: 1px solid rgba(255,110,176,0.3); }
+    .field[data-field="waves"]      .field-header { background: var(--waves-bg); }
+    .field[data-field="waves"]      .field-tag    { background: rgba(110,255,204,0.15); color: var(--waves); border: 1px solid rgba(110,255,204,0.3); }
+    .field[data-field="electric"]   .field-header { background: var(--electric-bg); }
+    .field[data-field="electric"]   .field-tag    { background: rgba(255,228,110,0.15); color: var(--electric); border: 1px solid rgba(255,228,110,0.3); }
+
+    .topic-list { padding: 8px 20px 14px; list-style: none; }
+    .topic-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      border-bottom: 1px solid rgba(160,120,255,0.07);
+      font-size: 12px; line-height: 1.45;
+    }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .field[data-field="mechanics"]  .topic-dot { background: var(--mechanics); box-shadow: 0 0 5px var(--mechanics); }
+    .field[data-field="grav"]       .topic-dot { background: var(--grav);      box-shadow: 0 0 5px var(--grav); }
+    .field[data-field="thermo"]     .topic-dot { background: var(--thermo);    box-shadow: 0 0 5px var(--thermo); }
+    .field[data-field="waves"]      .topic-dot { background: var(--waves);     box-shadow: 0 0 5px var(--waves); }
+    .field[data-field="electric"]   .topic-dot { background: var(--electric);  box-shadow: 0 0 5px var(--electric); }
+
+    .topic-name {
+      cursor: pointer; flex: 1; color: var(--text);
+      border-bottom: 1px dashed transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .field[data-field="mechanics"]  .topic-name:hover { color: var(--mechanics);  border-color: var(--mechanics); }
+    .field[data-field="grav"]       .topic-name:hover { color: var(--grav);       border-color: var(--grav); }
+    .field[data-field="thermo"]     .topic-name:hover { color: var(--thermo);     border-color: var(--thermo); }
+    .field[data-field="waves"]      .topic-name:hover { color: var(--waves);      border-color: var(--waves); }
+    .field[data-field="electric"]   .topic-name:hover { color: var(--electric);   border-color: var(--electric); }
+
+    .topic-quarter {
+      font-size: 8px; letter-spacing: 0.12em; color: var(--muted);
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(5,3,12,0.75); backdrop-filter: blur(6px);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px; max-width: 480px; width: 100%;
+      padding: 32px 28px 28px; position: relative;
+      animation: popIn 0.22s ease;
+      box-shadow: 0 0 60px rgba(160,120,255,0.2), 0 20px 60px rgba(0,0,0,0.6);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-tag {
+      font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+      display: inline-block; margin-bottom: 14px;
+      font-family: 'Space Mono', monospace;
+    }
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 1.25rem;
+      line-height: 1.25; margin-bottom: 10px; color: var(--text);
+    }
+    .modal-quarter { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .modal-desc {
+      font-size: 12.5px; line-height: 1.8; color: #b8acd4;
+      border-top: 1px solid var(--border); padding-top: 16px;
+    }
+    .modal-placeholder { font-style: italic; color: var(--muted); font-size: 12px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 18px;
+      font-size: 20px; cursor: pointer; color: var(--muted);
+      background: none; border: none; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── Practice page ── */
+
+  #wavePage { display:none; max-width:900px; margin:0 auto; padding:40px 32px 80px; position:relative; z-index:1; }
+  #wavePage.visible { display:block; }
+
+  .wave-hdr { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:28px; }
+  .wave-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:22px 24px; margin-bottom:20px; }
+  .wave-card h3 { font-family:'Space Grotesk',sans-serif; font-size:.85rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--purple2); margin-bottom:16px; }
+  #waveCanvas { width:100%; border:1px solid var(--border); border-radius:6px; background:#06030f; display:block; }
+  .wave-controls { display:flex; flex-wrap:wrap; gap:18px 32px; margin-bottom:18px; }
+  .wave-slider-row { display:flex; align-items:center; gap:10px; }
+  .wave-slider-row label { font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; width:140px; flex-shrink:0; }
+  .wave-slider { -webkit-appearance:none; width:180px; height:4px; border-radius:2px; background:var(--border2); outline:none; }
+  .wave-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--purple); cursor:pointer; }
+  .wave-val { font-family:'Space Mono',monospace; font-size:11px; color:var(--purple2); min-width:60px; }
+  .wave-toggle-row { display:flex; gap:10px; margin-bottom:18px; }
+  .wave-toggle-btn { padding:7px 16px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; border:1px solid var(--border2); border-radius:4px; background:none; color:var(--muted); cursor:pointer; transition:.15s; }
+  .wave-toggle-btn.active { background:var(--purple); color:#fff; border-color:var(--purple); }
+  .wave-readout { display:flex; gap:12px; flex-wrap:wrap; }
+  .wave-stat { flex:1; min-width:130px; background:rgba(160,120,255,.07); border:1px solid var(--border); border-radius:4px; padding:12px 14px; }
+  .wave-stat-label { font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .wave-stat-val { font-size:16px; font-family:'Space Mono',monospace; color:var(--purple2); font-weight:600; }
+  .wave-stat-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+  .wave-explainer { font-size:12px; color:var(--muted); line-height:1.7; margin-top:14px; }
+  .wave-explainer strong { color:var(--text); }
+  .wave-section-divider { border:none; border-top:1px solid var(--border); margin:32px 0; }
+  .wave-section-heading { font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600;
+    color:var(--purple2); letter-spacing:.08em; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+  .wave-section-heading span { font-size:18px; }
+  #lightCanvas { width:100%; border:1px solid var(--border); border-radius:6px; background:#06030f; display:block; }
+  .light-color-swatch { display:inline-block; width:80px; height:24px; border-radius:4px; border:1px solid rgba(255,255,255,.15);
+    vertical-align:middle; margin-right:10px; transition: background .2s; }
+  .light-nm-readout { font-family:'Space Mono',monospace; font-size:1.1rem; font-weight:600; color:var(--text); }
+  .light-color-name { font-size:11px; color:var(--muted); margin-top:4px; }
+  .light-slider-special { accent-color: #a078ff; }
+
+
+
+  /* ── Tool sub-tabs ── */
+  .tool-subtabs { display:flex; gap:0; border-bottom:1.5px solid var(--border2); margin-bottom:28px; flex-wrap:wrap; }
+  .tool-subtab  { padding:10px 20px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.08em;
+    text-transform:uppercase; cursor:pointer; color:var(--muted); border-bottom:2.5px solid transparent;
+    margin-bottom:-1.5px; transition:.15s; background:none; border-top:none; border-left:none; border-right:none; }
+  .tool-subtab:hover  { color:var(--text); }
+  .tool-subtab.active { color:var(--purple2); border-bottom-color:var(--purple); }
+  .tool-panel  { display:none; }
+  .tool-panel.active { display:block; }
+
+  /* ── Coulomb ── */
+  #coulombCanvas { width:100%; border:1px solid var(--border); border-radius:6px; background:#04020c; display:block; cursor:grab; }
+  .coul-readout { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+  .coul-stat    { flex:1; min-width:130px; background:rgba(160,120,255,.07); border:1px solid var(--border);
+    border-radius:4px; padding:12px 14px; }
+  .coul-stat-label { font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .coul-stat-val   { font-size:15px; font-family:'Space Mono',monospace; color:var(--purple2); font-weight:600; }
+  .coul-stat-sub   { font-size:10px; color:var(--muted); margin-top:2px; }
+  .coul-controls   { display:flex; flex-wrap:wrap; gap:14px 28px; margin-bottom:18px; }
+  .coul-row        { display:flex; align-items:center; gap:10px; }
+  .coul-row label  { font-size:10px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; width:150px; flex-shrink:0; }
+  .coul-slider     { -webkit-appearance:none; width:160px; height:4px; border-radius:2px;
+    background:var(--border2); outline:none; }
+  .coul-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px;
+    border-radius:50%; background:var(--purple); cursor:pointer; }
+  .coul-val        { font-family:'Space Mono',monospace; font-size:11px; color:var(--purple2); min-width:64px; }
+  .coul-explainer  { font-size:12px; color:var(--muted); line-height:1.7; margin-top:14px; }
+  .coul-explainer strong { color:var(--text); }
+
+  /* ── FBD ── */
+  #fbdCanvas { width:100%; border:1px solid var(--border); border-radius:6px; background:#04020c; display:block; }
+  .fbd-controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .fbd-btn  { padding:8px 16px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.08em;
+    text-transform:uppercase; border:1px solid var(--border2); border-radius:4px; background:none;
+    color:var(--muted); cursor:pointer; transition:.15s; }
+  .fbd-btn:hover  { color:var(--text); border-color:var(--purple); }
+  .fbd-btn.active { background:var(--purple); color:#fff; border-color:var(--purple); }
+  .fbd-force-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .fbd-force-item { display:flex; align-items:center; gap:10px; background:var(--surface);
+    border:1px solid var(--border); border-radius:6px; padding:10px 14px; }
+  .fbd-force-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .fbd-force-name { font-size:11px; color:var(--text); width:140px; flex-shrink:0; }
+  .fbd-force-slider { -webkit-appearance:none; flex:1; height:4px; border-radius:2px;
+    background:var(--border2); outline:none; }
+  .fbd-force-slider::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px;
+    border-radius:50%; background:var(--purple); cursor:pointer; }
+  .fbd-force-val  { font-family:'Space Mono',monospace; font-size:11px; color:var(--purple2); width:60px; text-align:right; }
+  .fbd-net-row    { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+  .fbd-net-card   { flex:1; min-width:160px; background:rgba(160,120,255,.07); border:1px solid var(--border);
+    border-radius:4px; padding:12px 14px; }
+  .fbd-net-label  { font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .fbd-net-val    { font-size:15px; font-family:'Space Mono',monospace; color:var(--purple2); font-weight:600; }
+  .fbd-net-sub    { font-size:10px; color:var(--muted); margin-top:2px; }
+  .fbd-explainer  { font-size:12px; color:var(--muted); line-height:1.7; margin-top:14px; }
+  .fbd-explainer strong { color:var(--text); }
+
+  #coulombPage { display:none; max-width:900px; margin:0 auto; padding:40px 32px 80px; position:relative; z-index:1; }
+  #coulombPage.visible { display:block; }
+  #fbdPage { display:none; max-width:900px; margin:0 auto; padding:40px 32px 80px; position:relative; z-index:1; }
+  #fbdPage.visible { display:block; }
+  #toolsPage { display:none; max-width:900px; margin:0 auto; padding:40px 32px 80px; position:relative; z-index:1; }
+  #toolsPage.visible { display:block; }
+  .tool-hdr { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:28px; }
+  .tool-hdr-icon { font-size:24px; }
+  .tool-hdr-title { font-family:'Space Grotesk',sans-serif; font-size:1.2rem; font-weight:600; color:var(--text); }
+  .tool-hdr-sub { font-size:11px; color:var(--muted); margin-top:2px; letter-spacing:.05em; }
+  /* sim controls */
+  .sim-controls { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px; align-items:center; }
+  .sim-btn { padding:8px 16px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    border:1px solid var(--border2); border-radius:4px; background:none; cursor:pointer; color:var(--muted); transition:all .15s; }
+  .sim-btn:hover, .sim-btn.active { background:var(--purple); color:#fff; border-color:var(--purple); }
+  .sim-slider-row { display:flex; align-items:center; gap:10px; }
+  .sim-slider-row label { font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; width:120px; flex-shrink:0; }
+  .sim-slider { -webkit-appearance:none; width:160px; height:4px; border-radius:2px; background:var(--border2); outline:none; }
+  .sim-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--purple); cursor:pointer; }
+  .sim-val { font-size:11px; color:var(--purple2); width:50px; font-family:'Space Mono',monospace; }
+  #simCanvas { width:100%; border:1px solid var(--border); border-radius:6px; background:#0a0614; display:block; cursor:crosshair; }
+  .sim-info-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; }
+  .sim-info-card { flex:1; min-width:140px; background:rgba(160,120,255,.07); border:1px solid var(--border); border-radius:4px; padding:12px 14px; }
+  .sim-info-label { font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .sim-info-val { font-size:16px; font-family:'Space Mono',monospace; color:var(--purple2); font-weight:600; }
+  .sim-info-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+  #practicePage { display: none; max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+  #practicePage.visible { display: block; }
+  #mapPage.hidden { display: none; }
+
+    .practice-section { margin-bottom: 56px; }
+    .practice-section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .practice-section-icon { font-size: 22px; }
+    .practice-section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 1.15rem; color: var(--text);
+    }
+    .practice-section-tag {
+      font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 9px; border-radius: 20px; margin-left: 4px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .question-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 22px 24px; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .question-card:hover { border-color: var(--border2); }
+    .question-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .q-num { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .q-type {
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 1px 7px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted);
+    }
+    .question-text { font-size: 13px; line-height: 1.75; margin-bottom: 16px; color: var(--text); }
+    .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .choice {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+      font-size: 12px; line-height: 1.5; transition: all 0.15s; user-select: none;
+      color: var(--text);
+    }
+    .choice:hover { border-color: var(--purple); background: rgba(160,120,255,0.07); }
+    .choice.correct { border-color: var(--waves); background: rgba(110,255,204,0.07); color: var(--waves); }
+    .choice.wrong   { border-color: #ff5555;      background: rgba(255,85,85,0.07);   color: #ff8080; }
+    .choice-letter  { font-size: 9px; width: 18px; flex-shrink: 0; margin-top: 1px; opacity: 0.45; }
+    .choice.correct .choice-letter, .choice.wrong .choice-letter { opacity: 1; }
+
+    .reveal-btn {
+      margin-top: 14px; padding: 8px 18px;
+      font-family: 'Space Mono', monospace; font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid var(--border2); border-radius: 5px;
+      background: none; cursor: pointer; color: var(--purple2);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .reveal-btn:hover { background: rgba(160,120,255,0.1); box-shadow: 0 0 12px rgba(160,120,255,0.2); }
+    .reveal-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+    .explanation {
+      display: none; margin-top: 14px; padding: 14px 16px;
+      background: rgba(160,120,255,0.06); border-radius: 6px;
+      font-size: 12.5px; line-height: 1.75; color: #c4b8e8;
+      border-left: 3px solid var(--purple);
+    }
+    .explanation.visible { display: block; }
+
+    .back-btn {
+      position: fixed; top: 16px; left: 18px; z-index: 100;
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 20px;
+      background: rgba(160,120,255,0.12); border: 1px solid rgba(160,120,255,0.3);
+      color: #c0a0ff; font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; transition: background 0.15s, box-shadow 0.15s;
+    }
+    .back-btn:hover { background: rgba(160,120,255,0.22); box-shadow: 0 0 14px rgba(160,120,255,0.2); }
+
+    footer {
+      text-align: center; padding: 48px 20px 0;
+      font-size: 9px; letter-spacing: 0.2em; color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 20px 28px; }
+      main, .search-wrap { padding-left: 16px; padding-right: 16px; }
+      #practicePage { padding: 28px 16px 60px; }
+      .page-tab { padding: 12px 14px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<a class="back-btn" href="index.html">← Home</a>
+
+<header>
+  <p class="label">Curriculum Map · Grade 8 · Champaca</p>
+  <h1>The Map of <em>Physics</em></h1>
+  <p class="subtitle">Click any topic for a description · organized by field</p>
+</header>
+
+<div class="page-tabs">
+  <div class="page-tab active" id="tabMap">&#128203; Curriculum Map</div>
+  <div class="page-tab" id="tabPractice">&#9999;&#65039; Practice Exercises</div>
+  <div class="page-tab" id="tabTools">&#128300; Mirror &amp; Lens</div>
+  <div class="page-tab" id="tabWave">&#127754; Waves</div>
+  <div class="page-tab" id="tabCoulomb">&#9889;&#65039; Coulomb</div>
+  <div class="page-tab" id="tabFBD">&#128208; FBD</div>
+</div>
+
+<div id="mapPage">
+
+  <nav class="quarters" id="quarterNav">
+    <div class="quarter-pill active" data-q="all">All Topics <span>4 quarters</span></div>
+    <div class="quarter-pill" data-q="Q1">Quarter 1 <span>Mechanics</span></div>
+    <div class="quarter-pill" data-q="Q2">Quarter 2 <span>Gravitation & Thermo</span></div>
+    <div class="quarter-pill" data-q="Q3">Quarter 3 <span>Waves & Light</span></div>
+    <div class="quarter-pill" data-q="Q4">Quarter 4 <span>The Electric Force</span></div>
+  </nav>
+
+  <div class="search-wrap">
+    <input type="text" id="searchBox" placeholder="Search a topic, e.g. 'momentum' or 'refraction'…"/>
+  </div>
+
+  <main id="cardGrid">
+
+    <!-- MECHANICS OF MOTION -->
+    <div class="field" data-field="mechanics" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🚀</div>
+        <div>
+          <div class="field-title">Mechanics of Motion</div>
+          <span class="field-tag">Mechanics</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="History of the Ideas of Motion">
+          <span class="topic-dot"></span><span class="topic-name">History of the Ideas of Motion</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Kinematic Quantities">
+          <span class="topic-dot"></span><span class="topic-name">Kinematic Quantities</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Forces and Laws of Motion">
+          <span class="topic-dot"></span><span class="topic-name">Forces and Laws of Motion</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Vectors">
+          <span class="topic-dot"></span><span class="topic-name">Vectors</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- MOMENTUM & IMPULSE -->
+    <div class="field" data-field="mechanics" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">💫</div>
+        <div>
+          <div class="field-title">Momentum & Impulse</div>
+          <span class="field-tag">Mechanics</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Impulse and Momentum">
+          <span class="topic-dot"></span><span class="topic-name">Impulse and Momentum</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="mechanics" data-title="Conservation of Momentum">
+          <span class="topic-dot"></span><span class="topic-name">Conservation of Momentum</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- GRAVITATION -->
+    <div class="field" data-field="grav" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🪐</div>
+        <div>
+          <div class="field-title">Gravitation</div>
+          <span class="field-tag">Gravity</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="grav" data-title="Scientists of Gravitation">
+          <span class="topic-dot"></span><span class="topic-name">Scientists of Gravitation</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="grav" data-title="Gravitational Field Force & Potential Energy">
+          <span class="topic-dot"></span><span class="topic-name">Gravitational Field Force & Potential Energy</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="grav" data-title="Conservation of Mechanical Energy">
+          <span class="topic-dot"></span><span class="topic-name">Conservation of Mechanical Energy</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- THERMODYNAMICS -->
+    <div class="field" data-field="thermo" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🌡️</div>
+        <div>
+          <div class="field-title">Thermodynamics</div>
+          <span class="field-tag">Thermo</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="thermo" data-title="Heat Transfer — Convection, Conduction, Radiation">
+          <span class="topic-dot"></span><span class="topic-name">Heat Transfer — Convection, Conduction, Radiation</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="thermo" data-title="Consequences of Heat Transfer">
+          <span class="topic-dot"></span><span class="topic-name">Consequences of Heat Transfer</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- WAVE MECHANICS -->
+    <div class="field" data-field="waves" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">〰️</div>
+        <div>
+          <div class="field-title">Wave Mechanics</div>
+          <span class="field-tag">Waves</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Introduction to Waves">
+          <span class="topic-dot"></span><span class="topic-name">Introduction to Waves</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Characteristic Behaviors of Waves">
+          <span class="topic-dot"></span><span class="topic-name">Characteristic Behaviors of Waves</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Sound as a Wave">
+          <span class="topic-dot"></span><span class="topic-name">Sound as a Wave</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- LIGHT & OPTICS -->
+    <div class="field" data-field="waves" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">🔭</div>
+        <div>
+          <div class="field-title">Light & Optics</div>
+          <span class="field-tag">Waves</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Evolution of Understanding of Light">
+          <span class="topic-dot"></span><span class="topic-name">Evolution of Understanding of Light</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Wave Nature of Light, Electromagnetic Waves & Color">
+          <span class="topic-dot"></span><span class="topic-name">Wave Nature of Light, EM Waves & Color</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Reflection and Refraction of Light">
+          <span class="topic-dot"></span><span class="topic-name">Reflection and Refraction of Light</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="waves" data-title="Different Types of Mirrors and Lenses">
+          <span class="topic-dot"></span><span class="topic-name">Different Types of Mirrors and Lenses</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ELECTROMAGNETISM -->
+    <div class="field" data-field="electric" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">⚡</div>
+        <div>
+          <div class="field-title">Electrostatics & Circuits</div>
+          <span class="field-tag">Electric</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="History of Electromagnetism">
+          <span class="topic-dot"></span><span class="topic-name">History of Electromagnetism</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Electric Charge and Charging Methods">
+          <span class="topic-dot"></span><span class="topic-name">Electric Charge and Charging Methods</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Coulomb's Law">
+          <span class="topic-dot"></span><span class="topic-name">Coulomb's Law</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Voltage, Current and Resistance">
+          <span class="topic-dot"></span><span class="topic-name">Voltage, Current and Resistance</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="electric" data-title="Electromagnetic Induction">
+          <span class="topic-dot"></span><span class="topic-name">Electromagnetic Induction</span><span class="topic-quarter">Q4</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+</div><!-- end #mapPage -->
+
+<!-- TOPIC MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-quarter" id="modalQuarter"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+  </div>
+</div>
+
+<!-- PRACTICE PAGE -->
+<div id="practicePage">
+
+  <!-- MECHANICS OF MOTION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🚀</div>
+      <div>
+        <span class="practice-section-title">Mechanics of Motion</span>
+        <span class="practice-section-tag" style="background:rgba(110,198,255,0.15);color:#6ec6ff;border:1px solid rgba(110,198,255,0.3);">Mechanics</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q1</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which scientist first described the concept of inertia as a property of matter at rest?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Aristotle</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Galileo Galilei</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Isaac Newton</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> René Descartes</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Isaac Newton.</strong> Newton formalized inertia as his First Law of Motion: an object at rest stays at rest, and an object in motion stays in motion, unless acted on by an external force. Galileo challenged Aristotle's view that motion requires a continuous force, but Newton codified inertia into law.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q2</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A car travels 100 m in 10 seconds. What is its average speed?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 1000 m/s</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 10 m/s</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 0.1 m/s</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 100 m/s</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 10 m/s.</strong> Average speed = distance ÷ time = 100 m ÷ 10 s = 10 m/s. Speed is a scalar — it only tells you how fast, not which direction. If the question asked for velocity, you'd also need to specify the direction of travel.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q3</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Newton's Third Law states that for every action there is an equal and opposite reaction. Which of the following is the best example of this?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> A rocket expelling gas downward and moving upward</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> A ball rolling to a stop due to friction</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> A car accelerating when the engine applies force</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> A book resting on a table</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — A rocket.</strong> The rocket pushes exhaust gas backward (action); the gas pushes the rocket forward (reaction). The forces are equal in magnitude, opposite in direction, and act on different objects — the hallmark of Newton's Third Law.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q4</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Two forces act on an object: 3 N to the right and 4 N upward. Using the graphical (tip-to-tail) method, what is the magnitude of the resultant force?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 7 N</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 1 N</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 5 N</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 12 N</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — 5 N.</strong> When two perpendicular vectors are added graphically (tip-to-tail), the resultant is the arrow drawn from the tail of the first to the tip of the last. For a 3-4-5 right triangle, the resultant = 5 N. You can verify this with a ruler and protractor on a scale drawing.</div>
+    </div>
+  </div>
+
+  <!-- MOMENTUM & IMPULSE -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">💫</div>
+      <div>
+        <span class="practice-section-title">Momentum & Impulse</span>
+        <span class="practice-section-tag" style="background:rgba(110,198,255,0.15);color:#6ec6ff;border:1px solid rgba(110,198,255,0.3);">Mechanics</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q5</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A 2 kg ball moving at 6 m/s collides with a wall and comes to rest. What impulse did the wall exert on the ball?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 6 N·s</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 12 N·s</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 3 N·s</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 0 N·s</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 12 N·s.</strong> Impulse = change in momentum = mΔv = 2 × (0 − 6) = −12 N·s. The magnitude is 12 N·s. Impulse equals the area under a force-time graph and always equals the change in momentum.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q6</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Two ice skaters push off each other from rest. Skater A (60 kg) moves left at 2 m/s. What can we say about Skater B?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Skater B also moves left</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Skater B remains stationary</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Skater B moves right — total momentum stays zero</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Skater B moves right with the same speed as A</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> Since the system started at rest, total momentum = 0. After the push, Skater A has −120 kg·m/s (left). Skater B must have +120 kg·m/s (right) to keep the total at zero. Skater B's speed depends on their mass — same speed only if masses are equal.</div>
+    </div>
+  </div>
+
+  <!-- GRAVITATION -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🪐</div>
+      <div>
+        <span class="practice-section-title">Gravitation</span>
+        <span class="practice-section-tag" style="background:rgba(255,159,110,0.15);color:#ff9f6e;border:1px solid rgba(255,159,110,0.3);">Gravity</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q7</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which scientist published the law of universal gravitation in 1687?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Galileo Galilei</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Isaac Newton</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Johannes Kepler</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Tycho Brahe</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Isaac Newton.</strong> Newton published his law of universal gravitation in Principia Mathematica (1687): F = Gm₁m₂/r². Kepler described planetary orbits mathematically before Newton, and Tycho Brahe collected the observational data Kepler used — but Newton unified it all into one law.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q8</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">If the distance between two masses is doubled, the gravitational force between them becomes:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Doubled</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Halved</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Unchanged</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> One quarter of the original</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — One quarter.</strong> Gravity follows an inverse square law: F ∝ 1/r². If r doubles, r² quadruples, so F becomes 1/4 of the original. This is why gravity weakens rapidly with distance — the relationship is not linear, it's squared.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A ball is thrown upward. At the highest point of its trajectory, which of the following is true?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Velocity is zero but acceleration is still 9.8 m/s² downward</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Both velocity and acceleration are zero</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Velocity is upward, acceleration is downward</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Velocity is zero, acceleration is zero</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A.</strong> At the peak, the ball momentarily stops (v = 0) but gravity never stops acting. Gravitational acceleration is always 9.8 m/s² downward — it does not "turn off" at the highest point. This is a very common misconception.</div>
+    </div>
+  </div>
+
+  <!-- THERMODYNAMICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🌡️</div>
+      <div>
+        <span class="practice-section-title">Thermodynamics</span>
+        <span class="practice-section-tag" style="background:rgba(255,110,176,0.15);color:#ff6eb0;border:1px solid rgba(255,110,176,0.3);">Thermo</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Heat transfer through direct contact between particles of matter is called:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Radiation</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Convection</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Conduction</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Induction</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Conduction.</strong> Conduction occurs when heat flows through direct particle-to-particle contact — like a metal spoon heating up in soup. Convection transfers heat through fluid movement (currents). Radiation transfers heat via electromagnetic waves, requiring no medium at all.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q11</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">The Sun heats the Earth across the vacuum of space. Which mode of heat transfer makes this possible?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Conduction</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Radiation</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Convection</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> All three equally</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — Radiation.</strong> Space is a vacuum — there is no medium for conduction (requires contact) or convection (requires fluid). Radiation travels as electromagnetic waves (infrared, visible light) and needs no medium, making it the only method that works across space.</div>
+    </div>
+  </div>
+
+  <!-- WAVE MECHANICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">〰️</div>
+      <div>
+        <span class="practice-section-title">Wave Mechanics</span>
+        <span class="practice-section-tag" style="background:rgba(110,255,204,0.15);color:#6effcc;border:1px solid rgba(110,255,204,0.3);">Waves</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q12</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A transverse wave is one where the particle vibration is:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Perpendicular to the direction of wave travel</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Parallel to the direction of wave travel</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Circular around the direction of travel</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Stationary while the wave moves</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Perpendicular.</strong> In a transverse wave, particles move up and down (or side to side) while the wave travels forward — like a wave on a string. Longitudinal waves (like sound) have particles vibrating parallel to the direction of travel in compressions and rarefactions.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q13</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A wave has a frequency of 200 Hz and a wavelength of 1.7 m. What is its speed?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 200 m/s</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 117.6 m/s</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 340 m/s</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 1.7 m/s</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — 340 m/s.</strong> Wave speed v = fλ = 200 × 1.7 = 340 m/s. This is approximately the speed of sound in air at room temperature — a useful value to remember.</div>
+    </div>
+  </div>
+
+  <!-- LIGHT & OPTICS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">🔭</div>
+      <div>
+        <span class="practice-section-title">Light & Optics</span>
+        <span class="practice-section-tag" style="background:rgba(110,255,204,0.15);color:#6effcc;border:1px solid rgba(110,255,204,0.3);">Waves</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q14</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which scientist first demonstrated that white light is composed of all colors of the spectrum?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> James Clerk Maxwell</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Thomas Young</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Christiaan Huygens</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Isaac Newton</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — Newton.</strong> Newton used a prism to disperse white light into its spectrum of colors and then used a second prism to recombine them — proving white light is not pure but is made of all visible wavelengths. Young later proved the wave nature of light through his double-slit experiment.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q15</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">When light passes from air into glass (a denser medium), it:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Speeds up and bends away from the normal</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Slows down and bends toward the normal</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Maintains the same speed and direction</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Reflects completely back into air</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> When light enters a denser medium, it slows down and bends toward the normal line (the line perpendicular to the surface). This is refraction. The opposite happens when leaving a dense medium — it speeds up and bends away from the normal.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q16</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">A concave mirror can produce a real, inverted image. Which type of mirror always produces a virtual, upright, and smaller image?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Convex mirror</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Concave mirror</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Plane mirror</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Both concave and convex</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Convex mirror.</strong> A convex (diverging) mirror always produces a virtual, upright, and smaller image — regardless of where the object is. This is why they're used for wide-angle views in car side mirrors and security cameras. Plane mirrors produce virtual, upright, same-size images.</div>
+    </div>
+  </div>
+
+  <!-- ELECTROSTATICS & CIRCUITS -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⚡</div>
+      <div>
+        <span class="practice-section-title">Electrostatics & Circuits</span>
+        <span class="practice-section-tag" style="background:rgba(255,228,110,0.15);color:#ffe46e;border:1px solid rgba(255,228,110,0.3);">Electric</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q17</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Who discovered that electric and magnetic phenomena are related, unifying them into electromagnetism?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Benjamin Franklin</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> André-Marie Ampère</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> James Clerk Maxwell</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Michael Faraday</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Maxwell.</strong> James Clerk Maxwell formulated the four equations that unified electricity, magnetism, and light into one theory of electromagnetism (1865). Faraday discovered electromagnetic induction experimentally; Ampère studied the magnetic effects of current; but Maxwell created the complete mathematical framework.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q18</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Two objects are charged by rubbing. One gains electrons; the other loses them. The one that loses electrons becomes:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Positively charged</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Negatively charged</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Neutral</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Magnetically charged</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — Positively charged.</strong> Electrons carry negative charge. Losing electrons means losing negative charge, leaving an excess of positive (protons), making the object net positive. The object that gains electrons becomes negatively charged. Charge is always conserved — what one gains, the other loses.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q19</span><span class="q-type">Computation</span></div>
+      <p class="question-text">A circuit has a voltage of 12 V and a resistance of 4 Ω. What is the current flowing through it?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 48 A</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 0.33 A</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 8 A</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 3 A</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — 3 A.</strong> Ohm's Law: I = V/R = 12/4 = 3 A. Voltage (V) is the push; Resistance (Ω) is the opposition; Current (A) is the flow. Always identify the two known values and solve for the third.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q20</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Electromagnetic induction is the process of generating an electric current by:</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Applying a constant voltage to a wire</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Moving a conductor through a changing magnetic field</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Rubbing two conductors together</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Connecting a battery to a resistor</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> Faraday's Law: a changing magnetic flux through a conductor induces an EMF (and therefore a current). This is the principle behind generators, transformers, and wireless charging. A static magnetic field induces nothing — it must be changing.</div>
+    </div>
+  </div>
+
+</div><!-- end #practicePage -->
+
+
+<!-- WAVE PAGE -->
+<div id="wavePage">
+  <div class="wave-hdr">
+    <div class="tool-hdr-icon">🌊</div>
+    <div>
+      <div class="tool-hdr-title">Wave Properties Visualizer</div>
+      <div class="tool-hdr-sub">Adjust frequency, amplitude &amp; wave speed · observe wavelength and period change live</div>
+    </div>
+  </div>
+
+  <div class="wave-card">
+    <h3>Wave Type</h3>
+    <div class="wave-toggle-row">
+      <button class="wave-toggle-btn active" id="waveTypeTransverse">Transverse Wave</button>
+      <button class="wave-toggle-btn" id="waveTypeLongitudinal">Longitudinal Wave</button>
+    </div>
+    <h3>Controls</h3>
+    <div class="wave-controls">
+      <div class="wave-slider-row">
+        <label>Frequency (Hz)</label>
+        <input type="range" class="wave-slider" id="wFreq" min="0.5" max="4" step="0.1" value="1.5"/>
+        <span class="wave-val" id="wFreqVal">1.5 Hz</span>
+      </div>
+      <div class="wave-slider-row">
+        <label>Amplitude (m)</label>
+        <input type="range" class="wave-slider" id="wAmp" min="10" max="80" step="1" value="45"/>
+        <span class="wave-val" id="wAmpVal">45 m</span>
+      </div>
+      <div class="wave-slider-row">
+        <label>Wave Speed (m/s)</label>
+        <input type="range" class="wave-slider" id="wSpeed" min="50" max="400" step="10" value="200"/>
+        <span class="wave-val" id="wSpeedVal">200 m/s</span>
+      </div>
+    </div>
+    <div class="wave-toggle-row">
+      <button class="wave-toggle-btn active" id="wavePlayBtn">⏸ Pause</button>
+      <button class="wave-toggle-btn" id="waveResetBtn">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="wave-card">
+    <h3>Live Animation</h3>
+    <canvas id="waveCanvas" height="220"></canvas>
+    <div class="wave-explainer" id="waveTypeDesc">
+      <strong>Transverse wave:</strong> particles vibrate <em>perpendicular</em> to the direction of wave travel. Examples: light, water surface waves, electromagnetic waves.
+    </div>
+  </div>
+
+  <div class="wave-card">
+    <h3>Derived Quantities</h3>
+    <div class="wave-readout">
+      <div class="wave-stat">
+        <div class="wave-stat-label">Period (T)</div>
+        <div class="wave-stat-val" id="wStatT">—</div>
+        <div class="wave-stat-sub">T = 1 / f</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Wavelength (λ)</div>
+        <div class="wave-stat-val" id="wStatLambda">—</div>
+        <div class="wave-stat-sub">λ = v / f</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Frequency (f)</div>
+        <div class="wave-stat-val" id="wStatF">—</div>
+        <div class="wave-stat-sub">cycles per second</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Wave Speed (v)</div>
+        <div class="wave-stat-val" id="wStatV">—</div>
+        <div class="wave-stat-sub">v = f × λ</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Amplitude (A)</div>
+        <div class="wave-stat-val" id="wStatA">—</div>
+        <div class="wave-stat-sub">max displacement</div>
+      </div>
+    </div>
+    <div class="wave-explainer" style="margin-top:18px">
+      <strong>Key relationships:</strong> v = f × λ (wave speed = frequency × wavelength) &nbsp;·&nbsp; T = 1/f (period = reciprocal of frequency)<br>
+      Increasing frequency <em>decreases</em> wavelength (at constant speed). Increasing wave speed <em>increases</em> wavelength (at constant frequency).
+    </div>
+  </div>
+
+  <hr class="wave-section-divider"/>
+
+  <div class="wave-section-heading"><span>💡</span> Light Waves</div>
+
+  <div class="wave-card">
+    <h3>Controls — Light Wave</h3>
+    <div class="wave-controls">
+      <div class="wave-slider-row">
+        <label>Wavelength (nm)</label>
+        <input type="range" class="wave-slider" id="lWavelength" min="380" max="780" step="1" value="550"/>
+        <span class="wave-val" id="lWavelengthVal">550 nm</span>
+      </div>
+      <div class="wave-slider-row">
+        <label>Amplitude</label>
+        <input type="range" class="wave-slider" id="lAmp" min="10" max="80" step="1" value="45"/>
+        <span class="wave-val" id="lAmpVal">45</span>
+      </div>
+    </div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="light-color-swatch" id="lightSwatch"></div>
+      <div>
+        <div class="light-nm-readout" id="lightNmText">550 nm</div>
+        <div class="light-color-name" id="lightColorName">Green</div>
+      </div>
+    </div>
+    <div class="wave-explainer" style="margin-top:14px">
+      <strong>Light is a transverse electromagnetic wave.</strong> Its color is determined entirely by its wavelength.
+      Frequency = c / λ, where c = 3×10⁸ m/s. Amplitude of a light wave relates to its brightness, not its color.
+      Below ~380 nm is ultraviolet (UV); above ~780 nm is infrared (IR) — both invisible to the human eye.
+    </div>
+  </div>
+
+  <div class="wave-card">
+    <h3>Light Wave Visualization</h3>
+    <canvas id="lightCanvas" height="180"></canvas>
+    <div class="wave-readout" style="margin-top:14px">
+      <div class="wave-stat">
+        <div class="wave-stat-label">Wavelength (λ)</div>
+        <div class="wave-stat-val" id="lStatLambda">—</div>
+        <div class="wave-stat-sub">determines color</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Frequency (f)</div>
+        <div class="wave-stat-val" id="lStatFreq">—</div>
+        <div class="wave-stat-sub">f = c / λ</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Wave Speed</div>
+        <div class="wave-stat-val">3×10⁸ m/s</div>
+        <div class="wave-stat-sub">speed of light (c)</div>
+      </div>
+      <div class="wave-stat">
+        <div class="wave-stat-label">Amplitude</div>
+        <div class="wave-stat-val" id="lStatAmp">—</div>
+        <div class="wave-stat-sub">relates to brightness</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spectrum bar -->
+  <div class="wave-card">
+    <h3>Visible Spectrum</h3>
+    <div style="position:relative;height:36px;border-radius:6px;overflow:hidden;margin-bottom:10px"
+         id="spectrumBar"></div>
+    <div id="spectrumMarker" style="position:relative;height:12px;margin-bottom:4px"></div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'Space Mono',monospace">
+      <span>380 nm (Violet)</span><span>440</span><span>490</span><span>550</span><span>590</span><span>625</span><span>780 nm (Red)</span>
+    </div>
+  </div>
+
+</div><!-- end #wavePage -->
+
+<!-- TOOLS PAGE -->
+<div id="toolsPage">
+  <div class="tool-hdr">
+    <div class="tool-hdr-icon">🔭</div>
+    <div>
+      <div class="tool-hdr-title">Mirror &amp; Lens Simulation</div>
+      <div class="tool-hdr-sub">Interactive ray diagram — drag on canvas to move the object, or use sliders</div>
+    </div>
+  </div>
+<div class="sim-controls">
+      <button class="sim-btn" data-type="concave">Concave Mirror</button>
+      <button class="sim-btn" data-type="convex">Convex Mirror</button>
+      <button class="sim-btn" data-type="converging">Converging Lens</button>
+      <button class="sim-btn" data-type="diverging">Diverging Lens</button>
+    </div>
+    <div class="sim-controls">
+      <div class="sim-slider-row">
+        <label>Focal Length</label>
+        <input type="range" class="sim-slider" id="fSlider" min="40" max="200" value="120"/>
+        <span class="sim-val" id="fVal">120px</span>
+      </div>
+      <div class="sim-slider-row">
+        <label>Object Distance</label>
+        <input type="range" class="sim-slider" id="dSlider" min="10" max="280" value="200"/>
+        <span class="sim-val" id="dVal">200px</span>
+      </div>
+    </div>
+    <canvas id="simCanvas" height="340"></canvas>
+    <div class="sim-info-row">
+      <div class="sim-info-card"><div class="sim-info-label">Image Nature</div><div class="sim-info-val" id="infoNature">—</div><div class="sim-info-sub">Real = in front · Virtual = behind</div></div>
+      <div class="sim-info-card"><div class="sim-info-label">Orientation</div><div class="sim-info-val" id="infoOrient">—</div><div class="sim-info-sub">Relative to object</div></div>
+      <div class="sim-info-card"><div class="sim-info-label">Size</div><div class="sim-info-val" id="infoSize">—</div><div class="sim-info-sub">Compared to object</div></div>
+      <div class="sim-info-card"><div class="sim-info-label">Magnification</div><div class="sim-info-val" id="infoMag">—</div><div class="sim-info-sub">m = −dᵢ / d₀</div></div>
+      <div class="sim-info-card"><div class="sim-info-label">Image Distance</div><div class="sim-info-val" id="infoDi">—</div><div class="sim-info-sub">1/f = 1/dₒ + 1/dᵢ</div></div>
+    </div>
+</div><!-- end #toolsPage -->
+
+
+<!-- COULOMB PAGE -->
+<div id="coulombPage">
+  <div class="wave-hdr">
+    <div class="tool-hdr-icon">⚡</div>
+    <div>
+      <div class="tool-hdr-title">Coulomb's Law</div>
+      <div class="tool-hdr-sub">Drag the charges · observe force magnitude and direction live</div>
+    </div>
+  </div>
+<div class="wave-card">
+      <h3>Charges — drag them on the canvas</h3>
+      <div class="coul-controls">
+        <div class="coul-row">
+          <label>Charge 1 (q₁)</label>
+          <input type="range" class="coul-slider" id="cq1" min="-8" max="8" step="0.5" value="3"/>
+          <span class="coul-val" id="cq1Val">+3 μC</span>
+        </div>
+        <div class="coul-row">
+          <label>Charge 2 (q₂)</label>
+          <input type="range" class="coul-slider" id="cq2" min="-8" max="8" step="0.5" value="-2"/>
+          <span class="coul-val" id="cq2Val">−2 μC</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <button class="wave-toggle-btn active" id="coulombPlayBtn">⏸ Pause</button>
+        <button class="wave-toggle-btn" id="coulombResetBtn">↺ Reset</button>
+      </div>
+      <canvas id="coulombCanvas" height="280"></canvas>
+      <div class="coul-explainer" id="coulombNote"></div>
+    </div>
+    <div class="wave-card">
+      <h3>Calculated Values</h3>
+      <div class="coul-readout">
+        <div class="coul-stat">
+          <div class="coul-stat-label">Distance (r)</div>
+          <div class="coul-stat-val" id="cStatR">—</div>
+          <div class="coul-stat-sub">between charges</div>
+        </div>
+        <div class="coul-stat">
+          <div class="coul-stat-label">Force |F|</div>
+          <div class="coul-stat-val" id="cStatF">—</div>
+          <div class="coul-stat-sub">F = k|q₁||q₂|/r²</div>
+        </div>
+        <div class="coul-stat">
+          <div class="coul-stat-label">Direction</div>
+          <div class="coul-stat-val" id="cStatDir">—</div>
+          <div class="coul-stat-sub">attraction or repulsion</div>
+        </div>
+        <div class="coul-stat">
+          <div class="coul-stat-label">k = 9×10⁹ N·m²/C²</div>
+          <div class="coul-stat-val" id="cStatK">9×10⁹</div>
+          <div class="coul-stat-sub">Coulomb's constant</div>
+        </div>
+      </div>
+      <div class="coul-explainer">
+        <strong>Coulomb's Law:</strong> F = k|q₁||q₂| / r² &nbsp;·&nbsp;
+        Like charges (++ or −−) <strong>repel</strong>. Unlike charges (+−) <strong>attract</strong>.<br>
+        Force is proportional to each charge and <em>inversely</em> proportional to the square of the distance.
+        Double the distance → force drops to ¼.
+      </div>
+    </div>
+</div><!-- end #coulombPage -->
+
+
+<!-- FBD PAGE -->
+<div id="fbdPage">
+  <div class="wave-hdr">
+    <div class="tool-hdr-icon">📐</div>
+    <div>
+      <div class="tool-hdr-title">Free Body Diagram</div>
+      <div class="tool-hdr-sub">Choose a scenario · adjust forces · observe net force and acceleration</div>
+    </div>
+  </div>
+<div class="wave-card">
+      <h3>Choose a Scenario</h3>
+      <div class="fbd-controls" id="fbdScenarioBtns">
+        <button class="fbd-btn active" data-scenario="block">Block on Surface</button>
+        <button class="fbd-btn"        data-scenario="hanging">Hanging Object</button>
+        <button class="fbd-btn"        data-scenario="incline">Inclined Plane</button>
+        <button class="fbd-btn"        data-scenario="freefall">Free Fall</button>
+      </div>
+      <h3 style="margin-top:0">Adjust Forces</h3>
+      <div class="fbd-force-list" id="fbdForceList"></div>
+    </div>
+    <div class="wave-card">
+      <h3>Free Body Diagram</h3>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <button class="wave-toggle-btn active" id="fbdPlayBtn">⏸ Pause</button>
+        <button class="wave-toggle-btn" id="fbdResetBtn">↺ Reset</button>
+      </div>
+      <canvas id="fbdCanvas" height="320"></canvas>
+    </div>
+    <div class="wave-card">
+      <h3>Net Force &amp; Newton's 2nd Law</h3>
+      <div class="fbd-net-row">
+        <div class="fbd-net-card">
+          <div class="fbd-net-label">Net Force X</div>
+          <div class="fbd-net-val" id="fbdNetFx">—</div>
+          <div class="fbd-net-sub">horizontal (→ positive)</div>
+        </div>
+        <div class="fbd-net-card">
+          <div class="fbd-net-label">Net Force Y</div>
+          <div class="fbd-net-val" id="fbdNetFy">—</div>
+          <div class="fbd-net-sub">vertical (↑ positive)</div>
+        </div>
+        <div class="fbd-net-card">
+          <div class="fbd-net-label">|Net Force|</div>
+          <div class="fbd-net-val" id="fbdNetFmag">—</div>
+          <div class="fbd-net-sub">resultant</div>
+        </div>
+        <div class="fbd-net-card">
+          <div class="fbd-net-label">Acceleration (a)</div>
+          <div class="fbd-net-val" id="fbdAcc">—</div>
+          <div class="fbd-net-sub">a = F_net / m (m=5 kg)</div>
+        </div>
+      </div>
+      <div class="fbd-explainer" id="fbdExplainer"></div>
+    </div>
+</div><!-- end #fbdPage -->
+
+<footer>Physics · Grade 8 Champaca · Click any topic to review</footer>
+
+<!-- MODAL DATA -->
+<script>
+const descriptions = {
+  "History of the Ideas of Motion": {q:"Q1", field:"mechanics", desc:"From Aristotle's belief that heavier objects fall faster, to Galileo's experiments disproving this, to Newton's three laws — this topic traces how humans fundamentally changed their understanding of why things move. Key figures: Aristotle, Galileo, Descartes, Newton."},
+  "Kinematic Quantities": {q:"Q1", field:"mechanics", desc:"Kinematics describes motion without asking why it happens. Core quantities: distance vs displacement, speed vs velocity, and acceleration. Understanding the difference between scalar quantities (speed, distance) and vector quantities (velocity, displacement) is the foundation of this topic."},
+  "Forces and Laws of Motion": {q:"Q1", field:"mechanics", desc:"Newton's three laws: (1) Inertia — objects resist changes in motion. (2) F = ma — net force equals mass times acceleration. (3) Action-Reaction — every force has an equal and opposite counterpart. Free body diagrams help visualize all forces acting on an object."},
+  "Vectors": {q:"Q1", field:"mechanics", desc:"Vectors have both magnitude and direction, unlike scalars which have magnitude only. Vectors can be added graphically using the polygon method (tip-to-tail for multiple vectors) or the parallelogram method (for two vectors). The resultant is the single vector that represents the combined effect of all vectors added."},
+  "Impulse and Momentum": {q:"Q1", field:"mechanics", desc:"Momentum (p = mv) is the quantity of motion. Impulse (J = FΔt) is the change in momentum. A large force over a short time or a small force over a long time can produce the same impulse. Airbags and crumple zones work by increasing Δt to reduce force on passengers."},
+  "Conservation of Momentum": {q:"Q1", field:"mechanics", desc:"In a closed system with no external forces, total momentum is conserved. In elastic collisions, both momentum and kinetic energy are conserved. In inelastic collisions, only momentum is conserved — some KE is lost to heat or deformation. The explosion of a rocket is a classic example."},
+  "Scientists of Gravitation": {q:"Q2", field:"grav", desc:"Tycho Brahe collected precise planetary data. Kepler used that data to formulate his three laws of planetary motion. Newton unified it all into his Law of Universal Gravitation (F = Gm₁m₂/r²). Einstein later redefined gravity as spacetime curvature in General Relativity."},
+  "Gravitational Field Force & Potential Energy": {q:"Q2", field:"grav", desc:"Gravitational field strength g = F/m (≈9.8 N/kg near Earth's surface). Gravitational potential energy GPE = mgh. The higher an object, the more stored potential energy. In orbit, objects are in continuous free fall — they move fast enough sideways that the ground curves away beneath them."},
+  "Conservation of Mechanical Energy": {q:"Q2", field:"grav", desc:"Mechanical energy = KE + PE. In the absence of friction, total mechanical energy is conserved: as an object falls, PE converts to KE and vice versa. At the bottom of a swing: max KE, min PE. At the top: max PE, min KE. Work done by friction converts ME into thermal energy."},
+  "Heat Transfer — Convection, Conduction, Radiation": {q:"Q2", field:"thermo", desc:"Three mechanisms: Conduction (particle-to-particle contact, e.g. metal rod), Convection (bulk movement of fluid, e.g. ocean currents, weather), Radiation (electromagnetic waves, e.g. sunlight, infrared). Vacuum flasks use all three strategies to minimize heat loss."},
+  "Consequences of Heat Transfer": {q:"Q2", field:"thermo", desc:"Heat transfer drives weather systems, ocean circulation, and climate. Thermal expansion (solids, liquids, gases all expand when heated) causes cracks in roads, requires expansion joints in bridges, and causes sea level rise. Thermostats and heat engines exploit controlled heat transfer."},
+  "Introduction to Waves": {q:"Q3", field:"waves", desc:"A wave is a disturbance that transfers energy without transferring matter. Waves are classified by type: transverse waves (particle vibration is perpendicular to wave travel, e.g. light), longitudinal waves (particle vibration is parallel to wave travel, e.g. sound), and pulse waves (a single disturbance rather than a repeating pattern). Key properties: amplitude, wavelength, frequency, and period."},
+  "Characteristic Behaviors of Waves": {q:"Q3", field:"waves", desc:"All waves exhibit: reflection (bouncing off surfaces), refraction (bending when entering a new medium), diffraction (spreading around obstacles), interference (constructive when in phase, destructive when out of phase), and the Doppler effect (frequency shift due to relative motion)."},
+  "Sound as a Wave": {q:"Q3", field:"waves", desc:"Sound is a longitudinal mechanical wave — it needs a medium (cannot travel through vacuum). Speed in air ≈ 340 m/s at room temperature (faster in solids). Pitch = frequency; loudness = amplitude. Echoes are reflections; resonance occurs at natural frequencies. The Doppler effect explains why a siren pitch changes as it passes."},
+  "Evolution of Understanding of Light": {q:"Q3", field:"waves", desc:"Newton proposed a corpuscular (particle) theory. Huygens argued for waves. Young's double-slit experiment confirmed wave behavior. Maxwell showed light is an electromagnetic wave. Einstein's photoelectric effect proved light also behaves as particles (photons) — leading to wave-particle duality."},
+  "Wave Nature of Light, Electromagnetic Waves & Color": {q:"Q3", field:"waves", desc:"Visible light is a small part of the electromagnetic spectrum: radio, microwave, infrared, visible, UV, X-ray, gamma. All EM waves travel at c ≈ 3×10⁸ m/s in vacuum. Color is determined by wavelength (red: ~700nm, violet: ~400nm). White light contains all visible wavelengths."},
+  "Reflection and Refraction of Light": {q:"Q3", field:"waves", desc:"Reflection: angle of incidence = angle of reflection. Refraction: light bends when changing speed in a new medium (Snell's Law: n₁sinθ₁ = n₂sinθ₂). Total internal reflection occurs when light hits a boundary at an angle greater than the critical angle — the basis of fiber optics."},
+  "Different Types of Mirrors and Lenses": {q:"Q3", field:"waves", desc:"Concave mirrors and convex lenses converge light — they can produce real, inverted images (useful in telescopes, cameras). Convex mirrors and concave lenses diverge light — always produce virtual, upright, smaller images (car side mirrors, peepholes). Lens/mirror equations: 1/f = 1/do + 1/di."},
+  "History of Electromagnetism": {q:"Q4", field:"electric", desc:"Franklin showed lightning is electrical. Coulomb quantified electric force. Oersted found that current produces a magnetic field. Faraday discovered induction. Maxwell unified everything mathematically. Edison and Tesla applied it — and had a famous rivalry over AC vs DC power."},
+  "Electric Charge and Charging Methods": {q:"Q4", field:"electric", desc:"Charge is quantized (±1.6×10⁻¹⁹ C per electron/proton) and conserved. Three charging methods: friction (triboelectric), conduction (contact), induction (no contact). Like charges repel; opposite charges attract. Grounding neutralizes a charged object by connecting to Earth."},
+  "Coulomb's Law": {q:"Q4", field:"electric", desc:"F = kq₁q₂/r² where k ≈ 9×10⁹ N·m²/C². Structurally identical to Newton's gravity but can be repulsive. Electric force is ~10³⁶ times stronger than gravitational force — gravity only dominates at large scales because most matter is electrically neutral."},
+  "Voltage, Current and Resistance": {q:"Q4", field:"electric", desc:"Voltage (V) is electric potential difference — the 'push'. Current (I) is the flow of charge — measured in amperes. Resistance (R) opposes flow — measured in ohms. Ohm's Law: V = IR. Series circuits: current same everywhere, voltages add. Parallel circuits: voltage same, currents add."},
+  "Electromagnetic Induction": {q:"Q4", field:"electric", desc:"Faraday's Law: a changing magnetic flux induces an EMF. Lenz's Law: the induced current opposes the change that caused it. Applications: generators (motion → electricity), transformers (change AC voltage), electric motors (electricity → motion), wireless charging, MRI machines."}
+};
+
+const tagColors = {
+  mechanics: {bg:'rgba(110,198,255,0.15)', color:'#6ec6ff', border:'rgba(110,198,255,0.3)'},
+  grav:      {bg:'rgba(255,159,110,0.15)', color:'#ff9f6e', border:'rgba(255,159,110,0.3)'},
+  thermo:    {bg:'rgba(255,110,176,0.15)', color:'#ff6eb0', border:'rgba(255,110,176,0.3)'},
+  waves:     {bg:'rgba(110,255,204,0.15)', color:'#6effcc', border:'rgba(110,255,204,0.3)'},
+  electric:  {bg:'rgba(255,228,110,0.15)', color:'#ffe46e', border:'rgba(255,228,110,0.3)'},
+};
+const tagLabels = {
+  mechanics:'Mechanics', grav:'Gravity', thermo:'Thermo', waves:'Waves', electric:'Electric'
+};
+const quarterLabels = {Q1:'Quarter 1 · Mechanics', Q2:'Quarter 2 · Gravitation & Thermo', Q3:'Quarter 3 · Waves & Light', Q4:'Quarter 4 · The Electric Force'};
+
+const backdrop = document.getElementById('modalBackdrop');
+
+function openModal(title, field, q) {
+  const data = descriptions[title] || {};
+  const c = tagColors[field] || tagColors.mechanics;
+  const tag = document.getElementById('modalTag');
+  tag.textContent = tagLabels[field] || field;
+  tag.style.background = c.bg; tag.style.color = c.color; tag.style.border = `1px solid ${c.border}`;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalQuarter').textContent = quarterLabels[q] || q;
+  const desc = document.getElementById('modalDesc');
+  if (data.desc) { desc.innerHTML = data.desc; desc.classList.remove('modal-placeholder'); }
+  else { desc.innerHTML = '<em>Reviewer coming soon.</em>'; desc.classList.add('modal-placeholder'); }
+  backdrop.classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => backdrop.classList.remove('open'));
+backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('open'); });
+
+document.querySelectorAll('.topic-name').forEach(el => {
+  el.addEventListener('click', () => {
+    const item = el.closest('.topic-item');
+    openModal(item.dataset.title, item.dataset.field, item.dataset.q);
+  });
+});
+
+// Quarter filter & search
+const quarters = document.querySelectorAll('.quarter-pill');
+const cards    = document.querySelectorAll('.field');
+const search   = document.getElementById('searchBox');
+let activeQ = 'all';
+
+function applyFilters() {
+  const term = search.value.toLowerCase().trim();
+  cards.forEach(card => {
+    const topics = card.querySelectorAll('.topic-item');
+    topics.forEach(t => {
+      const topicQ = t.dataset.q;
+      const qMatch = activeQ === 'all' || topicQ === activeQ;
+      const termMatch = !term || t.textContent.toLowerCase().includes(term);
+      t.style.display = (qMatch && termMatch) ? '' : 'none';
+      t.style.opacity = '1';
+    });
+    const anyVisible = Array.from(topics).some(t => t.style.display !== 'none');
+    card.classList.toggle('dimmed', !anyVisible);
+  });
+}
+
+quarters.forEach(btn => {
+  btn.addEventListener('click', () => {
+    quarters.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeQ = btn.dataset.q;
+    applyFilters();
+  });
+});
+search.addEventListener('input', applyFilters);
+
+// Page tab switching
+const tabMap       = document.getElementById('tabMap');
+const tabPractice  = document.getElementById('tabPractice');
+const tabTools     = document.getElementById('tabTools');
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+const toolsPage    = document.getElementById('toolsPage');
+const wavePage      = document.getElementById('wavePage');
+const coulombPage   = document.getElementById('coulombPage');
+const fbdPage       = document.getElementById('fbdPage');
+const tabWave       = document.getElementById('tabWave');
+const tabCoulomb    = document.getElementById('tabCoulomb');
+const tabFBD        = document.getElementById('tabFBD');
+
+function physSwitch(activeTab, activePage) {
+  [tabMap,tabPractice,tabTools,tabWave,tabCoulomb,tabFBD].forEach(t=>t.classList.remove('active'));
+  [practicePage,toolsPage,wavePage,coulombPage,fbdPage].forEach(p=>{p.classList.remove('visible');});
+  mapPage.classList.remove('hidden');
+  activeTab.classList.add('active');
+  if (activePage !== mapPage) { mapPage.classList.add('hidden'); activePage.classList.add('visible'); }
+}
+tabMap.addEventListener('click',      () => physSwitch(tabMap, mapPage));
+tabPractice.addEventListener('click', () => physSwitch(tabPractice, practicePage));
+tabTools.addEventListener('click',    () => { physSwitch(tabTools, toolsPage); initMirrorSim(); });
+tabWave.addEventListener('click', () => { physSwitch(tabWave, wavePage); window.initWave(); });
+tabCoulomb.addEventListener('click', () => { physSwitch(tabCoulomb, coulombPage); window.initCoulomb(); });
+tabFBD.addEventListener('click',     () => { physSwitch(tabFBD, fbdPage); window.initFBD(); });
+
+// Practice interactions
+document.querySelectorAll('.question-card').forEach(card => {
+  const correct     = card.dataset.answer;
+  const choices     = card.querySelectorAll('.choice');
+  const revealBtn   = card.querySelector('.reveal-btn');
+  const explanation = card.querySelector('.explanation');
+  let answered = false;
+  choices.forEach(choice => {
+    choice.addEventListener('click', () => {
+      if (answered) return; answered = true;
+      choices.forEach(c => { if (c.dataset.val === correct) c.classList.add('correct'); else c.classList.add('wrong'); });
+      explanation.classList.add('visible'); revealBtn.disabled = true;
+    });
+  });
+  revealBtn.addEventListener('click', () => {
+    if (answered) return; answered = true;
+    choices.forEach(c => { if (c.dataset.val === correct) c.classList.add('correct'); else c.classList.add('wrong'); });
+    explanation.classList.add('visible'); revealBtn.disabled = true;
+  });
+});
+
+// ── MIRROR & LENS SIMULATION ─────────────────────────────────────────────
+let simReady = false;
+let simType = 'concave'; // concave | convex | converging | diverging
+let focalLen = 120;  // pixels, positive
+let objDist  = 200;  // pixels from mirror/lens
+let isDragging = false;
+let simCanvas, simCtx;
+
+function initMirrorSim() {
+  if (simReady) return; simReady = true;
+  simCanvas = document.getElementById('simCanvas');
+  simCtx    = simCanvas.getContext('2d');
+  resizeSim();
+  window.addEventListener('resize', resizeSim);
+  drawSim();
+
+  // Type buttons
+  document.querySelectorAll('.sim-btn[data-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sim-btn[data-type]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      simType = btn.dataset.type;
+      drawSim(); updateInfo();
+    });
+  });
+
+  // Sliders
+  document.getElementById('fSlider').addEventListener('input', e => {
+    focalLen = parseInt(e.target.value);
+    document.getElementById('fVal').textContent = focalLen + 'px';
+    drawSim(); updateInfo();
+  });
+  document.getElementById('dSlider').addEventListener('input', e => {
+    objDist = parseInt(e.target.value);
+    document.getElementById('dVal').textContent = objDist + 'px';
+    drawSim(); updateInfo();
+  });
+
+  // Drag object on canvas
+  simCanvas.addEventListener('mousedown', e => {
+    const r = simCanvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (simCanvas.width / r.width);
+    const cx = simCanvas.width / 2;
+    const newDist = Math.abs(x - cx);
+    if (newDist > 10) { objDist = Math.max(10, Math.min(280, newDist)); document.getElementById('dSlider').value = objDist; document.getElementById('dVal').textContent = objDist + 'px'; drawSim(); updateInfo(); }
+    isDragging = true;
+  });
+  simCanvas.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const r = simCanvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (simCanvas.width / r.width);
+    const cx = simCanvas.width / 2;
+    objDist = Math.max(10, Math.min(280, Math.abs(x - cx)));
+    document.getElementById('dSlider').value = objDist;
+    document.getElementById('dVal').textContent = objDist + 'px';
+    drawSim(); updateInfo();
+  });
+  simCanvas.addEventListener('mouseup', () => isDragging = false);
+  simCanvas.addEventListener('mouseleave', () => isDragging = false);
+
+  document.querySelector('.sim-btn[data-type="concave"]').classList.add('active');
+  updateInfo();
+}
+
+function resizeSim() {
+  if (!simCanvas) return;
+  simCanvas.width  = simCanvas.offsetWidth;
+  simCanvas.height = 340;
+  drawSim();
+}
+
+function imageCalc() {
+  // Real sign convention:
+  //   concave mirror: f > 0, object in front (do > 0)
+  //   convex mirror:  f < 0
+  //   converging lens: f > 0
+  //   diverging lens:  f < 0
+  // Mirror formula & thin-lens formula are identical: 1/f = 1/do + 1/di
+  const f  = (simType === 'convex' || simType === 'diverging') ? -focalLen : focalLen;
+  const do_ = objDist;  // always positive (object always on input side)
+  if (Math.abs(do_ - Math.abs(f)) < 0.5) return { di: Infinity, M: Infinity, f };
+  const di = (f * do_) / (do_ - f);
+  const M  = -di / do_;
+  return { di, M, f };
+}
+
+function drawSim() {
+  if (!simCanvas || !simCtx) return;
+  const ctx = simCtx;
+  const W = simCanvas.width, H = simCanvas.height;
+  const cx = W / 2, cy = H / 2;
+  ctx.clearRect(0, 0, W, H);
+
+  const isMirror    = simType === 'concave' || simType === 'convex';
+  const isConcave   = simType === 'concave';
+  const isConverging = simType === 'converging';
+  const { di, M, f } = imageCalc();
+  const fAbs = Math.abs(f); // always positive px value
+
+  // ── Grid ──
+  ctx.strokeStyle = 'rgba(160,120,255,.07)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // ── Principal axis ──
+  ctx.strokeStyle = 'rgba(160,120,255,.3)'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+
+  // ── Optical element ──
+  ctx.strokeStyle = '#a078ff'; ctx.lineWidth = 3;
+  if (isMirror) {
+    const r = 120;
+    if (isConcave) {
+      // concave mirror faces LEFT — curved arc on right half
+      ctx.beginPath(); ctx.arc(cx + r, cy, r, Math.PI*0.62, Math.PI*1.38); ctx.stroke();
+    } else {
+      // convex mirror faces LEFT — curved arc on left half
+      ctx.beginPath(); ctx.arc(cx - r, cy, r, -Math.PI*0.38, Math.PI*0.38); ctx.stroke();
+    }
+  } else {
+    if (isConverging) {
+      // biconvex lens
+      ctx.beginPath(); ctx.arc(cx-55, cy, 75, -Math.PI*0.38, Math.PI*0.38); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+55, cy, 75,  Math.PI*0.62, Math.PI*1.38); ctx.stroke();
+    } else {
+      // biconcave lens
+      ctx.beginPath(); ctx.arc(cx+55, cy, 75,  Math.PI*0.62, Math.PI*1.38); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx-55, cy, 75, -Math.PI*0.38, Math.PI*0.38); ctx.stroke();
+    }
+  }
+  // Lens/mirror plane dashed
+  ctx.strokeStyle = 'rgba(160,120,255,.22)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(cx, cy-100); ctx.lineTo(cx, cy+100); ctx.stroke(); ctx.setLineDash([]);
+
+  // ── Focal / centre points ──
+  function drawFpt(x, label, alpha) {
+    ctx.globalAlpha = alpha || 1;
+    ctx.fillStyle = '#e0c0ff';
+    ctx.beginPath(); ctx.arc(x, cy, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(200,160,255,.85)'; ctx.font = '11px "Space Mono",monospace';
+    ctx.textAlign = 'center'; ctx.fillText(label, x, cy - 11);
+    ctx.globalAlpha = 1;
+  }
+  if (isMirror) {
+    // F and C=2F are ALWAYS in front of mirror (to the LEFT of cx)
+    drawFpt(cx - fAbs,   'F');
+    drawFpt(cx - 2*fAbs, 'C');
+    if (!isConcave) {
+      // convex: virtual F is behind mirror — show faded
+      drawFpt(cx + fAbs, 'F\'', 0.3);
+    }
+  } else {
+    // Lens has F on BOTH sides
+    drawFpt(cx - fAbs, 'F₁');
+    drawFpt(cx + fAbs, 'F₂');
+  }
+
+  // ── Object arrow (always on LEFT of optical element) ──
+  const objX  = cx - objDist;
+  const objH  = 55;   // height in px (tip is ABOVE axis → tipY = cy - objH)
+  const tipX  = objX, tipY = cy - objH;
+  ctx.strokeStyle = '#60e0ff'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(objX, cy); ctx.lineTo(objX, tipY); ctx.stroke();
+  ctx.fillStyle = '#60e0ff';
+  ctx.beginPath(); ctx.moveTo(tipX, tipY); ctx.lineTo(tipX-6, tipY+11); ctx.lineTo(tipX+6, tipY+11); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(96,224,255,.8)'; ctx.font='10px "Space Mono",monospace'; ctx.textAlign='center';
+  ctx.fillText('O', tipX, cy+15);
+
+  // ── Line drawing helpers ──
+  function seg(color, x1,y1,x2,y2, dashed, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.setLineDash(dashed ? [5,4] : []);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.restore();
+  }
+  // Extend a ray from (x1,y1) in direction (dx,dy) until it leaves canvas
+  function toEdge(x1,y1,dx,dy) {
+    let t = Infinity;
+    if (dx > 0) t = Math.min(t, (W-x1)/dx);
+    if (dx < 0) t = Math.min(t, (-x1)/dx);
+    if (dy > 0) t = Math.min(t, (H-y1)/dy);
+    if (dy < 0) t = Math.min(t, (-y1)/dy);
+    return [x1+dx*t, y1+dy*t];
+  }
+
+  // ── No-image case (object at F) ──
+  if (!isFinite(di)) {
+    // All rays emerge parallel — just draw parallel ray as example
+    seg('rgba(255,200,80,.7)', tipX, tipY, cx, tipY);
+    seg('rgba(255,200,80,.7)', cx, tipY, W, tipY);
+    ctx.fillStyle='rgba(255,200,80,.8)'; ctx.font='11px "Space Mono",monospace'; ctx.textAlign='center';
+    ctx.fillText('Object at F — rays emerge parallel, no image formed', cx, cy - objH - 20);
+    // Draw legend and return
+    drawLegend(ctx);
+    return;
+  }
+
+  // ── Image position ──
+  // Mirror: positive di → real image in FRONT (left of cx)
+  // Lens:   positive di → real image on FAR side (right of cx)
+  const imageX   = isMirror ? cx - di : cx + di;
+  const imageH   = M * objH;   // positive M → upright; negative → inverted
+  const imgTipY  = cy - imageH; // tip of image arrow
+
+  if (isMirror) {
+    // ═══════════ CONCAVE MIRROR ═══════════
+    if (isConcave) {
+      // RAY 1 — Parallel Ray (yellow)
+      // Incoming: horizontal from obj tip to mirror plane
+      // Outgoing: from (cx,tipY) THROUGH F=(cx-fAbs, cy), reflected back left
+      {
+        seg('rgba(255,200,80,.9)', tipX, tipY, cx, tipY);
+        // reflected direction: from (cx, tipY) toward F=(cx-fAbs, cy)
+        const dx = (cx-fAbs) - cx, dy = cy - tipY;
+        const [ex,ey] = toEdge(cx, tipY, dx, dy);
+        seg('rgba(255,200,80,.9)', cx, tipY, ex, ey);
+      }
+      // RAY 2 — Central (C) Ray (green)
+      // Incoming: from obj tip toward C=(cx-2f, cy), hits mirror, reflects back on same line
+      {
+        const Cx = cx - 2*fAbs;
+        // Incoming direction from tipX,tipY toward C — extend to mirror plane x=cx
+        const dx = cx - tipX, dy = (cy - tipY) * (cx - tipX) / ((Cx - tipX) || 1);
+        // y at mirror:
+        const yAtMirror = tipY + (cy - tipY) * (cx - tipX) / (Cx - tipX);
+        seg('rgba(80,255,160,.9)', tipX, tipY, cx, yAtMirror);
+        // Reflected: reverses both x and the vertical (ray aimed at C reflects through C back)
+        // Slope in = (yAtMirror - tipY)/(cx - tipX); slope out = same magnitude, opposite x
+        const slopeIn = (yAtMirror - tipY) / (cx - tipX);
+        // Outgoing: from (cx, yAtMirror) with direction (-1, +slopeIn) (reversed x)
+        const [ex,ey] = toEdge(cx, yAtMirror, -1, slopeIn);
+        seg('rgba(80,255,160,.9)', cx, yAtMirror, ex, ey);
+      }
+      // RAY 3 — Focal Ray (pink)
+      // Incoming: from obj tip THROUGH F=(cx-fAbs, cy), hits mirror, reflects parallel to axis
+      {
+        const Fx = cx - fAbs;
+        // y at mirror when line from tipX,tipY through F=(Fx,cy) reaches x=cx
+        const yAtMirror = cy + (tipY - cy) * (cx - Fx) / (tipX - Fx);
+        seg('rgba(255,100,180,.9)', tipX, tipY, cx, yAtMirror);
+        // Reflected parallel to axis → goes left
+        const [ex,ey] = toEdge(cx, yAtMirror, -1, 0);
+        seg('rgba(255,100,180,.9)', cx, yAtMirror, ex, ey);
+      }
+
+    } else {
+      // ═══════════ CONVEX MIRROR ═══════════
+      // Virtual F is BEHIND mirror at cx+fAbs
+      // RAY 1 — Parallel Ray (yellow)
+      // Incoming: horizontal to mirror. Reflected: diverges as if FROM virtual F'=(cx+fAbs,cy)
+      {
+        seg('rgba(255,200,80,.9)', tipX, tipY, cx, tipY);
+        // Diverging reflected: direction AWAY from F'=(cx+fAbs,cy) → toward left edge
+        const dx = cx - (cx+fAbs), dy = tipY - cy; // from F' to mirror hit point
+        const [ex,ey] = toEdge(cx, tipY, dx, dy);
+        seg('rgba(255,200,80,.9)', cx, tipY, ex, ey);
+        // Virtual extension dashed behind mirror toward F'
+        seg('rgba(255,200,80,.3)', cx, tipY, cx+fAbs, cy, true, 0.5);
+      }
+      // RAY 2 — Central (C) Ray (green)
+      // Aimed at C'=(cx+2f, cy) behind mirror → reflects back on itself
+      {
+        const Cp = cx + 2*fAbs;
+        // y at mirror: line from tipX,tipY toward Cp,cy hits x=cx
+        const yAtMirror = tipY + (cy - tipY) * (cx - tipX) / (Cp - tipX);
+        seg('rgba(80,255,160,.9)', tipX, tipY, cx, yAtMirror);
+        // Reflects back along same line toward left
+        const slopeIn = (yAtMirror - tipY) / (cx - tipX);
+        const [ex,ey] = toEdge(cx, yAtMirror, -1, slopeIn);
+        seg('rgba(80,255,160,.9)', cx, yAtMirror, ex, ey);
+        // Virtual dashed behind mirror
+        seg('rgba(80,255,160,.3)', cx, yAtMirror, Cp, cy, true, 0.5);
+      }
+      // RAY 3 — Focal Ray (pink)
+      // Headed TOWARD virtual F'=(cx+fAbs,cy) → reflects parallel to axis
+      {
+        const Fp = cx + fAbs;
+        const yAtMirror = tipY + (cy - tipY) * (cx - tipX) / (Fp - tipX);
+        seg('rgba(255,100,180,.9)', tipX, tipY, cx, yAtMirror);
+        // Reflected parallel to axis → left
+        const [ex,ey] = toEdge(cx, yAtMirror, -1, 0);
+        seg('rgba(255,100,180,.9)', cx, yAtMirror, ex, ey);
+        // Virtual dashed behind
+        seg('rgba(255,100,180,.3)', cx, yAtMirror, Fp, cy, true, 0.5);
+      }
+    }
+
+  } else {
+    // ═══════════ LENSES ═══════════
+    if (isConverging) {
+      // RAY 1 — Parallel Ray (yellow)
+      // Incoming: horizontal to lens plane. Refracts through F₂=(cx+fAbs, cy).
+      {
+        seg('rgba(255,200,80,.9)', tipX, tipY, cx, tipY);
+        // Direction from (cx,tipY) through F₂=(cx+fAbs,cy)
+        const dx = fAbs, dy = cy - tipY;
+        const [ex,ey] = toEdge(cx, tipY, dx, dy);
+        seg('rgba(255,200,80,.9)', cx, tipY, ex, ey);
+      }
+      // RAY 2 — Central Ray (green)
+      // Straight through optical centre undeviated
+      {
+        const dx = 1, dy = (cy - tipY) / (cx - tipX);
+        const [ex,ey] = toEdge(tipX, tipY, dx, dy);
+        seg('rgba(80,255,160,.9)', tipX, tipY, ex, ey);
+      }
+      // RAY 3 — Focal Ray (pink)
+      // Incoming: through F₁=(cx-fAbs, cy). Exits parallel to axis.
+      {
+        // y at lens: line from tipX,tipY through F₁=(cx-fAbs,cy) → x=cx
+        const F1x = cx - fAbs;
+        const yAtLens = tipY + (cy - tipY) * (cx - tipX) / (F1x - tipX);
+        seg('rgba(255,100,180,.9)', tipX, tipY, cx, yAtLens);
+        // Exits parallel → right edge
+        const [ex,ey] = toEdge(cx, yAtLens, 1, 0);
+        seg('rgba(255,100,180,.9)', cx, yAtLens, ex, ey);
+      }
+
+    } else {
+      // ═══════════ DIVERGING LENS ═══════════
+      // Virtual F₁=(cx-fAbs,cy) on object side, virtual F₂=(cx+fAbs,cy) on image side
+      // RAY 1 — Parallel Ray (yellow)
+      // Incoming horizontal. Refracts as if FROM virtual F₁=(cx-fAbs,cy) on same side.
+      {
+        seg('rgba(255,200,80,.9)', tipX, tipY, cx, tipY);
+        // Diverging outgoing: direction away from F₁ → from (cx-fAbs,cy) to (cx,tipY) extended right
+        const dx = cx - (cx-fAbs), dy = tipY - cy;  // fAbs, tipY-cy
+        const [ex,ey] = toEdge(cx, tipY, dx, dy);
+        seg('rgba(255,200,80,.9)', cx, tipY, ex, ey);
+        // Virtual dashed back to F₁
+        seg('rgba(255,200,80,.3)', cx, tipY, cx-fAbs, cy, true, 0.5);
+      }
+      // RAY 2 — Central Ray (green)
+      // Straight through optical centre undeviated
+      {
+        const dx = 1, dy = (cy - tipY) / (cx - tipX);
+        const [ex,ey] = toEdge(tipX, tipY, dx, dy);
+        seg('rgba(80,255,160,.9)', tipX, tipY, ex, ey);
+      }
+      // RAY 3 — Focal Ray (pink)
+      // Headed TOWARD F₂=(cx+fAbs,cy) on far side → exits parallel to axis
+      {
+        const F2x = cx + fAbs;
+        const yAtLens = tipY + (cy - tipY) * (cx - tipX) / (F2x - tipX);
+        seg('rgba(255,100,180,.9)', tipX, tipY, cx, yAtLens);
+        // Exits parallel → right edge
+        const [ex,ey] = toEdge(cx, yAtLens, 1, 0);
+        seg('rgba(255,100,180,.9)', cx, yAtLens, ex, ey);
+        // Virtual dashed toward F₂
+        seg('rgba(255,100,180,.3)', cx, yAtLens, F2x, cy, true, 0.5);
+      }
+    }
+  }
+
+  ctx.setLineDash([]);
+
+  // ── Image arrow ──
+  const isVirtual = di < 0;
+  ctx.strokeStyle = '#ff8060'; ctx.lineWidth = 2.5;
+  if (isVirtual) ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(imageX, cy); ctx.lineTo(imageX, imgTipY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ff8060';
+  const arrowDir = imgTipY < cy ? 1 : -1; // 1 = pointing up, -1 = pointing down
+  ctx.beginPath();
+  ctx.moveTo(imageX, imgTipY);
+  ctx.lineTo(imageX-6, imgTipY + arrowDir*12);
+  ctx.lineTo(imageX+6, imgTipY + arrowDir*12);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(255,128,96,.9)'; ctx.font='10px "Space Mono",monospace'; ctx.textAlign='center';
+  ctx.fillText(isVirtual ? 'I (virtual)' : 'I (real)', imageX, cy + (isVirtual ? -14 : 16));
+  ctx.fillStyle='rgba(255,150,100,.95)';
+  ctx.beginPath(); ctx.arc(imageX, imgTipY, 4, 0, Math.PI*2); ctx.fill();
+
+  drawLegend(ctx);
+}
+
+function drawLegend(ctx) {
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+  ctx.font = '10px "Space Mono",monospace'; ctx.textAlign='left';
+  [
+    ['#60e0ff',            'Object'],
+    ['#ff8060',            'Image'],
+    ['rgba(255,200,80,1)', 'Parallel Ray'],
+    ['rgba(80,255,160,1)', 'Central Ray'],
+    ['rgba(255,100,180,1)','Focal Ray'],
+  ].forEach(([col,lbl],i) => {
+    ctx.fillStyle = col; ctx.fillRect(14, 14+i*20, 16, 10);
+    ctx.fillStyle = 'rgba(220,200,255,.85)'; ctx.fillText(lbl, 36, 23+i*20);
+  });
+}
+
+function updateInfo() {
+  const { di, M } = imageCalc();
+  const isMirror = simType === 'concave' || simType === 'convex';
+  const nature = !isFinite(di) ? 'No image (obj at F)' :
+    (di > 0 ? 'Real' : 'Virtual');
+  const orientation = !isFinite(M) ? '—' : (M > 0 ? 'Upright' : 'Inverted');
+  const size = !isFinite(M) ? '—' : (Math.abs(M) > 1.01 ? 'Magnified' : Math.abs(M) < 0.99 ? 'Diminished' : 'Same size');
+  document.getElementById('infoNature').textContent    = nature;
+  document.getElementById('infoOrient').textContent    = orientation;
+  document.getElementById('infoSize').textContent      = size;
+  document.getElementById('infoMag').textContent       = isFinite(M) ? M.toFixed(2) + '\xd7' : '\u221e';
+  document.getElementById('infoDi').textContent        = isFinite(di) ? di.toFixed(1) + ' px' : '\u221e';
+}
+
+
+// ── Wave Visualizer ──────────────────────────────────────────────────────────
+(function() {
+  let waveInited = false;
+  let waveType = 'transverse'; // 'transverse' | 'longitudinal'
+  let wFreq = 1.5, wAmp = 45, wSpeed = 200;
+  let wPhase = 0, wRunning = true;
+  let waveCanvas, wCtx, wAF;
+
+  const SCALE = 100; // 100px = 1 metre on canvas
+
+  function initWave() {
+    if (waveInited) { resizeWaveCanvas(); return; }
+    waveInited = true;
+    waveCanvas = document.getElementById('waveCanvas');
+    wCtx = waveCanvas.getContext('2d');
+    resizeWaveCanvas();
+    window.addEventListener('resize', resizeWaveCanvas);
+
+    // Sliders
+    document.getElementById('wFreq').addEventListener('input', e => {
+      wFreq = parseFloat(e.target.value);
+      document.getElementById('wFreqVal').textContent = wFreq.toFixed(1) + ' Hz';
+      updateWaveStats();
+    });
+    document.getElementById('wAmp').addEventListener('input', e => {
+      wAmp = parseInt(e.target.value);
+      document.getElementById('wAmpVal').textContent = wAmp + ' m';
+      updateWaveStats();
+    });
+    document.getElementById('wSpeed').addEventListener('input', e => {
+      wSpeed = parseInt(e.target.value);
+      document.getElementById('wSpeedVal').textContent = wSpeed + ' m/s';
+      updateWaveStats();
+    });
+
+    // Wave type toggle
+    document.getElementById('waveTypeTransverse').addEventListener('click', () => {
+      waveType = 'transverse';
+      document.getElementById('waveTypeTransverse').classList.add('active');
+      document.getElementById('waveTypeLongitudinal').classList.remove('active');
+      document.getElementById('waveTypeDesc').innerHTML =
+        '<strong>Transverse wave:</strong> particles vibrate <em>perpendicular</em> to the direction of wave travel. Examples: light, water surface waves, electromagnetic waves.';
+    });
+    document.getElementById('waveTypeLongitudinal').addEventListener('click', () => {
+      waveType = 'longitudinal';
+      document.getElementById('waveTypeLongitudinal').classList.add('active');
+      document.getElementById('waveTypeTransverse').classList.remove('active');
+      document.getElementById('waveTypeDesc').innerHTML =
+        '<strong>Longitudinal wave:</strong> particles vibrate <em>parallel</em> to the direction of wave travel, creating compressions and rarefactions. Examples: sound waves, seismic P-waves.';
+    });
+
+    // Play/pause
+    document.getElementById('wavePlayBtn').addEventListener('click', () => {
+      wRunning = !wRunning;
+      document.getElementById('wavePlayBtn').textContent = wRunning ? '⏸ Pause' : '▶ Play';
+      document.getElementById('wavePlayBtn').classList.toggle('active', wRunning);
+      if (wRunning) animWave();
+    });
+    document.getElementById('waveResetBtn').addEventListener('click', () => {
+      wPhase = 0;
+    });
+
+    updateWaveStats();
+    animWave();
+    initLightTool();
+  }
+
+  function resizeWaveCanvas() {
+    if (!waveCanvas) return;
+    waveCanvas.width = waveCanvas.offsetWidth || 800;
+    waveCanvas.height = 220;
+  }
+
+  function updateWaveStats() {
+    const T = 1 / wFreq;
+    const lambda = wSpeed / wFreq;
+    document.getElementById('wStatT').textContent      = T.toFixed(2) + ' s';
+    document.getElementById('wStatLambda').textContent = lambda.toFixed(1) + ' m';
+    document.getElementById('wStatF').textContent      = wFreq.toFixed(1) + ' Hz';
+    document.getElementById('wStatV').textContent      = wSpeed + ' m/s';
+    document.getElementById('wStatA').textContent      = wAmp + ' m';
+  }
+
+  function animWave() {
+    if (!wRunning) return;
+    wPhase += 0.03 * wFreq;
+    drawWave();
+    wAF = requestAnimationFrame(animWave);
+  }
+
+  function drawWave() {
+    if (!wCtx) return;
+    const W = waveCanvas.width, H = waveCanvas.height;
+    const cx = W / 2, cy = H / 2;
+    wCtx.clearRect(0, 0, W, H);
+
+    // Background grid
+    wCtx.strokeStyle = 'rgba(160,120,255,0.06)';
+    wCtx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) { wCtx.beginPath(); wCtx.moveTo(x,0); wCtx.lineTo(x,H); wCtx.stroke(); }
+    for (let y = 0; y < H; y += 40) { wCtx.beginPath(); wCtx.moveTo(0,y); wCtx.lineTo(W,y); wCtx.stroke(); }
+
+    // Centre axis
+    wCtx.strokeStyle = 'rgba(160,120,255,0.3)';
+    wCtx.lineWidth = 1.5;
+    wCtx.setLineDash([]);
+    wCtx.beginPath(); wCtx.moveTo(0, cy); wCtx.lineTo(W, cy); wCtx.stroke();
+
+    const lambda = wSpeed / wFreq; // metres
+    // Map lambda to a pixel size that visually fills the canvas meaningfully.
+    // λ range: v/f = 50/4=12.5m (min, short/violet) → 400/0.5=800m (max, long/red)
+    // We want lambdaPx to range from ~40px (packed, high-f) to ~400px (stretched, low-f)
+    // Show ~3 wavelengths across the canvas regardless of slider values
+    const lambdaPx = (lambda / (wSpeed / wFreq)) * (waveCanvas.width / 3);
+
+    if (waveType === 'transverse') {
+      drawTransverse(W, H, cy, lambdaPx);
+    } else {
+      drawLongitudinal(W, H, cy, lambdaPx);
+    }
+
+    // Labels
+    drawWaveLabels(W, H, cy, lambdaPx);
+  }
+
+  function waveColor(alpha) {
+    return `rgba(160, 120, 255, ${alpha})`;
+  }
+
+  function drawTransverse(W, H, cy, lambdaPx) {
+    const ampPx = Math.min(wAmp * 0.9, cy - 20); // clamp to canvas
+    const wColor = waveColor(1);
+    const wColorSoft = waveColor(0.35);
+
+    // Glow
+    wCtx.shadowColor = waveColor(0.5);
+    wCtx.shadowBlur = 10;
+
+    // Draw wave — segment-by-segment so color stays consistent
+    wCtx.beginPath();
+    wCtx.strokeStyle = wColor;
+    wCtx.lineWidth = 2.5;
+    for (let px = 0; px <= W; px += 2) {
+      const angle = (px / lambdaPx) * Math.PI * 2 - wPhase * Math.PI * 2;
+      const y = cy - ampPx * Math.sin(angle);
+      if (px === 0) wCtx.moveTo(px, y); else wCtx.lineTo(px, y);
+    }
+    wCtx.stroke();
+    wCtx.shadowBlur = 0;
+
+    // Crest/trough highlights (lighter tint of same hue)
+    for (let px = 0; px <= W; px += 2) {
+      const angle = (px / lambdaPx) * Math.PI * 2 - wPhase * Math.PI * 2;
+      const sinV = Math.sin(angle);
+      const y = cy - ampPx * sinV;
+      if (sinV > 0.85) {
+        wCtx.fillStyle = waveColor(0.6);
+        wCtx.beginPath(); wCtx.arc(px, y, 3, 0, Math.PI*2); wCtx.fill();
+      } else if (sinV < -0.85) {
+        wCtx.fillStyle = waveColor(0.4);
+        wCtx.beginPath(); wCtx.arc(px, y, 3, 0, Math.PI*2); wCtx.fill();
+      }
+    }
+
+    // Animate a single particle bobbing in the middle
+    const particleX = W * 0.5;
+    const angle0 = (particleX / lambdaPx) * Math.PI * 2 - wPhase * Math.PI * 2;
+    const particleY = cy - ampPx * Math.sin(angle0);
+    wCtx.fillStyle = '#ffe46e';
+    wCtx.shadowColor = '#ffe46e'; wCtx.shadowBlur = 10;
+    wCtx.beginPath(); wCtx.arc(particleX, particleY, 7, 0, Math.PI*2); wCtx.fill();
+    wCtx.shadowBlur = 0;
+    // dashed vertical guide
+    wCtx.strokeStyle = 'rgba(255,228,110,0.3)'; wCtx.lineWidth=1; wCtx.setLineDash([4,4]);
+    wCtx.beginPath(); wCtx.moveTo(particleX, cy); wCtx.lineTo(particleX, particleY); wCtx.stroke();
+    wCtx.setLineDash([]);
+
+    // Amplitude arrow
+    wCtx.strokeStyle = 'rgba(255,228,110,0.6)'; wCtx.lineWidth=1.5;
+    const crestX = W * 0.25;
+    const crestY = cy - ampPx;
+    wCtx.beginPath(); wCtx.moveTo(crestX, cy); wCtx.lineTo(crestX, crestY); wCtx.stroke();
+    wCtx.fillStyle = 'rgba(255,228,110,0.8)'; wCtx.font = '10px "Space Mono",monospace'; wCtx.textAlign='center';
+    wCtx.fillText('A', crestX - 14, cy - ampPx/2);
+  }
+
+  function drawLongitudinal(W, H, cy, lambdaPx) {
+    const numParticles = 36;
+    const spacing = W / numParticles;
+    const dispAmp = Math.min(wAmp * 0.5, 30);
+
+    for (let i = 0; i < numParticles; i++) {
+      const baseX = (i + 0.5) * spacing;
+      const angle = (baseX / lambdaPx) * Math.PI * 2 - wPhase * Math.PI * 2;
+      const disp = dispAmp * Math.sin(angle);
+      const x = baseX + disp;
+
+      // Colour by compression/rarefaction using spectral hue
+      const compression = Math.cos(angle);
+      const alpha = compression > 0 ? 0.3 + 0.7*compression : 0.15 + 0.45*Math.abs(compression);
+      const r = waveColor(alpha);
+
+      const radius = 5 + 3 * Math.max(0, compression);
+      wCtx.fillStyle = r;
+      wCtx.shadowColor = r; wCtx.shadowBlur = compression > 0.5 ? 8 : 0;
+      wCtx.beginPath(); wCtx.arc(x, cy, radius, 0, Math.PI*2); wCtx.fill();
+    }
+    wCtx.shadowBlur = 0;
+
+    // Compression / rarefaction labels
+    const cX = W * 0.25;
+    const rX = W * 0.75;
+    const cAngle = (cX / lambdaPx) * Math.PI * 2 - wPhase * Math.PI * 2;
+    // find nearest compression peak
+    wCtx.fillStyle = 'rgba(160,120,255,0.7)'; wCtx.font='9px "Space Mono",monospace'; wCtx.textAlign='center';
+    wCtx.fillText('COMPRESSION', cX, cy - 28);
+    wCtx.fillStyle = 'rgba(100,200,255,0.7)';
+    wCtx.fillText('RAREFACTION', rX, cy + 38);
+  }
+
+  function drawWaveLabels(W, H, cy, lambdaPx) {
+    // Wavelength arrow below wave
+    const lY = cy + 60;
+    const x0 = W * 0.1;
+    const x1 = x0 + lambdaPx;
+    if (x1 < W - 20) {
+      wCtx.strokeStyle = 'rgba(100,255,200,0.5)'; wCtx.lineWidth=1.5; wCtx.setLineDash([]);
+      wCtx.beginPath(); wCtx.moveTo(x0, lY); wCtx.lineTo(x1, lY); wCtx.stroke();
+      [[x0, 1],[x1, -1]].forEach(([x, dir]) => {
+        wCtx.beginPath(); wCtx.moveTo(x, lY); wCtx.lineTo(x + dir*10, lY-5); wCtx.lineTo(x + dir*10, lY+5); wCtx.closePath(); wCtx.fill();
+      });
+      wCtx.fillStyle = 'rgba(100,255,200,0.7)'; wCtx.font='10px "Space Mono",monospace'; wCtx.textAlign='center';
+      wCtx.fillText('λ = ' + (wSpeed/wFreq).toFixed(1) + ' m', (x0+x1)/2, lY - 8);
+    }
+    // Direction arrow
+    wCtx.strokeStyle='rgba(255,200,80,0.5)'; wCtx.lineWidth=1.5;
+    wCtx.beginPath(); wCtx.moveTo(20, 18); wCtx.lineTo(80, 18); wCtx.stroke();
+    wCtx.beginPath(); wCtx.moveTo(80,18); wCtx.lineTo(70,13); wCtx.lineTo(70,23); wCtx.closePath();
+    wCtx.fillStyle='rgba(255,200,80,0.5)'; wCtx.fill();
+    wCtx.fillStyle='rgba(255,200,80,0.7)'; wCtx.font='9px "Space Mono",monospace'; wCtx.textAlign='left';
+    wCtx.fillText('wave direction →', 20, 34);
+  }
+
+
+  // ── Light Wave Sub-tool ────────────────────────────────────────────────────
+  let lWavelength = 550, lAmp = 45, lPhase = 0;
+  let lightCanvas, lCtx;
+
+  function nmToRgb(nm) {
+    // CIE approximation of visible spectrum
+    let r=0, g=0, b=0;
+    if      (nm >= 380 && nm < 440) { r=(440-nm)/(440-380); g=0; b=1; }
+    else if (nm >= 440 && nm < 490) { r=0; g=(nm-440)/(490-440); b=1; }
+    else if (nm >= 490 && nm < 510) { r=0; g=1; b=(510-nm)/(510-490); }
+    else if (nm >= 510 && nm < 580) { r=(nm-510)/(580-510); g=1; b=0; }
+    else if (nm >= 580 && nm < 645) { r=1; g=(645-nm)/(645-580); b=0; }
+    else if (nm >= 645 && nm <= 780) { r=1; g=0; b=0; }
+    // Intensity falloff at edges (eye sensitivity)
+    let factor = 1;
+    if      (nm >= 380 && nm < 420) factor = 0.3 + 0.7*(nm-380)/(420-380);
+    else if (nm > 700 && nm <= 780)  factor = 0.3 + 0.7*(780-nm)/(780-700);
+    r = Math.round(r*factor*255);
+    g = Math.round(g*factor*255);
+    b = Math.round(b*factor*255);
+    return [r, g, b];
+  }
+
+  function nmToColorStr(nm, alpha) {
+    const [r,g,b] = nmToRgb(nm);
+    return alpha !== undefined ? `rgba(${r},${g},${b},${alpha})` : `rgb(${r},${g},${b})`;
+  }
+
+  function nmToName(nm) {
+    if (nm < 380) return 'Ultraviolet (UV)';
+    if (nm < 420) return 'Violet';
+    if (nm < 450) return 'Violet-Blue';
+    if (nm < 490) return 'Blue';
+    if (nm < 510) return 'Cyan';
+    if (nm < 560) return 'Green';
+    if (nm < 590) return 'Yellow-Green / Yellow';
+    if (nm < 625) return 'Orange';
+    if (nm <= 780) return 'Red';
+    return 'Infrared (IR)';
+  }
+
+  function updateLightStats() {
+    const freqHz = (3e8 / (lWavelength * 1e-9));
+    const freqStr = (freqHz / 1e14).toFixed(2) + ' × 10¹⁴ Hz';
+    document.getElementById('lStatLambda').textContent = lWavelength + ' nm';
+    document.getElementById('lStatFreq').textContent   = freqStr;
+    document.getElementById('lStatAmp').textContent    = lAmp + ' (arb.)';
+    document.getElementById('lightNmText').textContent = lWavelength + ' nm';
+    document.getElementById('lightColorName').textContent = nmToName(lWavelength);
+    document.getElementById('lWavelengthVal').textContent = lWavelength + ' nm';
+    document.getElementById('lightSwatch').style.background = nmToColorStr(lWavelength);
+    updateSpectrumMarker();
+  }
+
+  function buildSpectrumBar() {
+    const bar = document.getElementById('spectrumBar');
+    if (!bar) return;
+    // Canvas-based rainbow
+    const bc = document.createElement('canvas');
+    bc.width = 800; bc.height = 36;
+    const bctx = bc.getContext('2d');
+    for (let x = 0; x < 800; x++) {
+      const nm = 380 + (x/800)*(780-380);
+      bctx.fillStyle = nmToColorStr(nm);
+      bctx.fillRect(x, 0, 1, 36);
+    }
+    bar.style.backgroundImage = `url(${bc.toDataURL()})`;
+    bar.style.backgroundSize = '100% 100%';
+  }
+
+  function updateSpectrumMarker() {
+    const marker = document.getElementById('spectrumMarker');
+    if (!marker) return;
+    const pct = (lWavelength - 380) / (780 - 380) * 100;
+    marker.innerHTML = `<div style="position:absolute;left:${pct}%;transform:translateX(-50%);
+      width:2px;height:12px;background:white;border-radius:1px;box-shadow:0 0 6px rgba(255,255,255,.7)"></div>`;
+  }
+
+  function initLightTool() {
+    lightCanvas = document.getElementById('lightCanvas');
+    if (!lightCanvas) return;
+    lCtx = lightCanvas.getContext('2d');
+    resizeLightCanvas();
+    window.addEventListener('resize', resizeLightCanvas);
+
+    document.getElementById('lWavelength').addEventListener('input', e => {
+      lWavelength = parseInt(e.target.value);
+      updateLightStats();
+    });
+    document.getElementById('lAmp').addEventListener('input', e => {
+      lAmp = parseInt(e.target.value);
+      document.getElementById('lAmpVal').textContent = lAmp;
+      updateLightStats();
+    });
+
+    buildSpectrumBar();
+    updateLightStats();
+    animLight();
+  }
+
+  function resizeLightCanvas() {
+    if (!lightCanvas) return;
+    lightCanvas.width = lightCanvas.offsetWidth || 800;
+    lightCanvas.height = 180;
+  }
+
+  function animLight() {
+    lPhase += 0.04;
+    drawLightWave();
+    requestAnimationFrame(animLight);
+  }
+
+  function drawLightWave() {
+    if (!lCtx || !lightCanvas) return;
+    const W = lightCanvas.width, H = lightCanvas.height;
+    const cy = H / 2;
+    lCtx.clearRect(0, 0, W, H);
+
+    // Grid
+    lCtx.strokeStyle = 'rgba(160,120,255,0.05)'; lCtx.lineWidth=1;
+    for (let x=0;x<W;x+=40){lCtx.beginPath();lCtx.moveTo(x,0);lCtx.lineTo(x,H);lCtx.stroke();}
+    for (let y=0;y<H;y+=40){lCtx.beginPath();lCtx.moveTo(0,y);lCtx.lineTo(W,y);lCtx.stroke();}
+
+    // Axis
+    lCtx.strokeStyle = 'rgba(255,255,255,0.15)'; lCtx.lineWidth=1.5;
+    lCtx.beginPath(); lCtx.moveTo(0,cy); lCtx.lineTo(W,cy); lCtx.stroke();
+
+    const ampPx = Math.min(lAmp * 0.9, cy - 16);
+    // Wavelength on canvas: scale so ~2-4 full waves visible
+    // Map nm to pixel wavelength: 380nm(violet)→short(~40px), 780nm(red)→long(~280px)
+    // This gives intuition: red waves look stretched out, violet waves look tightly packed
+    const tNm = (lWavelength - 380) / (780 - 380);  // 0=violet, 1=red
+    const lambdaPx = 40 + tNm * 240;  // 40px (violet) → 280px (red)
+
+    const baseColor = nmToRgb(lWavelength);
+
+    // Glow under the wave
+    const grad = lCtx.createLinearGradient(0, cy - ampPx, 0, cy + ampPx);
+    grad.addColorStop(0, nmToColorStr(lWavelength, 0.0));
+    grad.addColorStop(0.5, nmToColorStr(lWavelength, 0.18));
+    grad.addColorStop(1, nmToColorStr(lWavelength, 0.0));
+
+    // Draw filled wave
+    lCtx.beginPath();
+    lCtx.moveTo(0, cy);
+    for (let px = 0; px <= W; px += 2) {
+      const angle = (px / lambdaPx) * Math.PI * 2 - lPhase * Math.PI * 2;
+      const y = cy - ampPx * Math.sin(angle);
+      lCtx.lineTo(px, y);
+    }
+    lCtx.lineTo(W, cy);
+    lCtx.closePath();
+    lCtx.fillStyle = grad;
+    lCtx.fill();
+
+    // Draw wave line with glow
+    lCtx.shadowColor = nmToColorStr(lWavelength);
+    lCtx.shadowBlur = 12;
+    lCtx.beginPath();
+    lCtx.strokeStyle = nmToColorStr(lWavelength);
+    lCtx.lineWidth = 2.5;
+    for (let px = 0; px <= W; px += 2) {
+      const angle = (px / lambdaPx) * Math.PI * 2 - lPhase * Math.PI * 2;
+      const y = cy - ampPx * Math.sin(angle);
+      if (px === 0) lCtx.moveTo(px, y); else lCtx.lineTo(px, y);
+    }
+    lCtx.stroke();
+    lCtx.shadowBlur = 0;
+
+    // Wavelength bracket
+    const bY = cy + ampPx + 18;
+    const bX0 = W * 0.1;
+    const bX1 = bX0 + lambdaPx;
+    if (bX1 < W - 10) {
+      lCtx.strokeStyle = 'rgba(255,255,255,0.35)'; lCtx.lineWidth=1.2;
+      lCtx.beginPath(); lCtx.moveTo(bX0, bY); lCtx.lineTo(bX1, bY); lCtx.stroke();
+      // ticks
+      [bX0, bX1].forEach(x => {
+        lCtx.beginPath(); lCtx.moveTo(x, bY-5); lCtx.lineTo(x, bY+5); lCtx.stroke();
+      });
+      lCtx.fillStyle = 'rgba(255,255,255,0.5)'; lCtx.font='9px "Space Mono",monospace'; lCtx.textAlign='center';
+      lCtx.fillText('λ = ' + lWavelength + ' nm', (bX0+bX1)/2, bY - 8);
+    }
+
+    // Color label in corner
+    lCtx.fillStyle = nmToColorStr(lWavelength, 0.85);
+    lCtx.font = 'bold 11px "Space Mono",monospace'; lCtx.textAlign='left';
+    lCtx.fillText(nmToName(lWavelength), 14, 20);
+  }
+
+  // Expose init for tab switching
+  window.initWave = initWave;
+})();
+
+
+// ── COULOMB'S LAW ─────────────────────────────────────────────────────────────
+(function() {
+  let cInited = false;
+  let cCanvas, cCtx;
+  let q1 = 3, q2 = -2;           // μC
+  const K = 9e9;                  // N·m²/C²
+  let c1x, c1y, c2x, c2y;
+  // Velocities for animation (px/frame)
+  let v1x = 0, v1y = 0, v2x = 0, v2y = 0;
+  let dragging = null;
+  let cRunning = true;
+  let cAF = null;
+
+  window.initCoulomb = function() {
+    if (cInited) { resizeC(); drawC(); return; }
+    cInited = true;
+    cCanvas = document.getElementById('coulombCanvas');
+    cCtx = cCanvas.getContext('2d');
+    resizeC();
+
+    // place charges at 1/3 and 2/3 across
+    c1x = cCanvas.width * 0.33; c1y = cCanvas.height * 0.5;
+    c2x = cCanvas.width * 0.67; c2y = cCanvas.height * 0.5;
+
+    window.addEventListener('resize', () => { resizeC(); drawC(); });
+
+    // Sliders
+    document.getElementById('cq1').addEventListener('input', e => {
+      q1 = parseFloat(e.target.value);
+      document.getElementById('cq1Val').textContent = (q1 >= 0 ? '+' : '') + q1 + ' \u03bcC';
+      updateC();
+    });
+    document.getElementById('cq2').addEventListener('input', e => {
+      q2 = parseFloat(e.target.value);
+      document.getElementById('cq2Val').textContent = (q2 >= 0 ? '+' : '') + q2 + ' \u03bcC';
+      updateC();
+    });
+
+    // Drag
+    function getPos(e) {
+      const r = cCanvas.getBoundingClientRect();
+      const sx = cCanvas.width / r.width, sy = cCanvas.height / r.height;
+      const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+      return [cx * sx, cy * sy];
+    }
+    function startDrag(e) {
+      const [mx, my] = getPos(e);
+      const d1 = Math.hypot(mx-c1x, my-c1y);
+      const d2 = Math.hypot(mx-c2x, my-c2y);
+      if (d1 < 26) dragging = 'c1';
+      else if (d2 < 26) dragging = 'c2';
+    }
+    function moveDrag(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      const [mx, my] = getPos(e);
+      const pad = 30;
+      const bx = Math.max(pad, Math.min(cCanvas.width - pad, mx));
+      const by = Math.max(pad, Math.min(cCanvas.height - pad, my));
+      if (dragging === 'c1') { c1x = bx; c1y = by; }
+      else                   { c2x = bx; c2y = by; }
+      updateC();
+    }
+    function endDrag() { dragging = null; }
+    cCanvas.addEventListener('mousedown', startDrag);
+    cCanvas.addEventListener('mousemove', moveDrag);
+    cCanvas.addEventListener('mouseup',   endDrag);
+    cCanvas.addEventListener('mouseleave',endDrag);
+    cCanvas.addEventListener('touchstart', startDrag, {passive:false});
+    cCanvas.addEventListener('touchmove',  moveDrag,  {passive:false});
+    cCanvas.addEventListener('touchend',   endDrag);
+
+    // Play / Pause / Reset
+    document.getElementById('coulombPlayBtn').addEventListener('click', () => {
+      cRunning = !cRunning;
+      const btn = document.getElementById('coulombPlayBtn');
+      btn.textContent = cRunning ? '⏸ Pause' : '▶ Play';
+      btn.classList.toggle('active', cRunning);
+      if (cRunning) animC();
+    });
+    document.getElementById('coulombResetBtn').addEventListener('click', () => {
+      c1x = cCanvas.width * 0.33; c1y = cCanvas.height * 0.5;
+      c2x = cCanvas.width * 0.67; c2y = cCanvas.height * 0.5;
+      v1x = v1y = v2x = v2y = 0;
+      updateC();
+    });
+
+    updateC();
+    animC();
+  };
+
+  function animC() {
+    if (!cRunning) return;
+    if (dragging) { requestAnimationFrame(animC); return; } // don't physics-move while dragging
+
+    const dx = c2x - c1x, dy = c2y - c1y;
+    const dist = Math.max(50, Math.hypot(dx, dy)); // min separation to avoid explosion
+    const ux = dx / dist, uy = dy / dist;
+
+    // F = K|q1||q2|/r² in simulation units (100px = 1m, charges in μC)
+    const distM = dist / 100;
+    const Fmag = K * Math.abs(q1 * 1e-6) * Math.abs(q2 * 1e-6) / (distM * distM);
+    // Scale to px/frame² — keep it visually gentle (mass=1 virtual unit, scale factor)
+    const FSCALE = 0.003;
+    const Fpx = Math.min(Fmag * FSCALE, 12);
+    const attract = (q1 * q2) < 0;
+
+    // Apply force: attract → charges move toward each other; repel → apart
+    const dir = attract ? 1 : -1;
+    v1x +=  dir * ux * Fpx;  v1y +=  dir * uy * Fpx;
+    v2x += -dir * ux * Fpx;  v2y += -dir * uy * Fpx;
+
+    // Damping so it doesn't oscillate forever
+    // No damping — charges accelerate freely like real physics
+
+    // Move
+    const pad = 32, W = cCanvas.width, H = cCanvas.height;
+    c1x = Math.max(pad, Math.min(W-pad, c1x + v1x));
+    c1y = Math.max(pad, Math.min(H-pad, c1y + v1y));
+    c2x = Math.max(pad, Math.min(W-pad, c2x + v2x));
+    c2y = Math.max(pad, Math.min(H-pad, c2y + v2y));
+
+    // Bounce off walls
+    if (c1x <= pad || c1x >= W-pad) { v1x *= -0.5; }
+    if (c1y <= pad || c1y >= H-pad) { v1y *= -0.5; }
+    if (c2x <= pad || c2x >= W-pad) { v2x *= -0.5; }
+    if (c2y <= pad || c2y >= H-pad) { v2y *= -0.5; }
+
+    // Enforce minimum separation
+    const sep = Math.hypot(c2x-c1x, c2y-c1y);
+    if (attract && sep < 58) {
+      // elastic bounce when very close
+      v1x *= -0.6; v1y *= -0.6; v2x *= -0.6; v2y *= -0.6;
+    }
+
+    updateC();
+    cAF = requestAnimationFrame(animC);
+  }
+
+  function resizeC() {
+    if (!cCanvas) return;
+    const ow = cCanvas.width;
+    cCanvas.width  = cCanvas.offsetWidth || 700;
+    cCanvas.height = 280;
+    // scale positions proportionally if canvas changed size
+    if (c1x !== undefined && ow > 0) {
+      const scale = cCanvas.width / ow;
+      c1x *= scale; c2x *= scale;
+    } else {
+      c1x = cCanvas.width * 0.33; c1y = cCanvas.height * 0.5;
+      c2x = cCanvas.width * 0.67; c2y = cCanvas.height * 0.5;
+    }
+  }
+
+  function updateC() { drawC(); updateCStats(); }
+
+  function chargeColor(q) {
+    if (q > 0) return ['#ff6060', 'rgba(255,80,80,'];
+    if (q < 0) return ['#60aaff', 'rgba(60,140,255,'];
+    return ['#aaaaaa', 'rgba(170,170,170,'];
+  }
+
+  function drawC() {
+    if (!cCtx) return;
+    const W = cCanvas.width, H = cCanvas.height;
+    cCtx.clearRect(0, 0, W, H);
+
+    // Grid
+    cCtx.strokeStyle = 'rgba(160,120,255,0.05)'; cCtx.lineWidth = 1;
+    for (let x=0;x<W;x+=40){cCtx.beginPath();cCtx.moveTo(x,0);cCtx.lineTo(x,H);cCtx.stroke();}
+    for (let y=0;y<H;y+=40){cCtx.beginPath();cCtx.moveTo(0,y);cCtx.lineTo(W,y);cCtx.stroke();}
+
+    const dx = c2x - c1x, dy = c2y - c1y;
+    const dist = Math.hypot(dx, dy);
+    const ux = dx / dist, uy = dy / dist;   // unit vec c1→c2
+
+    // Force magnitude (use μC → C conversion)
+    const F = K * Math.abs(q1 * 1e-6) * Math.abs(q2 * 1e-6) / ((dist / 100) ** 2); // dist in metres (100px = 1m)
+    const attract = (q1 * q2) < 0;
+
+    // Electric field lines between charges (simple radial lines)
+    const nLines = 10;
+    for (let i = 0; i < nLines; i++) {
+      const angle = (i / nLines) * Math.PI * 2;
+      const r0 = 26, r1 = dist * 0.38;
+      const [c1col] = chargeColor(q1);
+      cCtx.strokeStyle = 'rgba(160,120,255,0.12)'; cCtx.lineWidth = 1;
+      cCtx.beginPath();
+      cCtx.moveTo(c1x + Math.cos(angle)*r0, c1y + Math.sin(angle)*r0);
+      cCtx.lineTo(c1x + Math.cos(angle)*r1, c1y + Math.sin(angle)*r1);
+      cCtx.stroke();
+    }
+
+    // Force arrows
+    const arrowLen = Math.min(120, Math.max(18, F * 0.0002));
+    const RAD = 22; // charge radius
+
+    function drawArrow(fromX, fromY, toX, toY, color) {
+      const adx = toX-fromX, ady = toY-fromY;
+      const alen = Math.hypot(adx,ady);
+      if (alen < 2) return;
+      const ax = adx/alen, ay = ady/alen;
+      cCtx.strokeStyle = color; cCtx.lineWidth = 2.5; cCtx.setLineDash([]);
+      cCtx.beginPath(); cCtx.moveTo(fromX, fromY); cCtx.lineTo(toX, toY); cCtx.stroke();
+      // arrowhead
+      cCtx.fillStyle = color;
+      cCtx.beginPath();
+      cCtx.moveTo(toX, toY);
+      cCtx.lineTo(toX - ax*12 + ay*5, toY - ay*12 - ax*5);
+      cCtx.lineTo(toX - ax*12 - ay*5, toY - ay*12 + ax*5);
+      cCtx.closePath(); cCtx.fill();
+    }
+
+    // F on charge 1: attract→toward c2, repel→away from c2
+    const [col1] = chargeColor(q1);
+    const [col2] = chargeColor(q2);
+    const arrowColor = attract ? '#80ffb0' : '#ffb060';
+
+    if (attract) {
+      // Arrows point inward (toward each other)
+      drawArrow(c1x - ux*RAD - ux*6, c1y - uy*RAD - uy*6,
+                c1x + ux*arrowLen,   c1y + uy*arrowLen, arrowColor);
+      drawArrow(c2x + ux*RAD + ux*6, c2y + uy*RAD + uy*6,
+                c2x - ux*arrowLen,   c2y - uy*arrowLen, arrowColor);
+    } else {
+      // Arrows point outward (away from each other)
+      drawArrow(c1x + ux*RAD + ux*6, c1y + uy*RAD + uy*6,
+                c1x - ux*arrowLen,   c1y - uy*arrowLen, arrowColor);
+      drawArrow(c2x - ux*RAD - ux*6, c2y - uy*RAD - uy*6,
+                c2x + ux*arrowLen,   c2y + uy*arrowLen, arrowColor);
+    }
+
+    // Distance line
+    cCtx.strokeStyle = 'rgba(200,160,255,0.25)'; cCtx.lineWidth=1; cCtx.setLineDash([4,4]);
+    cCtx.beginPath(); cCtx.moveTo(c1x, c1y); cCtx.lineTo(c2x, c2y); cCtx.stroke();
+    cCtx.setLineDash([]);
+    cCtx.fillStyle = 'rgba(200,160,255,0.6)'; cCtx.font='10px "Space Mono",monospace';
+    cCtx.textAlign='center';
+    cCtx.fillText('r = ' + (dist/100).toFixed(2) + ' m', (c1x+c2x)/2, (c1y+c2y)/2 - 10);
+
+    // Draw charges (glow + circle + label)
+    [[c1x, c1y, q1], [c2x, c2y, q2]].forEach(([cx, cy, q]) => {
+      const [col, colA] = chargeColor(q);
+      // Glow
+      const grd = cCtx.createRadialGradient(cx,cy,RAD*0.4, cx,cy,RAD*2.2);
+      grd.addColorStop(0, colA + '0.35)');
+      grd.addColorStop(1, colA + '0)');
+      cCtx.fillStyle = grd;
+      cCtx.beginPath(); cCtx.arc(cx, cy, RAD*2.2, 0, Math.PI*2); cCtx.fill();
+      // Circle
+      cCtx.fillStyle = col; cCtx.strokeStyle = '#fff'; cCtx.lineWidth = 1.5;
+      cCtx.beginPath(); cCtx.arc(cx, cy, RAD, 0, Math.PI*2); cCtx.fill(); cCtx.stroke();
+      // Label
+      cCtx.fillStyle = '#fff'; cCtx.font = 'bold 12px "Space Mono",monospace';
+      cCtx.textAlign = 'center'; cCtx.textBaseline = 'middle';
+      cCtx.fillText((q >= 0 ? '+' : '') + q, cx, cy);
+      cCtx.textBaseline = 'alphabetic';
+    });
+
+    // Drag hint
+    cCtx.fillStyle = 'rgba(160,120,255,0.4)'; cCtx.font='9px "Space Mono",monospace';
+    cCtx.textAlign='left';
+    cCtx.fillText('drag charges to change distance', 10, H - 10);
+  }
+
+  function updateCStats() {
+    if (!cCanvas) return;
+    const dx = c2x - c1x, dy = c2y - c1y;
+    const dist = Math.hypot(dx, dy);
+    const distM = dist / 100;
+    const F = K * Math.abs(q1 * 1e-6) * Math.abs(q2 * 1e-6) / (distM * distM);
+    const attract = (q1 * q2) < 0;
+    const sameSign = (q1 * q2) > 0;
+
+    document.getElementById('cStatR').textContent   = distM.toFixed(2) + ' m';
+    document.getElementById('cStatF').textContent   =
+      F >= 1 ? F.toFixed(2) + ' N' :
+      F >= 0.001 ? (F*1000).toFixed(2) + ' mN' : (F*1e6).toFixed(2) + ' \u03bcN';
+    document.getElementById('cStatDir').textContent = q1===0||q2===0 ? 'No force' : attract ? 'Attraction' : 'Repulsion';
+
+    const note = document.getElementById('coulombNote');
+    if (q1===0 || q2===0) {
+      note.innerHTML = 'One charge is <strong>zero</strong> — no electric force acts between them.';
+    } else if (attract) {
+      note.innerHTML = '<strong>Opposite charges attract.</strong> The force arrows point <em>toward</em> each other. Try moving them closer — notice the force grows rapidly (inverse-square law).';
+    } else {
+      note.innerHTML = '<strong>Like charges repel.</strong> The force arrows point <em>away</em> from each other. Double the distance and the force drops to <em>one-quarter</em>.';
+    }
+  }
+})();
+
+// ── FREE BODY DIAGRAM ─────────────────────────────────────────────────────────
+(function() {
+  let fbdInited = false;
+  let fbdCanvas, fbdCtx;
+  const MASS = 5; // kg
+  let objX = 0, objY = 0;   // object offset from centre (px)
+  let objVx = 0, objVy = 0; // velocity (px/frame)
+  let fbdRunning = true;
+
+  // Scenario definitions: each force has {id, name, color, angle_deg, min, max, default, fixed}
+  // angle: 0=right, 90=up, 180=left, 270=down
+  const SCENARIOS = {
+    block: {
+      label: 'Block on flat surface — adjust applied force and friction',
+      forces: [
+        { id:'W',  name:'Weight (W)',    color:'#ff6060', angle:270, min:0,   max:100, val:49,  fixed:true,  note:'W = mg = 5×9.8 = 49 N' },
+        { id:'N',  name:'Normal (N)',    color:'#60aaff', angle:90,  min:0,   max:100, val:49,  fixed:true,  note:'N = W on flat surface' },
+        { id:'Fa', name:'Applied (Fₐ)', color:'#80ffb0', angle:0,   min:0,   max:80,  val:20,  fixed:false, note:'horizontal push' },
+        { id:'Ff', name:'Friction (Ff)', color:'#ffb060', angle:180, min:0,   max:60,  val:10,  fixed:false, note:'opposes motion' },
+      ]
+    },
+    hanging: {
+      label: 'Hanging object — adjust tension',
+      forces: [
+        { id:'W',  name:'Weight (W)',    color:'#ff6060', angle:270, min:0, max:100, val:49, fixed:true,  note:'W = mg' },
+        { id:'T',  name:'Tension (T)',   color:'#60aaff', angle:90,  min:0, max:100, val:49, fixed:false, note:'upward pull of string' },
+      ]
+    },
+    incline: {
+      label: 'Block on 30° incline — adjust friction',
+      forces: [
+        { id:'W',  name:'Weight (W)',    color:'#ff6060', angle:270,  min:0, max:100, val:49, fixed:true,  note:'W = mg = 49 N' },
+        { id:'N',  name:'Normal (N)',    color:'#60aaff', angle:120,  min:0, max:100, val:42, fixed:true,  note:'perpendicular to incline' },
+        { id:'Wx', name:'W∥ (down slope)',color:'#ff9090',angle:210,  min:0, max:60,  val:24, fixed:true,  note:'W sin30° = 24.5 N' },
+        { id:'Ff', name:'Friction (Ff)', color:'#ffb060', angle:30,   min:0, max:40,  val:15, fixed:false, note:'up the slope' },
+      ]
+    },
+    freefall: {
+      label: 'Free fall — only gravity acts',
+      forces: [
+        { id:'W',  name:'Weight (W)',    color:'#ff6060', angle:270, min:0, max:100, val:49, fixed:true, note:'W = mg — the only force' },
+      ]
+    }
+  };
+
+  let currentScenario = 'block';
+  let forces = [];
+
+  window.initFBD = function() {
+    if (fbdInited) { resizeFBD(); drawFBD(); return; }
+    fbdInited = true;
+    fbdCanvas = document.getElementById('fbdCanvas');
+    fbdCtx = fbdCanvas.getContext('2d');
+    resizeFBD();
+    window.addEventListener('resize', () => { resizeFBD(); drawFBD(); });
+
+    document.querySelectorAll('[data-scenario]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-scenario]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentScenario = btn.dataset.scenario;
+        loadScenario(currentScenario);
+      });
+    });
+
+    // Play / Pause / Reset
+    document.getElementById('fbdPlayBtn').addEventListener('click', () => {
+      fbdRunning = !fbdRunning;
+      const btn = document.getElementById('fbdPlayBtn');
+      btn.textContent = fbdRunning ? '⏸ Pause' : '▶ Play';
+      btn.classList.toggle('active', fbdRunning);
+      if (fbdRunning) animFBD();
+    });
+    document.getElementById('fbdResetBtn').addEventListener('click', () => {
+      objX = 0; objY = 0; objVx = 0; objVy = 0;
+      drawFBD(); updateFBDStats();
+    });
+
+    loadScenario(currentScenario);
+    animFBD();
+  };
+
+  function animFBD() {
+    if (!fbdRunning) return;
+    const Fx = forces.reduce((s,f) => s + f.val * Math.cos(f.angle * Math.PI/180), 0);
+    // canvas y is flipped: positive Fy_physics = up = negative canvas y
+    const Fy_c = -forces.reduce((s,f) => s + f.val * Math.sin(f.angle * Math.PI/180), 0);
+
+    // a = F/m, scale to px/frame²
+    const ASCALE = 0.004;
+    objVx += (Fx / MASS) * ASCALE;
+    objVy += (Fy_c / MASS) * ASCALE;
+    const DAMP = 0.96;
+    objVx *= DAMP; objVy *= DAMP;
+
+    // Clamp offset so object stays on canvas
+    const W = fbdCanvas ? fbdCanvas.width : 700;
+    const H = fbdCanvas ? fbdCanvas.height : 320;
+    const limit = Math.min(W, H) * 0.35;
+    objX = Math.max(-limit, Math.min(limit, objX + objVx));
+    objY = Math.max(-limit, Math.min(limit, objY + objVy));
+
+    drawFBD();
+    requestAnimationFrame(animFBD);
+  }
+
+  function resizeFBD() {
+    if (!fbdCanvas) return;
+    fbdCanvas.width  = fbdCanvas.offsetWidth || 700;
+    fbdCanvas.height = 320;
+  }
+
+  function loadScenario(key) {
+    const sc = SCENARIOS[key];
+    objX = 0; objY = 0; objVx = 0; objVy = 0;
+    forces = sc.forces.map(f => ({ ...f }));
+    buildForceList();
+    drawFBD();
+    updateFBDStats();
+  }
+
+  function buildForceList() {
+    const list = document.getElementById('fbdForceList');
+    list.innerHTML = '';
+    forces.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'fbd-force-item';
+      row.innerHTML = `
+        <div class="fbd-force-dot" style="background:${f.color}"></div>
+        <div class="fbd-force-name">${f.name}</div>
+        <input type="range" class="fbd-force-slider" data-id="${f.id}"
+          min="${f.min}" max="${f.max}" step="1" value="${f.val}"
+          ${f.fixed ? 'disabled' : ''} style="${f.fixed ? 'opacity:0.4' : ''}"/>
+        <div class="fbd-force-val" id="fv_${f.id}">${f.val} N</div>`;
+      list.appendChild(row);
+      row.querySelector('input').addEventListener('input', e => {
+        const force = forces.find(x => x.id === e.target.dataset.id);
+        if (force) { force.val = parseInt(e.target.value); document.getElementById('fv_' + force.id).textContent = force.val + ' N'; }
+        drawFBD(); updateFBDStats();
+      });
+    });
+  }
+
+  function drawFBD() {
+    if (!fbdCtx) return;
+    const W = fbdCanvas.width, H = fbdCanvas.height;
+    const cx = W * 0.42 + objX, cy = H * 0.50 + objY;
+    const BOX = 48;
+    fbdCtx.clearRect(0, 0, W, H);
+
+    // Background grid
+    fbdCtx.strokeStyle = 'rgba(160,120,255,0.05)'; fbdCtx.lineWidth=1;
+    for(let x=0;x<W;x+=40){fbdCtx.beginPath();fbdCtx.moveTo(x,0);fbdCtx.lineTo(x,H);fbdCtx.stroke();}
+    for(let y=0;y<H;y+=40){fbdCtx.beginPath();fbdCtx.moveTo(0,y);fbdCtx.lineTo(W,y);fbdCtx.stroke();}
+
+    // Draw incline ramp for incline scenario
+    if (currentScenario === 'incline') {
+      fbdCtx.strokeStyle = 'rgba(160,120,255,0.3)'; fbdCtx.lineWidth=2;
+      fbdCtx.beginPath(); fbdCtx.moveTo(cx - 140, cy + 90); fbdCtx.lineTo(cx + 100, cy - 58); fbdCtx.stroke();
+      fbdCtx.beginPath(); fbdCtx.moveTo(cx - 140, cy + 90); fbdCtx.lineTo(cx - 140, cy - 58); fbdCtx.stroke();
+      // angle label
+      fbdCtx.fillStyle='rgba(200,160,255,0.5)'; fbdCtx.font='10px "Space Mono",monospace'; fbdCtx.textAlign='left';
+      fbdCtx.fillText('30°', cx - 110, cy + 70);
+    } else {
+      // Ground line
+      fbdCtx.strokeStyle = 'rgba(160,120,255,0.25)'; fbdCtx.lineWidth=1.5;
+      fbdCtx.beginPath(); fbdCtx.moveTo(cx-120, cy+BOX); fbdCtx.lineTo(cx+120, cy+BOX); fbdCtx.stroke();
+    }
+
+    // Object box
+    fbdCtx.fillStyle = 'rgba(160,120,255,0.15)';
+    fbdCtx.strokeStyle = 'rgba(160,120,255,0.6)'; fbdCtx.lineWidth=2;
+    if (currentScenario === 'hanging') {
+      // Circle for hanging
+      fbdCtx.beginPath(); fbdCtx.arc(cx, cy, BOX*0.7, 0, Math.PI*2); fbdCtx.fill(); fbdCtx.stroke();
+      // String above
+      fbdCtx.strokeStyle='rgba(200,160,255,0.4)'; fbdCtx.lineWidth=1.5; fbdCtx.setLineDash([4,3]);
+      fbdCtx.beginPath(); fbdCtx.moveTo(cx, cy-BOX*0.7); fbdCtx.lineTo(cx, cy-BOX*2.5); fbdCtx.stroke();
+      fbdCtx.setLineDash([]);
+    } else {
+      fbdCtx.beginPath(); fbdCtx.rect(cx-BOX, cy-BOX, BOX*2, BOX*2); fbdCtx.fill(); fbdCtx.stroke();
+    }
+    fbdCtx.fillStyle='rgba(200,160,255,0.7)'; fbdCtx.font='11px "Space Mono",monospace';
+    fbdCtx.textAlign='center'; fbdCtx.textBaseline='middle';
+    fbdCtx.fillText(MASS + ' kg', cx, cy);
+    fbdCtx.textBaseline='alphabetic';
+
+    // Draw force arrows
+    const SCALE = 1.8; // px per N
+    forces.forEach(f => {
+      if (f.val === 0) return;
+      const rad = f.angle * Math.PI / 180;
+      const len = Math.max(18, f.val * SCALE);
+      const ex = cx + Math.cos(rad) * (BOX + len);
+      const ey = cy - Math.sin(rad) * (BOX + len);   // canvas y is flipped
+      const sx = cx + Math.cos(rad) * BOX;
+      const sy = cy - Math.sin(rad) * BOX;
+
+      // Arrow shaft
+      fbdCtx.strokeStyle = f.color; fbdCtx.lineWidth = 2.5; fbdCtx.setLineDash([]);
+      fbdCtx.beginPath(); fbdCtx.moveTo(sx, sy); fbdCtx.lineTo(ex, ey); fbdCtx.stroke();
+
+      // Arrowhead
+      const adx = ex-sx, ady = ey-sy;
+      const al = Math.hypot(adx,ady);
+      const ax = adx/al, ay = ady/al;
+      fbdCtx.fillStyle = f.color;
+      fbdCtx.beginPath();
+      fbdCtx.moveTo(ex, ey);
+      fbdCtx.lineTo(ex - ax*12 + ay*5, ey - ay*12 - ax*5);
+      fbdCtx.lineTo(ex - ax*12 - ay*5, ey - ay*12 + ax*5);
+      fbdCtx.closePath(); fbdCtx.fill();
+
+      // Label at tip
+      const lx = ex + ax*16, ly = ey + ay*16;
+      fbdCtx.fillStyle = f.color; fbdCtx.font='bold 10px "Space Mono",monospace';
+      fbdCtx.textAlign = Math.cos(rad) > 0.3 ? 'left' : Math.cos(rad) < -0.3 ? 'right' : 'center';
+      fbdCtx.textBaseline = Math.sin(rad) > 0.3 ? 'bottom' : Math.sin(rad) < -0.3 ? 'top' : 'middle';
+      fbdCtx.fillText(f.name.split('(')[0].trim() + ' ' + f.val + 'N', lx, ly);
+    });
+    fbdCtx.textBaseline = 'alphabetic';
+
+    // Net force arrow from centre
+    const Fx = forces.reduce((s,f) => s + f.val * Math.cos(f.angle * Math.PI/180), 0);
+    const Fy = forces.reduce((s,f) => s + f.val * (-Math.sin(f.angle * Math.PI/180)), 0); // canvas
+    const Fmag = Math.hypot(Fx, Fy);
+    if (Fmag > 1) {
+      const ux2 = Fx/Fmag, uy2 = Fy/Fmag;
+      const nlen = Math.min(Fmag * SCALE, 120);
+      const nx2 = cx + ux2*nlen, ny2 = cy + uy2*nlen;
+      fbdCtx.strokeStyle='#ffe46e'; fbdCtx.lineWidth=3;
+      fbdCtx.beginPath(); fbdCtx.moveTo(cx,cy); fbdCtx.lineTo(nx2,ny2); fbdCtx.stroke();
+      fbdCtx.fillStyle='#ffe46e';
+      fbdCtx.beginPath();
+      fbdCtx.moveTo(nx2,ny2);
+      fbdCtx.lineTo(nx2-ux2*13+uy2*5, ny2-uy2*13-ux2*5);
+      fbdCtx.lineTo(nx2-ux2*13-uy2*5, ny2-uy2*13+ux2*5);
+      fbdCtx.closePath(); fbdCtx.fill();
+      fbdCtx.fillStyle='#ffe46e'; fbdCtx.font='bold 10px "Space Mono",monospace';
+      fbdCtx.textAlign='center'; fbdCtx.textBaseline='middle';
+      fbdCtx.fillText('Fₙₑₜ', nx2 + ux2*18, ny2 + uy2*18);
+      fbdCtx.textBaseline='alphabetic';
+    }
+
+    // Legend top-right
+    const lx0 = W - 10;
+    fbdCtx.font='9px "Space Mono",monospace'; fbdCtx.textAlign='right';
+    forces.forEach((f,i) => {
+      fbdCtx.fillStyle = f.color;
+      fbdCtx.fillRect(lx0 - 135, 14 + i*18, 12, 10);
+      fbdCtx.fillStyle='rgba(220,200,255,.8)';
+      fbdCtx.fillText(f.name, lx0, 23 + i*18);
+    });
+    const ni = forces.length;
+    fbdCtx.fillStyle='#ffe46e'; fbdCtx.fillRect(lx0-135, 14+ni*18, 12, 10);
+    fbdCtx.fillStyle='rgba(220,200,255,.8)'; fbdCtx.fillText('Net Force', lx0, 23+ni*18);
+  }
+
+  function updateFBDStats() {
+    const Fx = forces.reduce((s,f) => s + f.val * Math.cos(f.angle * Math.PI/180), 0);
+    // Physics convention: up positive
+    const Fy_phys = forces.reduce((s,f) => s + f.val * Math.sin(f.angle * Math.PI/180), 0);
+    const Fmag = Math.hypot(Fx, Fy_phys);
+    const acc  = Fmag / MASS;
+
+    const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' N';
+    document.getElementById('fbdNetFx').textContent    = fmt(Fx);
+    document.getElementById('fbdNetFy').textContent    = fmt(Fy_phys);
+    document.getElementById('fbdNetFmag').textContent  = Fmag.toFixed(1) + ' N';
+    document.getElementById('fbdAcc').textContent      = acc.toFixed(2) + ' m/s²';
+
+    const sc = SCENARIOS[currentScenario];
+    const balanced = Fmag < 2;
+    const expl = document.getElementById('fbdExplainer');
+    expl.innerHTML = `<strong>${sc.label}.</strong> ` +
+      (balanced
+        ? 'The net force is <strong>~zero — the object is in equilibrium</strong> (Newton\'s 1st Law: constant velocity or at rest).'
+        : `Net force = <strong>${Fmag.toFixed(1)} N</strong> → acceleration = <strong>${acc.toFixed(2)} m/s²</strong> (F = ma, m = ${MASS} kg).`);
+  }
+})();
+
+// Starfield
+(function() {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    stars = [];
+    for (let i = 0; i < 280; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4 + 0.2,
+        a: Math.random(),
+        speed: Math.random() * 0.4 + 0.1,
+        twinkle: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.twinkle += s.speed * 0.02;
+      const alpha = s.a * (0.5 + 0.5 * Math.sin(s.twinkle));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,180,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  init();
+  window.addEventListener('resize', () => { resize(); init(); });
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
