@@ -1,0 +1,2972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Map of Algebra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1b2e;
+      --surface:   #132240;
+      --surface2:  #1a2e52;
+      --border:    rgba(80,140,255,0.14);
+      --border2:   rgba(80,140,255,0.30);
+      --blue:      #5a9fff;
+      --blue2:     #7db8ff;
+      --sky:       #a8d4ff;
+      --text:      #dce8ff;
+      --muted:     #7a9cc8;
+      --dim:       #2a4060;
+
+      --radicals:    #1a4fad;
+      --radicals-bg: rgba(80,140,255,0.09);
+      --complex:     #7c3aed;
+      --complex-bg:  rgba(124,58,237,0.07);
+      --coord:       #0891b2;
+      --coord-bg:    rgba(8,145,178,0.07);
+      --functions:   #0d9488;
+      --functions-bg:rgba(13,148,136,0.07);
+      --linear:      #1d7a3a;
+      --linear-bg:   rgba(29,122,58,0.07);
+      --systems:     #d97706;
+      --systems-bg:  rgba(217,119,6,0.07);
+      --inequalities:#b45309;
+      --inequalities-bg:rgba(180,83,9,0.07);
+      --quadratic:   #dc2626;
+      --quadratic-bg:rgba(220,38,38,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 80px;
+      overflow-x: hidden;
+    }
+
+    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    header, .page-tabs, #mapPage, #practicePage, .modal-backdrop {
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 64px 40px 44px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(80,140,255,0.12) 0%, transparent 100%);
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: 'RADICAL · COMPLEX · FUNCTION · LINEAR · SLOPE · QUADRATIC · PARABOLA · SYSTEM · INEQUALITY · DOMAIN · RANGE · VERTEX';
+      position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+      font-size: 10px; letter-spacing: 0.22em; color: var(--dim);
+      white-space: nowrap; overflow: hidden;
+    }
+    .label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    h1 {
+      font-family: 'Lora', serif; font-weight: 400;
+      font-size: clamp(2.4rem, 5.5vw, 4rem); line-height: 1.05; color: var(--text);
+      text-shadow: 0 0 60px rgba(26,79,173,0.18);
+    }
+    h1 em {
+      font-style: italic; font-weight: 600;
+      background: linear-gradient(135deg, var(--blue), var(--sky));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.08em; }
+
+    /* ── Tabs ── */
+    .page-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+    .page-tab {
+      padding: 14px 28px; font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+      color: var(--muted); user-select: none; white-space: nowrap;
+    }
+    .page-tab:hover { color: var(--text); }
+    .page-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* ── Quarter nav ── */
+    .quarters { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+    .quarter-pill {
+      flex: 1; min-width: 160px; padding: 13px 18px;
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: background 0.2s; text-align: center; user-select: none; color: var(--muted);
+    }
+    .quarter-pill:last-child { border-right: none; }
+    .quarter-pill:hover { background: rgba(80,140,255,0.08); color: var(--text); }
+    .quarter-pill.active { background: rgba(80,140,255,0.12); color: var(--blue); box-shadow: inset 0 -2px 0 var(--blue); }
+    .quarter-pill span { display: block; font-size: 8px; opacity: 0.55; margin-top: 3px; }
+
+    /* ── Search ── */
+    .search-wrap { padding: 28px 32px 0; max-width: 1200px; margin: 0 auto; }
+    .search-wrap input {
+      width: 100%; max-width: 440px; padding: 10px 16px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 4px; outline: none; color: var(--text); transition: border-color 0.2s; caret-color: var(--blue2);
+    }
+    .search-wrap input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(80,140,255,0.18); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    /* ── Card grid ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 32px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; }
+
+    .field {
+      border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+      background: var(--surface); transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+      animation: rise 0.45s ease both;
+    }
+    .field:hover { border-color: var(--border2); box-shadow: 0 0 28px rgba(80,140,255,0.12), 0 4px 24px rgba(0,0,0,0.35); transform: translateY(-3px); }
+    .field.dimmed { display: none; }
+    .field:nth-child(1){animation-delay:.05s} .field:nth-child(2){animation-delay:.10s}
+    .field:nth-child(3){animation-delay:.15s} .field:nth-child(4){animation-delay:.20s}
+    .field:nth-child(5){animation-delay:.25s} .field:nth-child(6){animation-delay:.30s}
+    .field:nth-child(7){animation-delay:.35s} .field:nth-child(8){animation-delay:.40s}
+    .field:nth-child(9){animation-delay:.45s} .field:nth-child(10){animation-delay:.50s}
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    .field-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 13px; }
+    .field-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .field-title { font-family: 'Lora', serif; font-weight: 600; font-size: 1rem; line-height: 1.25; color: var(--text); }
+    .field-tag { display: inline-block; margin-top: 5px; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; font-family: 'IBM Plex Mono', monospace; }
+
+    .field[data-field="radicals"]     .field-header { background: var(--radicals-bg); }
+    .field[data-field="radicals"]     .field-tag    { background: rgba(26,79,173,0.12);  color: var(--radicals);     border: 1px solid rgba(26,79,173,0.28); }
+    .field[data-field="complex"]      .field-header { background: var(--complex-bg); }
+    .field[data-field="complex"]      .field-tag    { background: rgba(124,58,237,0.12); color: var(--complex);      border: 1px solid rgba(124,58,237,0.28); }
+    .field[data-field="coord"]        .field-header { background: var(--coord-bg); }
+    .field[data-field="coord"]        .field-tag    { background: rgba(8,145,178,0.12);  color: var(--coord);        border: 1px solid rgba(8,145,178,0.28); }
+    .field[data-field="functions"]    .field-header { background: var(--functions-bg); }
+    .field[data-field="functions"]    .field-tag    { background: rgba(13,148,136,0.12); color: var(--functions);    border: 1px solid rgba(13,148,136,0.28); }
+    .field[data-field="linear"]       .field-header { background: var(--linear-bg); }
+    .field[data-field="linear"]       .field-tag    { background: rgba(29,122,58,0.12);  color: var(--linear);       border: 1px solid rgba(29,122,58,0.28); }
+    .field[data-field="systems"]      .field-header { background: var(--systems-bg); }
+    .field[data-field="systems"]      .field-tag    { background: rgba(217,119,6,0.12);  color: var(--systems);      border: 1px solid rgba(217,119,6,0.28); }
+    .field[data-field="inequalities"] .field-header { background: var(--inequalities-bg); }
+    .field[data-field="inequalities"] .field-tag    { background: rgba(180,83,9,0.12);   color: var(--inequalities); border: 1px solid rgba(180,83,9,0.28); }
+    .field[data-field="quadratic"]    .field-header { background: var(--quadratic-bg); }
+    .field[data-field="quadratic"]    .field-tag    { background: rgba(220,38,38,0.12);  color: var(--quadratic);    border: 1px solid rgba(220,38,38,0.28); }
+
+    .topic-list { padding: 8px 20px 14px; list-style: none; }
+    .topic-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(80,140,255,0.1); font-size: 12px; line-height: 1.45; }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    .field[data-field="radicals"]     .topic-dot { background: var(--radicals);     box-shadow: 0 0 5px var(--radicals); }
+    .field[data-field="complex"]      .topic-dot { background: var(--complex);      box-shadow: 0 0 5px var(--complex); }
+    .field[data-field="coord"]        .topic-dot { background: var(--coord);        box-shadow: 0 0 5px var(--coord); }
+    .field[data-field="functions"]    .topic-dot { background: var(--functions);    box-shadow: 0 0 5px var(--functions); }
+    .field[data-field="linear"]       .topic-dot { background: var(--linear);       box-shadow: 0 0 5px var(--linear); }
+    .field[data-field="systems"]      .topic-dot { background: var(--systems);      box-shadow: 0 0 5px var(--systems); }
+    .field[data-field="inequalities"] .topic-dot { background: var(--inequalities); box-shadow: 0 0 5px var(--inequalities); }
+    .field[data-field="quadratic"]    .topic-dot { background: var(--quadratic);    box-shadow: 0 0 5px var(--quadratic); }
+
+    .topic-name { cursor: pointer; flex: 1; color: var(--text); border-bottom: 1px dashed transparent; transition: color 0.15s, border-color 0.15s; }
+    .field[data-field="radicals"]     .topic-name:hover { color: var(--radicals);     border-color: var(--radicals); }
+    .field[data-field="complex"]      .topic-name:hover { color: var(--complex);      border-color: var(--complex); }
+    .field[data-field="coord"]        .topic-name:hover { color: var(--coord);        border-color: var(--coord); }
+    .field[data-field="functions"]    .topic-name:hover { color: var(--functions);    border-color: var(--functions); }
+    .field[data-field="linear"]       .topic-name:hover { color: var(--linear);       border-color: var(--linear); }
+    .field[data-field="systems"]      .topic-name:hover { color: var(--systems);      border-color: var(--systems); }
+    .field[data-field="inequalities"] .topic-name:hover { color: var(--inequalities); border-color: var(--inequalities); }
+    .field[data-field="quadratic"]    .topic-name:hover { color: var(--quadratic);    border-color: var(--quadratic); }
+
+    .topic-quarter { font-size: 8px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Modal ── */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,5,18,0.75); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 10px; max-width: 480px; width: 100%;
+      padding: 32px 28px 28px; position: relative;
+      animation: popIn 0.22s ease;
+      box-shadow: 0 0 60px rgba(26,79,173,0.13), 0 20px 60px rgba(0,0,0,0.13);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-tag { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 14px; font-family: 'IBM Plex Mono', monospace; }
+    .modal-title { font-family: 'Lora', serif; font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin-bottom: 10px; color: var(--text); }
+    .modal-quarter { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .modal-desc { font-size: 12.5px; line-height: 1.8; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; }
+    .modal-close { position: absolute; top: 14px; right: 18px; font-size: 20px; cursor: pointer; color: var(--muted); background: none; border: none; transition: color 0.15s; }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── Practice page ── */
+    #practicePage { display: none; max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+    #practicePage.visible { display: block; }
+    #mapPage.hidden { display: none; }
+
+    .practice-section { margin-bottom: 56px; }
+    .practice-section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .practice-section-icon { font-size: 22px; }
+    .practice-section-title { font-family: 'Lora', serif; font-weight: 600; font-size: 1.15rem; color: var(--text); }
+    .practice-section-tag { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; padding: 2px 9px; border-radius: 20px; margin-left: 4px; font-family: 'IBM Plex Mono', monospace; }
+
+    .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 22px 24px; margin-bottom: 16px; transition: border-color 0.2s; box-shadow: 0 1px 4px rgba(26,79,173,0.05); }
+    .question-card:hover { border-color: var(--border2); }
+    .question-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .q-num { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .q-type { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 1px 7px; border-radius: 20px; border: 1px solid var(--border2); color: var(--muted); }
+    .question-text { font-size: 13px; line-height: 1.75; margin-bottom: 16px; color: var(--text); }
+    .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .choice { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; line-height: 1.5; transition: all 0.15s; user-select: none; color: var(--text); }
+    .choice:hover { border-color: var(--blue); background: rgba(80,140,255,0.08); }
+    .choice.correct { border-color: var(--blue); background: rgba(80,140,255,0.12); color: var(--blue); }
+    .choice.wrong   { border-color: #dc2626; background: rgba(220,38,38,0.05); color: #dc2626; }
+    .choice-letter  { font-size: 9px; width: 18px; flex-shrink: 0; margin-top: 1px; opacity: 0.45; }
+    .choice.correct .choice-letter, .choice.wrong .choice-letter { opacity: 1; }
+
+    .reveal-btn { margin-top: 14px; padding: 8px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; background: transparent; border: 1px solid var(--border2); border-radius: 4px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .reveal-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+    .reveal-btn:disabled { opacity: 0.4; cursor: default; }
+    .explanation { display: none; margin-top: 14px; padding: 14px 16px; background: var(--surface2); border-radius: 6px; font-size: 12px; line-height: 1.75; color: var(--muted); border-left: 3px solid var(--blue); }
+    .explanation.visible { display: block; }
+
+    /* ── Short-answer / Problem-solving ── */
+    .ps-type { font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase;
+      padding: 1px 8px; border-radius: 20px; border: 1px solid rgba(255,180,60,0.4);
+      background: rgba(255,180,60,0.1); color: #f59e0b; }
+    .graph-type { font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase;
+      padding: 1px 8px; border-radius: 20px; border: 1px solid rgba(167,139,250,0.4);
+      background: rgba(167,139,250,0.1); color: #a78bfa; }
+    .sa-wrap { margin-top: 14px; display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .sa-input {
+      flex: 1; min-width: 160px; padding: 9px 14px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+      background: var(--surface2); border: 1.5px solid var(--border2);
+      border-radius: 6px; color: var(--text); outline: none; transition: border-color 0.15s;
+    }
+    .sa-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(80,140,255,0.15); }
+    .sa-input.correct { border-color: #16a34a; background: rgba(22,163,74,0.08); }
+    .sa-input.wrong   { border-color: #dc2626; background: rgba(220,38,38,0.07); }
+    .sa-input:disabled { opacity: 0.7; cursor: default; }
+    .sa-check-btn {
+      padding: 9px 18px; background: var(--blue); color: #fff; border: none;
+      border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .sa-check-btn:hover:not(:disabled) { background: var(--blue2); }
+    .sa-check-btn:disabled { opacity: 0.4; cursor: default; }
+    .sa-hint { font-size: 10px; color: var(--muted); margin-top: 6px; font-style: italic; width: 100%; }
+    .ps-section-label {
+      margin: 40px 0 20px; padding: 12px 20px; border-radius: 8px;
+      background: rgba(80,140,255,0.07); border: 1px solid var(--border2);
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .ps-section-label span { font-family: 'Lora', serif; font-size: 1rem; text-transform: none; letter-spacing: 0; color: var(--text); }
+
+    footer { text-align: center; padding: 48px 20px 0; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); position: relative; z-index: 1; }
+
+    /* ── Grapher tab ── */
+    #grapherPage { display: none; position: relative; z-index: 1; height: calc(100vh - 107px); }
+    #grapherPage.visible { display: flex; flex-direction: column; }
+    .gr-body { display: flex; flex: 1; overflow: hidden; }
+    .gr-sidebar {
+      width: 260px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .gr-sidebar-head {
+      padding: 12px 14px 10px; font-size: 9px; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between;
+    }
+    .gr-eq-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .gr-eq-list::-webkit-scrollbar { width: 3px; }
+    .gr-eq-list::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+    .gr-row {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px; margin-bottom: 8px;
+      transition: border-color .15s;
+    }
+    .gr-row.has-error { border-color: rgba(220,38,38,0.4); }
+    .gr-swatch {
+      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+      cursor: pointer; transition: transform .12s;
+    }
+    .gr-swatch:hover { transform: scale(1.35); }
+    .gr-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text);
+      min-width: 0;
+    }
+    .gr-input::placeholder { color: var(--dim); }
+    .gr-vis {
+      background: none; border: none; cursor: pointer; font-size: 12px;
+      color: var(--muted); padding: 0 2px; flex-shrink: 0; transition: color .15s;
+    }
+    .gr-del {
+      background: none; border: none; cursor: pointer; font-size: 13px;
+      color: rgba(220,38,38,0.35); padding: 0 2px; flex-shrink: 0; line-height: 1; transition: color .15s;
+    }
+    .gr-del:hover { color: #dc2626; }
+    .gr-badge {
+      font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+      padding: 1px 6px; border-radius: 10px; margin-top: 5px; margin-left: 19px;
+      display: inline-block;
+    }
+    .gr-err-label {
+      font-size: 9px; color: #dc2626; margin-top: 4px; margin-left: 19px; letter-spacing: .06em;
+    }
+    .gr-add {
+      margin: 4px 8px 8px; padding: 10px; border-radius: 8px;
+      background: transparent; border: 1px dashed var(--border2);
+      color: var(--muted); cursor: pointer; font-size: 11px;
+      letter-spacing: .1em; text-transform: uppercase;
+      font-family: 'IBM Plex Mono', monospace; transition: all .15s;
+    }
+    .gr-add:hover { border-color: var(--blue); color: var(--blue); background: rgba(90,159,255,0.06); }
+    .gr-hint {
+      padding: 10px 14px 14px; border-top: 1px solid var(--border);
+      font-size: 10px; color: var(--muted); line-height: 1.9; flex-shrink: 0;
+    }
+    .gr-hint-title { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+    .gr-hint code {
+      background: var(--bg); padding: 1px 5px; border-radius: 3px;
+      color: var(--text); font-size: 10px; cursor: pointer;
+    }
+    .gr-hint code:hover { color: var(--blue); }
+    .gr-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+    #grCanvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+    .gr-coords {
+      position: absolute; bottom: 12px; right: 14px; pointer-events: none;
+      font-size: 10px; color: var(--muted);
+      background: rgba(10,15,26,0.75); padding: 3px 10px;
+      border-radius: 4px; border: 1px solid var(--border);
+    }
+    .gr-controls {
+      display: flex; gap: 8px; padding: 8px 14px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+      background: var(--surface);
+    }
+    .gr-ctrl-btn {
+      padding: 5px 12px; border-radius: 6px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace; font-size: 11px; transition: all .15s;
+    }
+    .gr-ctrl-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Quadratic & Linear explorer pages ── */
+    #quadraticPage, #linearPage {
+      display: none; position: relative; z-index: 1;
+      height: calc(100vh - 107px);
+    }
+    #quadraticPage.visible, #linearPage.visible { display: flex; flex-direction: column; }
+    .exp-body { display: flex; flex: 1; overflow: hidden; }
+    .exp-sidebar {
+      width: 280px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow-y: auto; padding: 14px 14px 20px;
+      gap: 16px;
+    }
+    .exp-sidebar::-webkit-scrollbar { width: 3px; }
+    .exp-sidebar::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+    .exp-section-title {
+      font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--blue); margin-bottom: 8px;
+    }
+    .exp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .exp-row label { font-size: 11px; color: var(--muted); min-width: 60px; flex-shrink: 0; }
+    .exp-row input[type=range] { flex: 1; accent-color: var(--blue); cursor: pointer; }
+    .exp-row .val { font-size: 11px; color: var(--text); min-width: 40px; text-align: right; font-family: 'IBM Plex Mono', monospace; }
+    .exp-info {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      padding: 12px 14px; font-size: 11px; line-height: 1.85; color: var(--muted);
+    }
+    .exp-info strong { color: var(--blue2); }
+    .exp-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+      font-family: 'IBM Plex Mono', monospace; margin-top: 6px; cursor: default;
+    }
+    .exp-badge.positive { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    .exp-badge.zero     { background: rgba(250,204,21,0.15);  color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+    .exp-badge.negative { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+    .exp-btn {
+      padding: 8px 14px; border-radius: 6px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+      letter-spacing: .08em; text-transform: uppercase; transition: all .15s;
+    }
+    .exp-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .exp-btn.active-preset { border-color: var(--blue); color: var(--blue); background: rgba(80,140,255,0.1); }
+    .exp-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+    .exp-canvas-wrap canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+    .exp-coords {
+      position: absolute; bottom: 12px; right: 14px; pointer-events: none;
+      font-size: 10px; color: var(--muted);
+      background: rgba(10,15,26,0.75); padding: 3px 10px;
+      border-radius: 4px; border: 1px solid var(--border);
+    }
+    .exp-controls {
+      display: flex; gap: 8px; padding: 8px 14px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+      background: var(--surface); align-items: center;
+    }
+    .exp-controls .gr-ctrl-btn { padding: 5px 12px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; transition: all .15s; }
+    .exp-controls .gr-ctrl-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .exp-hint { margin-left: auto; font-size: 10px; color: var(--muted); }
+    .exp-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    .exp-formula {
+      background: rgba(80,140,255,0.07); border: 1px solid rgba(80,140,255,0.22);
+      border-radius: 6px; padding: 10px 13px; margin-bottom: 8px;
+      font-size: 13px; letter-spacing: 0.04em; color: var(--blue2);
+      text-align: center; font-family: 'IBM Plex Mono', monospace;
+    }
+    .exp-formula small { display: block; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .exp-formula strong { color: var(--sky); }
+    .exp-explain {
+      font-size: 10.5px; line-height: 1.85; color: var(--muted);
+      border-left: 2px solid rgba(80,140,255,0.3); padding-left: 10px;
+    }
+    .exp-explain b { color: var(--blue2); }
+    .exp-explain .var-a { color: #f472b6; font-weight: 600; }
+    .exp-explain .var-h { color: #34d399; font-weight: 600; }
+    .exp-explain .var-k { color: #facc15; font-weight: 600; }
+    .exp-explain .var-m { color: #f472b6; font-weight: 600; }
+    .exp-explain .var-b { color: #34d399; font-weight: 600; }
+
+    /* ── "What to notice" dynamic hint box ── */
+    .exp-notice {
+      background: rgba(90,159,255,0.08); border: 1px solid rgba(90,159,255,0.28);
+      border-radius: 6px; padding: 10px 13px; font-size: 10.5px;
+      line-height: 1.8; color: var(--sky); font-style: italic;
+      transition: opacity 0.3s;
+    }
+    .exp-notice::before { content: '💡 '; font-style: normal; }
+
+    /* ── Table of values ── */
+    .exp-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    .exp-table th { font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--blue); padding: 4px 8px; text-align: center;
+      border-bottom: 1px solid var(--border); }
+    .exp-table td { padding: 3px 8px; text-align: center; color: var(--muted);
+      border-bottom: 1px solid rgba(80,140,255,0.06); font-family: 'IBM Plex Mono', monospace; }
+    .exp-table tr:last-child td { border-bottom: none; }
+    .exp-table td:first-child { color: var(--blue2); }
+
+    /* ── Try it link on map cards ── */
+    .try-it-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin: 6px 0 2px; padding: 4px 10px; border-radius: 4px;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      cursor: pointer; border: 1px solid var(--border2); color: var(--blue);
+      background: rgba(80,140,255,0.07); transition: all .15s;
+      font-family: 'IBM Plex Mono', monospace; user-select: none;
+    }
+    .try-it-link:hover { background: rgba(80,140,255,0.16); border-color: var(--blue); }
+
+    /* ── Explorer-linked practice note ── */
+    .explorer-callout {
+      margin-top: 10px; padding: 8px 12px; border-radius: 5px;
+      font-size: 10px; color: var(--blue); background: rgba(80,140,255,0.07);
+      border: 1px solid rgba(80,140,255,0.2); letter-spacing: .02em;
+    }
+
+    /* ── Home button ── */
+    .home-btn {
+      position: fixed; top: 16px; left: 18px; z-index: 200;
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 6px;
+      background: rgba(13, 27, 46, 0.82); border: 1px solid var(--border2);
+      color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      text-decoration: none; cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .home-btn:hover {
+      color: var(--blue2); border-color: var(--blue);
+      background: rgba(80, 140, 255, 0.1);
+    }
+    .home-btn svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 20px 28px; }
+      main, .search-wrap { padding-left: 16px; padding-right: 16px; }
+      #practicePage { padding: 28px 16px 60px; }
+      .page-tab { padding: 12px 14px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<a class="home-btn" href="index.html">
+  <svg viewBox="0 0 20 20"><path d="M10 2L2 9h2v9h5v-5h2v5h5V9h2L10 2z"/></svg>
+  Home
+</a>
+
+<header>
+  <p class="label">Grade 8 · Champaca · Mathematics</p>
+  <h1>Map of <em>Algebra</em></h1>
+  <p class="subtitle">4 quarters · 16 topics · radicals, functions, linearity & quadratics</p>
+</header>
+
+<nav class="page-tabs">
+  <div class="page-tab active" id="tabMap">&#128203; Curriculum Map</div>
+  <div class="page-tab" id="tabPractice">&#9999;&#65039; Practice Exercises</div>
+  <div class="page-tab" id="tabGrapher">&#128200; Grapher</div>
+  <div class="page-tab" id="tabQuadratic">&#8767; Quadratic Explorer</div>
+  <div class="page-tab" id="tabLinear">&#8725; Linear Explorer</div>
+</nav>
+
+<div id="mapPage">
+
+  <nav class="quarters" id="quarterNav">
+    <div class="quarter-pill active" data-q="all">All Topics <span>4 quarters · 16 topics</span></div>
+    <div class="quarter-pill" data-q="Q1">Quarter 1 <span>Radicals &amp; Complex Numbers</span></div>
+    <div class="quarter-pill" data-q="Q2">Quarter 2 <span>Coordinates &amp; Functions</span></div>
+    <div class="quarter-pill" data-q="Q3">Quarter 3 <span>Linear Functions &amp; Systems</span></div>
+    <div class="quarter-pill" data-q="Q4">Quarter 4 <span>Inequalities &amp; Quadratics</span></div>
+  </nav>
+
+  <div class="search-wrap">
+    <input type="text" id="searchBox" placeholder="Search a topic, e.g. 'radical' or 'parabola'…"/>
+  </div>
+
+  <main id="cardGrid">
+
+    <!-- Q1: PROPERTIES OF RADICALS -->
+    <div class="field" data-field="radicals" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">√</div>
+        <div>
+          <div class="field-title">Properties of Radicals &amp; Simplification</div>
+          <span class="field-tag">Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="The nth Root and Radical Notation">
+          <span class="topic-dot"></span><span class="topic-name">The nth Root &amp; Radical Notation</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Product and Quotient Properties of Radicals">
+          <span class="topic-dot"></span><span class="topic-name">Product &amp; Quotient Properties of Radicals</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Simplifying Radicals (Perfect Squares, Cubes)">
+          <span class="topic-dot"></span><span class="topic-name">Simplifying Radicals (Perfect Squares &amp; Cubes)</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Rational Exponent Form: aⁿ/ᵐ = (ᵐ√a)ⁿ">
+          <span class="topic-dot"></span><span class="topic-name">Rational Exponent Form: aⁿ/ᵐ = (ᵐ√a)ⁿ</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q1: OPERATIONS ON RADICALS -->
+    <div class="field" data-field="radicals" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">➕</div>
+        <div>
+          <div class="field-title">Operations on Radicals &amp; Rationalization</div>
+          <span class="field-tag">Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Adding and Subtracting Like Radicals">
+          <span class="topic-dot"></span><span class="topic-name">Adding &amp; Subtracting Like Radicals</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Multiplying Radicals (FOIL with Radicals)">
+          <span class="topic-dot"></span><span class="topic-name">Multiplying Radicals (FOIL with Radicals)</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Rationalizing the Denominator (Monomial and Binomial)">
+          <span class="topic-dot"></span><span class="topic-name">Rationalizing the Denominator</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Conjugate Pairs and Difference of Squares with Radicals">
+          <span class="topic-dot"></span><span class="topic-name">Conjugate Pairs &amp; Difference of Squares</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q1: RADICAL EQUATIONS -->
+    <div class="field" data-field="radicals" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">⚖</div>
+        <div>
+          <div class="field-title">Radical Equations Leading to LEOV</div>
+          <span class="field-tag">Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Solving Radical Equations (Isolate, then Square Both Sides)">
+          <span class="topic-dot"></span><span class="topic-name">Solving Radical Equations (Isolate &amp; Square)</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Extraneous Solutions: Why We Check">
+          <span class="topic-dot"></span><span class="topic-name">Extraneous Solutions: Why We Always Check</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="LEOV: Linear Equations in One Variable">
+          <span class="topic-dot"></span><span class="topic-name">LEOV: Squaring turns the radical equation into a linear one</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q1: APPLICATIONS OF RADICALS -->
+    <div class="field" data-field="radicals" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">🌍</div>
+        <div>
+          <div class="field-title">Applications of Radicals</div>
+          <span class="field-tag">Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Distance Formula Derivation Using Radicals">
+          <span class="topic-dot"></span><span class="topic-name">Distance Formula Derivation</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Radical Models: Free-fall, Pendulum, Speed">
+          <span class="topic-dot"></span><span class="topic-name">Radical Models: Free-fall, Pendulum, Speed</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="radicals" data-title="Geometric Means and Radical Lengths">
+          <span class="topic-dot"></span><span class="topic-name">Geometric Means &amp; Radical Lengths</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q1: COMPLEX NUMBER SYSTEM -->
+    <div class="field" data-field="complex" data-quarters="Q1">
+      <div class="field-header">
+        <div class="field-icon">𝑖</div>
+        <div>
+          <div class="field-title">The Complex Number System</div>
+          <span class="field-tag">Q1</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q1" data-field="complex" data-title="The Imaginary Unit i and Powers of i">
+          <span class="topic-dot"></span><span class="topic-name">The Imaginary Unit <em>i</em> &amp; Powers of <em>i</em></span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="complex" data-title="Complex Numbers in the Form a + bi">
+          <span class="topic-dot"></span><span class="topic-name">Complex Numbers: a + bi Form</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="complex" data-title="Operations on Complex Numbers (Add, Subtract, Multiply, Divide)">
+          <span class="topic-dot"></span><span class="topic-name">Operations on Complex Numbers</span><span class="topic-quarter">Q1</span>
+        </li>
+        <li class="topic-item" data-q="Q1" data-field="complex" data-title="Complex Conjugates and Modulus">
+          <span class="topic-dot"></span><span class="topic-name">Complex Conjugates &amp; Modulus</span><span class="topic-quarter">Q1</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q2: CARTESIAN COORDINATE SYSTEM -->
+    <div class="field" data-field="coord" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">🗺</div>
+        <div>
+          <div class="field-title">The Cartesian Coordinate System</div>
+          <span class="field-tag">Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="coord" data-title="The Four Quadrants, Axes, and Ordered Pairs">
+          <span class="topic-dot"></span><span class="topic-name">The Four Quadrants, Axes &amp; Ordered Pairs</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="coord" data-title="Plotting Points and Reading Coordinates">
+          <span class="topic-dot"></span><span class="topic-name">Plotting Points &amp; Reading Coordinates</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="coord" data-title="Distance Formula: d = √((x₂−x₁)² + (y₂−y₁)²)">
+          <span class="topic-dot"></span><span class="topic-name">Distance Formula</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="coord" data-title="Midpoint Formula: M = ((x₁+x₂)/2, (y₁+y₂)/2)">
+          <span class="topic-dot"></span><span class="topic-name">Midpoint Formula</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q2: RELATIONS AND FUNCTIONS -->
+    <div class="field" data-field="functions" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">f(x)</div>
+        <div>
+          <div class="field-title">Relations &amp; Functions</div>
+          <span class="field-tag">Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Relations: Sets of Ordered Pairs, Tables, Graphs">
+          <span class="topic-dot"></span><span class="topic-name">Relations: Ordered Pairs, Tables &amp; Graphs</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Definition of a Function (Vertical Line Test)">
+          <span class="topic-dot"></span><span class="topic-name">What is a Function? (Vertical Line Test)</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Domain and Range">
+          <span class="topic-dot"></span><span class="topic-name">Domain &amp; Range</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Function Notation: f(x) and Mapping Diagrams">
+          <span class="topic-dot"></span><span class="topic-name">Function Notation &amp; Mapping Diagrams</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="One-to-One Functions and the Horizontal Line Test">
+          <span class="topic-dot"></span><span class="topic-name">One-to-One Functions &amp; Horizontal Line Test</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q2: MORE ABOUT FUNCTIONS -->
+    <div class="field" data-field="functions" data-quarters="Q2">
+      <div class="field-header">
+        <div class="field-icon">⚙</div>
+        <div>
+          <div class="field-title">More About Functions: Evaluation &amp; Operations</div>
+          <span class="field-tag">Q2</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Evaluating Functions: Finding f(a), f(x+h)">
+          <span class="topic-dot"></span><span class="topic-name">Evaluating Functions: f(a), f(x+h)</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Sum, Difference, Product, and Quotient of Functions">
+          <span class="topic-dot"></span><span class="topic-name">Sum, Difference, Product &amp; Quotient of Functions</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Composition of Functions: (f∘g)(x) = f(g(x))">
+          <span class="topic-dot"></span><span class="topic-name">Composition of Functions: (f∘g)(x)</span><span class="topic-quarter">Q2</span>
+        </li>
+        <li class="topic-item" data-q="Q2" data-field="functions" data-title="Problem Set: Real-World Function Applications">
+          <span class="topic-dot"></span><span class="topic-name">Problem Set: Real-World Applications</span><span class="topic-quarter">Q2</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q3: LINEAR FUNCTIONS -->
+    <div class="field" data-field="linear" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">/</div>
+        <div>
+          <div class="field-title">Linear Functions</div>
+          <span class="field-tag">Q3</span>
+          <div class="try-it-link" data-goto="linear">⁄ Try the Linear Explorer →</div>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Slope: Rise over Run, m = (y₂−y₁)/(x₂−x₁)">
+          <span class="topic-dot"></span><span class="topic-name">Slope: Rise over Run</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Slope-Intercept Form: y = mx + b">
+          <span class="topic-dot"></span><span class="topic-name">Slope-Intercept Form: y = mx + b</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Point-Slope Form: y − y₁ = m(x − x₁)">
+          <span class="topic-dot"></span><span class="topic-name">Point-Slope Form: y − y₁ = m(x − x₁)</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Two-Point Form: y − y₁ = ((y₂−y₁)/(x₂−x₁))(x − x₁)">
+          <span class="topic-dot"></span><span class="topic-name">Two-Point Form: y − y₁ = ((y₂−y₁)/(x₂−x₁))(x − x₁)</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Intercepts Form: x/a + y/b = 1">
+          <span class="topic-dot"></span><span class="topic-name">Intercepts Form: x/a + y/b = 1</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q3: PARALLELISM & PERPENDICULARITY -->
+    <div class="field" data-field="linear" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">∥⊥</div>
+        <div>
+          <div class="field-title">Parallelism &amp; Perpendicularity in Algebra</div>
+          <span class="field-tag">Q3</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Parallel Lines: Equal Slopes (m₁ = m₂)">
+          <span class="topic-dot"></span><span class="topic-name">Parallel Lines: Equal Slopes (m₁ = m₂)</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Perpendicular Lines: Negative Reciprocal Slopes (m₁ · m₂ = −1)">
+          <span class="topic-dot"></span><span class="topic-name">Perpendicular Lines: m₁ · m₂ = −1</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="linear" data-title="Writing Equations of Parallel and Perpendicular Lines">
+          <span class="topic-dot"></span><span class="topic-name">Writing Equations of Parallel &amp; Perpendicular Lines</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q3: SLETV -->
+    <div class="field" data-field="systems" data-quarters="Q3">
+      <div class="field-header">
+        <div class="field-icon">⟺</div>
+        <div>
+          <div class="field-title">SLETV — Systems of Linear Equations in 2 Variables</div>
+          <span class="field-tag">Q3</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q3" data-field="systems" data-title="Solving by Graphing: Consistent, Inconsistent, Dependent">
+          <span class="topic-dot"></span><span class="topic-name">Solving by Graphing</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="systems" data-title="Solving by Substitution Method">
+          <span class="topic-dot"></span><span class="topic-name">Solving by Substitution</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="systems" data-title="Solving by Elimination (Addition/Subtraction) Method">
+          <span class="topic-dot"></span><span class="topic-name">Solving by Elimination</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="systems" data-title="Types of Solutions: One, None, Infinitely Many">
+          <span class="topic-dot"></span><span class="topic-name">Types of Solutions: One, None, Infinitely Many</span><span class="topic-quarter">Q3</span>
+        </li>
+        <li class="topic-item" data-q="Q3" data-field="systems" data-title="Word Problems Using Systems of Equations">
+          <span class="topic-dot"></span><span class="topic-name">Word Problems Using Systems</span><span class="topic-quarter">Q3</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q4: SLI2V -->
+    <div class="field" data-field="inequalities" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">≤</div>
+        <div>
+          <div class="field-title">SLI2V — Linear Inequalities in 2 Variables</div>
+          <span class="field-tag">Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="inequalities" data-title="Graphing Linear Inequalities: Boundary Line and Shading">
+          <span class="topic-dot"></span><span class="topic-name">Graphing Linear Inequalities</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="inequalities" data-title="Solid vs. Dashed Boundary Lines (≤ / ≥ vs. < / >)">
+          <span class="topic-dot"></span><span class="topic-name">Solid vs. Dashed Boundary Lines</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="inequalities" data-title="Half-Planes: Testing a Point to Determine the Correct Region">
+          <span class="topic-dot"></span><span class="topic-name">Half-Planes &amp; Testing a Point</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="inequalities" data-title="Systems of Linear Inequalities (Feasible Region)">
+          <span class="topic-dot"></span><span class="topic-name">Systems of Linear Inequalities &amp; Feasible Region</span><span class="topic-quarter">Q4</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q4: QUADRATIC FUNCTIONS -->
+    <div class="field" data-field="quadratic" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">⌒</div>
+        <div>
+          <div class="field-title">Quadratic Functions &amp; Parabolas</div>
+          <span class="field-tag">Q4</span>
+          <div class="try-it-link" data-goto="quadratic">⌒ Try the Quadratic Explorer →</div>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Standard Form: f(x) = ax² + bx + c">
+          <span class="topic-dot"></span><span class="topic-name">Standard Form: f(x) = ax² + bx + c</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Vertex Form: f(x) = a(x − h)² + k">
+          <span class="topic-dot"></span><span class="topic-name">Vertex Form: f(x) = a(x − h)² + k</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Key Features: Vertex, Axis of Symmetry, Intercepts, Direction of Opening">
+          <span class="topic-dot"></span><span class="topic-name">Key Features: Vertex, Axis, Intercepts, Opening</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Transformations of Parabolas (Shifts and Reflections)">
+          <span class="topic-dot"></span><span class="topic-name">Transformations of Parabolas</span><span class="topic-quarter">Q4</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Q4: SOLVING QUADRATICS -->
+    <div class="field" data-field="quadratic" data-quarters="Q4">
+      <div class="field-header">
+        <div class="field-icon">🔍</div>
+        <div>
+          <div class="field-title">The 4 Methods of Solving Quadratics</div>
+          <span class="field-tag">Q4</span>
+        </div>
+      </div>
+      <ul class="topic-list">
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Method 1 — Factoring: (x + p)(x + q) = 0">
+          <span class="topic-dot"></span><span class="topic-name">Method 1 — Factoring</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Method 2 — Square Root Theorem: x² = k → x = ±√k">
+          <span class="topic-dot"></span><span class="topic-name">Method 2 — Square Root Theorem</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Method 3 — Completing the Square: Half, Square, Add">
+          <span class="topic-dot"></span><span class="topic-name">Method 3 — Completing the Square</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="Method 4 — Quadratic Formula: x = (−b ± √(b²−4ac)) / 2a">
+          <span class="topic-dot"></span><span class="topic-name">Method 4 — Quadratic Formula</span><span class="topic-quarter">Q4</span>
+        </li>
+        <li class="topic-item" data-q="Q4" data-field="quadratic" data-title="The Discriminant: b²−4ac and the Nature of Roots">
+          <span class="topic-dot"></span><span class="topic-name">The Discriminant &amp; Nature of Roots</span><span class="topic-quarter">Q4</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+
+  <footer>Grade 8 · Champaca · Map of Algebra</footer>
+
+</div><!-- end #mapPage -->
+
+<!-- PRACTICE PAGE -->
+<div id="practicePage">
+
+  <!-- ── MULTIPLE CHOICE SECTION ── -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">√</div>
+      <div>
+        <span class="practice-section-title">Radicals &amp; Complex Numbers</span>
+        <span class="practice-section-tag" style="background:rgba(80,140,255,0.12);color:#5a9fff;border:1px solid rgba(80,140,255,0.3);">Q1</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q1</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following is the simplified form of √75?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 3√5</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 5√3</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 15√5</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 25√3</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — 5√3.</strong> Factor 75 into a perfect square times something: 75 = 25 × 3. So √75 = √(25 × 3) = √25 · √3 = 5√3. The key step is identifying the largest perfect square factor. 25 is the largest perfect square that divides 75, giving a fully simplified result.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q2</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the rationalized form of 6 / √3?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 2</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 6√3</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 2√3</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 3√2</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — 2√3.</strong> Multiply numerator and denominator by √3: (6/√3) · (√3/√3) = 6√3 / 3 = 2√3. Rationalization removes the radical from the denominator by multiplying by a form of 1. Always simplify the result — here 6/3 = 2.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q3</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Simplify: (2 + √5)(2 − √5)</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> −1</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 4 − √5</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 9</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 4 + √5</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — −1.</strong> This is a conjugate pair: (a + b)(a − b) = a² − b². So (2 + √5)(2 − √5) = 2² − (√5)² = 4 − 5 = −1. Conjugate products always yield a rational number, which is exactly why we use conjugates to rationalize binomial denominators.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q4</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Solve: √(x + 3) = 4. Which value of x is the solution?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> x = 1</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> x = √7</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> x = 19</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> x = 13</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — x = 13.</strong> The radical is already isolated. Square both sides: (√(x+3))² = 4² → x + 3 = 16. Squaring gives the LEOV — a linear equation in one variable: x + 3 = 16. Solve: x = 13. Always check in the original: √(13 + 3) = √16 = 4 ✓. No extraneous solution here.</div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q5</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is i³ equal to?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 1</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> −i</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> i</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> −1</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — −i.</strong> The powers of i cycle with period 4: i¹ = i, i² = −1, i³ = −i, i⁴ = 1, then repeats. So i³ = i² · i = (−1)(i) = −i. To find iⁿ quickly, divide n by 4: remainder 0 → 1, remainder 1 → i, remainder 2 → −1, remainder 3 → −i.</div>
+    </div>
+  </div>
+
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">f(x)</div>
+      <div>
+        <span class="practice-section-title">Functions &amp; the Coordinate Plane</span>
+        <span class="practice-section-tag" style="background:rgba(13,148,136,0.12);color:#2dd4bf;border:1px solid rgba(13,148,136,0.3);">Q2</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q6</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">Which of the following relations is a function?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> {(1,2), (1,3), (2,4)}</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> {(3,1), (3,2), (4,5)}</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> {(1,5), (2,5), (3,5)}</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> {(2,4), (2,−4), (3,9)}</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> A function requires every x-value to map to exactly one y-value. In A and B, x = 1 and x = 3 each appear twice with different y-values — not a function. In D, x = 2 maps to both 4 and −4 — not a function. In C, each x (1, 2, 3) maps to exactly one y (5 each). Having the same output for different inputs is perfectly fine — that just means it's not one-to-one.</div>
+    </div>
+
+    <div class="question-card" data-answer="A">
+      <div class="question-meta"><span class="q-num">Q7</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">If f(x) = 2x² − 3x + 1, what is f(−1)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 6</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> −4</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 0</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 4</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>A — 6.</strong> Substitute x = −1: f(−1) = 2(−1)² − 3(−1) + 1 = 2(1) + 3 + 1 = 6. Be careful: (−1)² = +1, not −1. A common error is applying the negative sign to the exponent before squaring. Always square first, then apply the coefficient.</div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">Q8</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the distance between (1, 2) and (4, 6)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> √7</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> 3</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> √21</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> 5</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D — 5.</strong> d = √((4−1)² + (6−2)²) = √(9 + 16) = √25 = 5. This is actually a 3-4-5 right triangle scaled naturally. The distance formula is the Pythagorean theorem applied to the coordinate plane — the horizontal leg is 3, the vertical leg is 4, so the hypotenuse is 5.</div>
+    </div>
+  </div>
+
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">/</div>
+      <div>
+        <span class="practice-section-title">Linear Functions &amp; Systems</span>
+        <span class="practice-section-tag" style="background:rgba(29,122,58,0.12);color:#4ade80;border:1px solid rgba(29,122,58,0.3);">Q3</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">Q9</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the slope of the line passing through (−2, 5) and (4, −1)?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> 1</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> −1</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> 2</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> −2</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — −1.</strong> m = (y₂ − y₁)/(x₂ − x₁) = (−1 − 5)/(4 − (−2)) = −6/6 = −1. A negative slope means the line falls from left to right. Note: the order of the points doesn't matter as long as you're consistent — subtracting in the same order in both numerator and denominator.</div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">Q10</span><span class="q-type">Multiple Choice</span></div>
+      <p class="question-text">What is the value of the discriminant of 2x² − 4x + 2 = 0, and how many real roots does it have?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Discriminant = 8; two distinct real roots</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Discriminant = −16; no real roots</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Discriminant = 0; one repeated real root</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Discriminant = 4; two distinct real roots</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Discriminant = 0; one repeated real root.</strong> With a=2, b=−4, c=2: D = b² − 4ac = (−4)² − 4(2)(2) = 16 − 16 = 0. When D = 0, there is exactly one real root (a double root). The parabola touches the x-axis at exactly one point — its vertex. In this case x = −b/2a = 4/4 = 1.</div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM SOLVING SECTION ── -->
+  <div class="ps-section-label">
+    🧩 <span>Problem Solving — 15 Questions</span>
+    <span style="margin-left:auto;font-size:9px;color:var(--muted)">Short Answer · Equation Form · Graphing (multiple choice)</span>
+  </div>
+
+  <!-- Q1: RADICALS — SHORT ANSWER -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">√</div>
+      <div>
+        <span class="practice-section-title">Radicals &amp; Complex Numbers — Problem Solving</span>
+        <span class="practice-section-tag" style="background:rgba(80,140,255,0.12);color:#5a9fff;border:1px solid rgba(80,140,255,0.3);">Q1</span>
+      </div>
+    </div>
+
+    <!-- PS1: simplify -->
+    <div class="question-card" data-ps="1" data-accept="4√3|4 √3|4*√3" data-alts="">
+      <div class="question-meta"><span class="q-num">PS1</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Simplify completely: √48</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Write your answer using the √ symbol, e.g. <em>5√2</em></p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="Your answer…" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>4√3.</strong> Factor: 48 = 16 × 3. So √48 = √16 · √3 = 4√3. Always look for the largest perfect square factor — using 4 × 12 first would give 2√12, which needs to be simplified again to 4√3.</div>
+    </div>
+
+    <!-- PS2: add/subtract radicals -->
+    <div class="question-card" data-ps="2" data-accept="7√5|7 √5" data-alts="">
+      <div class="question-meta"><span class="q-num">PS2</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Simplify: 3√5 + 2√20</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="Your answer…" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>7√5.</strong> First simplify √20 = √(4·5) = 2√5. Then: 3√5 + 2(2√5) = 3√5 + 4√5 = 7√5. Like radicals can only be combined after they share the same radicand — here both become √5 after simplification.</div>
+    </div>
+
+    <!-- PS3: multiply with FOIL -->
+    <div class="question-card" data-ps="3" data-accept="2√2-1|-1+2√2|2√2−1" data-alts="">
+      <div class="question-meta"><span class="q-num">PS3</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Expand and simplify: (√2 + 3)(√2 − 1)</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Combine all like terms in your final answer.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="Your answer…" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>2√2 + 2.</strong> FOIL (√2 + 3)(√2 − 1): √2·√2 − √2·1 + 3·√2 − 3·1 = 2 − √2 + 3√2 − 3 = 2√2 − 1. Wait — that's 2 − 1 + (−1 + 3)√2 = 1 + 2√2. Let me redo carefully: (√2)(√2) = 2, (√2)(−1) = −√2, (3)(√2) = 3√2, (3)(−1) = −3. Sum: 2 − √2 + 3√2 − 3 = (2−3) + (3−1)√2 = −1 + 2√2 = 2√2 − 1. ✅ Answer: <strong>2√2 − 1.</strong></div>
+    </div>
+
+    <!-- PS4: solve radical equation -->
+    <div class="question-card" data-ps="4" data-accept="x=6|6" data-alts="">
+      <div class="question-meta"><span class="q-num">PS4</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Solve for x: √(2x − 3) = 3</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="x = ?" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>x = 6.</strong> The radical is already isolated. Square both sides: 2x − 3 = 9 — this is the LEOV, a linear equation in one variable. Solve: 2x = 12, x = 6. Check: √(12 − 3) = √9 = 3 ✓.</div>
+    </div>
+
+    <!-- PS5: complex multiplication -->
+    <div class="question-card" data-ps="5" data-accept="14+5i|14 + 5i|5i+14" data-alts="">
+      <div class="question-meta"><span class="q-num">PS5</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Multiply: (3 + 2i)(4 − i)</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Write in a + bi form.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="a + bi" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>14 + 5i.</strong> FOIL: 3·4 + 3·(−i) + 2i·4 + 2i·(−i) = 12 − 3i + 8i − 2i². Since i² = −1: = 12 − 3i + 8i − 2(−1) = 12 + 2 + 5i = 14 + 5i.</div>
+    </div>
+  </div>
+
+  <!-- Q2: FUNCTIONS — SHORT ANSWER -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⚙</div>
+      <div>
+        <span class="practice-section-title">Functions — Problem Solving</span>
+        <span class="practice-section-tag" style="background:rgba(13,148,136,0.12);color:#2dd4bf;border:1px solid rgba(13,148,136,0.3);">Q2</span>
+      </div>
+    </div>
+
+    <!-- PS6: composition -->
+    <div class="question-card" data-ps="6" data-accept="6|six" data-alts="">
+      <div class="question-meta"><span class="q-num">PS6</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Given f(x) = x² + 2 and g(x) = x − 1, find (f ∘ g)(3).</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="Answer…" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>6.</strong> (f ∘ g)(3) = f(g(3)). First g(3) = 3 − 1 = 2. Then f(2) = 2² + 2 = 6. Always evaluate the inner function first.</div>
+    </div>
+
+    <!-- PS7: equation of linear function given two points -->
+    <div class="question-card" data-ps="7" data-accept="y=2x+1|y = 2x + 1|y=2x+1|f(x)=2x+1" data-alts="">
+      <div class="question-meta"><span class="q-num">PS7</span><span class="ps-type">Equation Form</span></div>
+      <p class="question-text">Write the equation of the line passing through (0, 1) and (2, 5) in slope-intercept form.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="y = mx + b" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>y = 2x + 1.</strong> Slope: m = (5 − 1)/(2 − 0) = 4/2 = 2. Since (0,1) is the y-intercept, b = 1. So y = 2x + 1.</div>
+    </div>
+
+    <!-- PS8: solve radical equation → LEOV -->
+    <div class="question-card" data-ps="8" data-accept="x=9|9" data-alts="">
+      <div class="question-meta"><span class="q-num">PS8</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Solve: √(3x − 2) = 5</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Isolate the radical, square both sides to get the LEOV, then solve and check.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="x = ?" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>x = 9.</strong> The radical is already isolated. Square both sides: 3x − 2 = 25. This is the LEOV — a linear equation in one variable. Solve: 3x = 27 → x = 9. Check: √(27 − 2) = √25 = 5 ✓. No extraneous solution.</div>
+    </div>
+  </div>
+
+  <!-- Q3: LINEAR & SYSTEMS — GRAPHING + SHORT ANSWER -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">📈</div>
+      <div>
+        <span class="practice-section-title">Linear Functions &amp; Systems — Problem Solving</span>
+        <span class="practice-section-tag" style="background:rgba(29,122,58,0.12);color:#4ade80;border:1px solid rgba(29,122,58,0.3);">Q3</span>
+      </div>
+    </div>
+
+    <!-- PS9: graphing — mulcho because graphing -->
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">PS9</span><span class="graph-type">Graphing</span></div>
+      <p class="question-text">Which graph correctly represents y = −2x + 3?</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">Think: slope = −2 (falls left to right), y-intercept = (0, 3).</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> A line rising steeply, crossing y-axis at −3</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> A horizontal line at y = 3</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> A line falling left to right, crossing y-axis at 3 and x-axis at 1.5</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> A line falling left to right, crossing y-axis at −2</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C.</strong> y = −2x + 3 has slope m = −2 (negative → falls from left to right, steep) and y-intercept b = 3 (crosses y-axis at 3). To find the x-intercept: set y = 0 → 0 = −2x + 3 → x = 1.5. So the line crosses (0, 3) and (1.5, 0), and falls steeply — matching option C.</div>
+    </div>
+
+    <!-- PS10: write equation of perpendicular line -->
+    <div class="question-card" data-ps="10" data-accept="y=x/2+4|y = x/2 + 4|y=(1/2)x+4|y = (1/2)x + 4|y=0.5x+4|y = 0.5x + 4" data-alts="">
+      <div class="question-meta"><span class="q-num">PS10</span><span class="ps-type">Equation Form</span></div>
+      <p class="question-text">A line has equation y = −2x + 1. Write the equation of a line perpendicular to it that passes through (0, 4).</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="y = mx + b" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>y = ½x + 4.</strong> The slope of the original line is −2. A perpendicular slope is the negative reciprocal: −1/(−2) = ½. Since the line passes through (0, 4), the y-intercept is 4. So y = ½x + 4. Verify: (−2)(½) = −1 ✓ — slopes are negative reciprocals.</div>
+    </div>
+
+    <!-- PS11: solve system by substitution -->
+    <div class="question-card" data-ps="11" data-accept="(2,3)|(2, 3)|x=2,y=3|x=2 y=3" data-alts="">
+      <div class="question-meta"><span class="q-num">PS11</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Solve the system: y = x + 1 and y = 2x − 1. Write the solution as an ordered pair.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="(x, y)" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>(2, 3).</strong> Set equal: x + 1 = 2x − 1 → x = 2. Then y = 2 + 1 = 3. Check in both: 3 = 2 + 1 ✓ and 3 = 2(2) − 1 ✓. The solution is the point where the two lines intersect.</div>
+    </div>
+
+    <!-- PS12: graphing — mulcho -->
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">PS12</span><span class="graph-type">Graphing</span></div>
+      <p class="question-text">A system of two linear equations is graphed. The two lines are parallel and have different y-intercepts. How many solutions does the system have?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Exactly one — they must intersect somewhere</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> None — parallel lines never intersect</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Infinitely many — they share all points</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Two — one for each line</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B — No solution.</strong> Parallel lines (same slope, different y-intercepts) never intersect, so the system is inconsistent and has no solution. When you solve such a system algebraically, you get a false statement like 0 = 5, which signals no solution. If the lines were identical (same slope, same y-intercept), there would be infinitely many solutions.</div>
+    </div>
+  </div>
+
+  <!-- Q4: QUADRATICS — SHORT ANSWER + GRAPHING -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⌒</div>
+      <div>
+        <span class="practice-section-title">Quadratic Functions — Problem Solving</span>
+        <span class="practice-section-tag" style="background:rgba(220,38,38,0.12);color:#f87171;border:1px solid rgba(220,38,38,0.3);">Q4</span>
+      </div>
+    </div>
+
+    <!-- PS13: vertex form -->
+    <div class="question-card" data-ps="13" data-accept="(3,-4)|(3, -4)|vertex (3,-4)|vertex: (3,-4)" data-alts="">
+      <div class="question-meta"><span class="q-num">PS13</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Write the vertex of the parabola: f(x) = 2(x − 3)² − 4</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="(h, k)" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>(3, −4).</strong> Vertex form is f(x) = a(x − h)² + k, so the vertex is (h, k) = (3, −4). Note: the h value is positive 3 because the form is (x − 3), not (x + 3). Since a = 2 > 0, the parabola opens upward and (3, −4) is the minimum point.</div>
+    </div>
+
+    <!-- PS14: solve by factoring -->
+    <div class="question-card" data-ps="14" data-accept="x=2,x=-5|x=2 and x=-5|x=-5,x=2|{2,-5}|{-5,2}|x=2 x=-5" data-alts="">
+      <div class="question-meta"><span class="q-num">PS14</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Solve by factoring: x² + 3x − 10 = 0</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">List both solutions.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="x = ?, x = ?" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>x = 2 and x = −5.</strong> Find two numbers that multiply to −10 and add to 3: those are 5 and −2. So x² + 3x − 10 = (x + 5)(x − 2) = 0. By the zero-product property: x + 5 = 0 → x = −5, or x − 2 = 0 → x = 2. Check: (2)² + 3(2) − 10 = 4 + 6 − 10 = 0 ✓</div>
+    </div>
+
+    <!-- PS15: graphing — describe the parabola -->
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">PS15</span><span class="graph-type">Graphing</span></div>
+      <p class="question-text">For f(x) = −x² + 4x − 3, which of the following best describes the graph?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Opens upward, vertex at (2, 1), x-intercepts at x = 1 and x = 3</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Opens upward, no x-intercepts, vertex below the x-axis</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Opens downward, vertex at (−2, 1), crosses x-axis at x = −1 and x = −3</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Opens downward, vertex at (2, 1), x-intercepts at x = 1 and x = 3</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D.</strong> a = −1 < 0 → opens downward. Axis of symmetry: x = −b/2a = −4/−2 = 2. Vertex y-value: f(2) = −4 + 8 − 3 = 1. So vertex is (2, 1). To find x-intercepts: −x² + 4x − 3 = 0 → x² − 4x + 3 = 0 → (x−1)(x−3) = 0 → x = 1 and x = 3. The parabola opens down, peaks at (2,1), and crosses x = 1 and x = 3.</div>
+    </div>
+
+  </div>
+
+  <!-- ── EXPLORER-LINKED CHALLENGES ── -->
+  <div class="ps-section-label">
+    🔬 <span>Explorer Challenges — Verify with the Interactive Tools</span>
+    <span style="margin-left:auto;font-size:9px;color:var(--muted)">Use the Linear or Quadratic Explorer to check your answers</span>
+  </div>
+
+  <!-- Linear Explorer challenges -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⁄</div>
+      <div>
+        <span class="practice-section-title">Linear Explorer Challenges</span>
+        <span class="practice-section-tag" style="background:rgba(29,122,58,0.12);color:#4ade80;border:1px solid rgba(29,122,58,0.3);">Q3</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="B">
+      <div class="question-meta"><span class="q-num">EC1</span><span class="graph-type">Explorer</span></div>
+      <p class="question-text">In the Linear Explorer, set m₁ = 3 and b₁ = −2. Which table row is correct for this line?</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">Check your answer using the Table of Values panel in the explorer.</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> When x = 2, y = 4</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> When x = 2, y = 4 &nbsp;✓&nbsp; (3·2 − 2 = 4) — and when x = 0, y = −2</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> When x = 2, y = 1</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> When x = 0, y = 3</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>B.</strong> y = 3x − 2. At x = 2: y = 3(2) − 2 = 6 − 2 = 4. At x = 0: y = 3(0) − 2 = −2 (the y-intercept = b). Open the Linear Explorer, set m₁ = 3 and b₁ = −2, and verify this in the Table of Values panel!
+        <div class="explorer-callout">🔗 Verify this in the <span class="try-it-link" data-goto="linear" style="display:inline;">⁄ Linear Explorer</span></div>
+      </div>
+    </div>
+
+    <div class="question-card" data-ps="EC2" data-accept="y=−3x+1|y=-3x+1|y = -3x + 1|y=−3x + 1|y = −3x + 1" data-alts="">
+      <div class="question-meta"><span class="q-num">EC2</span><span class="ps-type">Equation Form</span></div>
+      <p class="question-text">Write the equation of a line parallel to y = −3x + 5 that passes through (0, 1). Then open the Linear Explorer and use the Parallel preset to see why parallel lines never intersect.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="y = mx + b" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>y = −3x + 1.</strong> Parallel lines share the same slope. The slope of y = −3x + 5 is −3. The new line passes through (0, 1) so b = 1 → y = −3x + 1. In the Linear Explorer, set m₁ = m₂ = −3 with different intercepts — notice "Parallel Lines" appears and the lines never cross.
+        <div class="explorer-callout">🔗 Try the Parallel preset in the <span class="try-it-link" data-goto="linear" style="display:inline;">⁄ Linear Explorer</span></div>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="C">
+      <div class="question-meta"><span class="q-num">EC3</span><span class="graph-type">Explorer</span></div>
+      <p class="question-text">Open the Linear Explorer with both lines visible. Set m₁ = 2, b₁ = 1 and m₂ = −0.5, b₂ = 3. What relationship does the explorer identify, and what is the intersection point?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> Parallel — no intersection</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> Same Line — infinitely many intersections</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> Perpendicular — intersect at (0.8, 2.6)</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> Intersecting — intersect at (1, 3)</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>C — Perpendicular.</strong> Check: 2 × (−0.5) = −1 ✓ (negative reciprocal slopes). Intersection: set equal → 2x + 1 = −0.5x + 3 → 2.5x = 2 → x = 0.8, y = 2(0.8) + 1 = 2.6. Try this in the Explorer — the Perpendicular preset shows the same configuration!
+        <div class="explorer-callout">🔗 Verify with the Perpendicular preset in the <span class="try-it-link" data-goto="linear" style="display:inline;">⁄ Linear Explorer</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quadratic Explorer challenges -->
+  <div class="practice-section">
+    <div class="practice-section-header">
+      <div class="practice-section-icon">⌒</div>
+      <div>
+        <span class="practice-section-title">Quadratic Explorer Challenges</span>
+        <span class="practice-section-tag" style="background:rgba(220,38,38,0.12);color:#f87171;border:1px solid rgba(220,38,38,0.3);">Q4</span>
+      </div>
+    </div>
+
+    <div class="question-card" data-ps="EC4" data-accept="(−2,3)|(-2,3)|(−2, 3)|(-2, 3)" data-alts="">
+      <div class="question-meta"><span class="q-num">EC4</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">In the Quadratic Explorer, set a = 1, h = −2, k = 3. What is the vertex of this parabola? Then verify: does the parabola have real roots? (Check the Discriminant panel.)</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="(h, k)" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>(−2, 3).</strong> In vertex form f(x) = a(x − h)² + k, the vertex is always (h, k) = (−2, 3). Since a = 1 > 0, it opens upward and k = 3 > 0 means the vertex is above the x-axis → D &lt; 0, no real roots. Confirm in the Explorer's Discriminant panel!
+        <div class="explorer-callout">🔗 Set a=1, h=−2, k=3 in the <span class="try-it-link" data-goto="quadratic" style="display:inline;">⌒ Quadratic Explorer</span></div>
+      </div>
+    </div>
+
+    <div class="question-card" data-answer="D">
+      <div class="question-meta"><span class="q-num">EC5</span><span class="graph-type">Explorer</span></div>
+      <p class="question-text">In the Quadratic Explorer, you want to create a parabola that opens downward AND has two real roots. Which combination of settings achieves this?</p>
+      <ul class="choices">
+        <li class="choice" data-val="A"><span class="choice-letter">A</span> a = 1, h = 0, k = 5 — opens up, vertex above x-axis</li>
+        <li class="choice" data-val="B"><span class="choice-letter">B</span> a = −1, h = 0, k = 5 — opens down, vertex far above x-axis, no real roots</li>
+        <li class="choice" data-val="C"><span class="choice-letter">C</span> a = 1, h = 0, k = −3 — opens up, two real roots, but opens upward</li>
+        <li class="choice" data-val="D"><span class="choice-letter">D</span> a = −1, h = 0, k = −3 — opens down, vertex below x-axis → two real roots</li>
+      </ul>
+      <button class="reveal-btn">Check Answer</button>
+      <div class="explanation">✅ <strong>D.</strong> a &lt; 0 makes it open downward (∩). k = −3 puts the vertex at (0, −3), below the x-axis. A downward parabola whose vertex is below the x-axis must cross the x-axis twice → two real roots (D > 0). Try all four in the Explorer and watch the Discriminant badge change!
+        <div class="explorer-callout">🔗 Test each combo in the <span class="try-it-link" data-goto="quadratic" style="display:inline;">⌒ Quadratic Explorer</span></div>
+      </div>
+    </div>
+
+    <div class="question-card" data-ps="EC6" data-accept="k=0|k = 0|k=0.0|set k to 0|k equal 0" data-alts="">
+      <div class="question-meta"><span class="q-num">EC6</span><span class="ps-type">Short Answer</span></div>
+      <p class="question-text">Open the Quadratic Explorer with a = 2, h = 3. What value of k makes the discriminant exactly 0 (one repeated root)? Hint: think about what happens to the vertex position when D = 0.</p>
+      <div class="sa-wrap">
+        <input class="sa-input" type="text" placeholder="k = ?" autocomplete="off" spellcheck="false"/>
+        <button class="sa-check-btn">Check</button>
+      </div>
+      <p class="sa-hint"></p>
+      <div class="explanation">✅ <strong>k = 0.</strong> When D = 0, the vertex touches the x-axis. The vertex y-coordinate is k, so k = 0 places the vertex exactly on the x-axis → one repeated root at x = h = 3. Try it in the Explorer: drag k to 0 and watch the "D = 0 — One repeated root" badge appear, and the roots panel shows x = 3.
+        <div class="explorer-callout">🔗 Confirm by dragging k in the <span class="try-it-link" data-goto="quadratic" style="display:inline;">⌒ Quadratic Explorer</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #practicePage -->
+
+<!-- Topic modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-quarter" id="modalQuarter"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+  </div>
+</div>
+
+<script>
+// ── Particles ───────────────────────────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, dots = [];
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  for(let i=0; i<55; i++) dots.push({
+    x: Math.random()*1600, y: Math.random()*900,
+    vx:(Math.random()-.5)*.28, vy:(Math.random()-.5)*.28,
+    r: Math.random()*1.8+.5, o: Math.random()*.32+.08
+  });
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    dots.forEach(d=>{
+      d.x+=d.vx; d.y+=d.vy;
+      if(d.x<0) d.x=W; if(d.x>W) d.x=0;
+      if(d.y<0) d.y=H; if(d.y>H) d.y=0;
+      ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(100,170,255,${d.o})`; ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+// ── Topic data ───────────────────────────────────────────────────────────────
+const TOPIC_DATA = {
+  'The nth Root and Radical Notation': { q:'Q1', field:'radicals', desc:'The nth root of a number a is written ⁿ√a, meaning the value raised to the nth power equals a. When n=2 it is the square root; n=3 the cube root. A radical expression has three parts: the radical sign, the radicand (number inside), and the index n. When no index is written, assume n=2.' },
+  'Product and Quotient Properties of Radicals': { q:'Q1', field:'radicals', desc:'Product property: ⁿ√(ab) = ⁿ√a · ⁿ√b. Quotient property: ⁿ√(a/b) = ⁿ√a / ⁿ√b (b≠0). These allow you to split or combine radicals — useful for simplifying. Note: these only work within the same index.' },
+  'Simplifying Radicals (Perfect Squares, Cubes)': { q:'Q1', field:'radicals', desc:'A radical is simplified when: (1) no perfect nth power factors remain under the radical, (2) no fractions are under the radical, (3) no radicals in the denominator. Strategy: factor the radicand, identify the perfect square (or cube) factor, pull it out.' },
+  'Rational Exponent Form: aⁿ/ᵐ = (ᵐ√a)ⁿ': { q:'Q1', field:'radicals', desc:'Rational exponents connect radicals and exponents: a^(1/n) = ⁿ√a and a^(m/n) = (ⁿ√a)^m = ⁿ√(aᵐ). The denominator of the exponent is the root index; the numerator is the power. All exponent rules (product, quotient, power) apply to rational exponents.' },
+  'Adding and Subtracting Like Radicals': { q:'Q1', field:'radicals', desc:'Only like radicals (same index and same radicand) can be added or subtracted — just like like terms. Example: 3√5 + 2√5 = 5√5. If radicals look different, simplify first — they may become like radicals after simplification.' },
+  'Multiplying Radicals (FOIL with Radicals)': { q:'Q1', field:'radicals', desc:'To multiply radicals with the same index: ⁿ√a · ⁿ√b = ⁿ√(ab). For binomials with radicals, use FOIL or the distributive property. Special pattern: (√a + √b)(√a − √b) = a − b (difference of squares). This is the basis for rationalization.' },
+  'Rationalizing the Denominator': { q:'Q1', field:'radicals', desc:'Rationalization removes radicals from the denominator. For a monomial denominator: multiply top and bottom by ⁿ√(aⁿ⁻¹) to complete the nth power. For a binomial denominator like (a + √b): multiply by the conjugate (a − √b). The product (a + √b)(a − √b) = a² − b, which is rational.' },
+  'Conjugate Pairs and Difference of Squares with Radicals': { q:'Q1', field:'radicals', desc:'The conjugate of (a + √b) is (a − √b). Their product equals a² − b — a rational number. This is a direct application of the difference of squares: (x+y)(x−y) = x² − y². Conjugates are used to rationalize binomial denominators and simplify complex number division.' },
+  'Solving Radical Equations (Isolate, then Square Both Sides)': { q:'Q1', field:'radicals', desc:'The radical equations in this course all lead to LEOV — Linear Equations in One Variable — after squaring. Steps: (1) Isolate the radical. (2) Square both sides — the radical disappears and a linear equation in one variable remains. (3) Solve it. (4) Always check back in the original, since squaring can produce extraneous solutions.' },
+  'Extraneous Solutions: Why We Check': { q:'Q1', field:'radicals', desc:'After squaring both sides of a radical equation to reach the LEOV, the resulting linear equation may produce a value that does not satisfy the original radical equation. This is called an extraneous solution — it solves the LEOV but fails when plugged back into the original. Always check every solution in the original equation. Example: if squaring gives x = 4 but √(x+1) should equal −2, that fails because square roots are non-negative.' },
+  'LEOV: Linear Equations in One Variable': { q:'Q1', field:'radicals', desc:'LEOV stands for Linear Equations in One Variable. In this course, all radical equations are designed so that after isolating the radical and squaring both sides, the radical disappears and what remains is a simple LEOV. Example: √(2x−3) = 3 → square both sides → 2x − 3 = 9 → 2x = 12 → x = 6. The radical equation “leads to” the LEOV, which is then solved directly. Always check your answer in the original to catch any extraneous solutions.' },
+  'Distance Formula Derivation Using Radicals': { q:'Q1', field:'radicals', desc:'The distance between two points (x₁,y₁) and (x₂,y₂) is d = √((x₂−x₁)² + (y₂−y₁)²). This is derived by applying the Pythagorean theorem to the right triangle formed by the horizontal and vertical distances between the points.' },
+  'Radical Models: Free-fall, Pendulum, Speed': { q:'Q1', field:'radicals', desc:'Real-world radical models include: free-fall time t = √(2h/g), pendulum period T = 2π√(L/g), speed from kinetic energy v = √(2KE/m). In each case, solving for the variable under the radical requires isolating it and squaring both sides.' },
+  'Geometric Means and Radical Lengths': { q:'Q1', field:'radicals', desc:'The geometric mean of two numbers a and b is √(ab). In geometry, radical lengths arise in special right triangles (45-45-90 legs of x give hypotenuse x√2; 30-60-90 legs are x and x√3). Radical lengths also appear in the altitude-on-hypotenuse theorem.' },
+  'The Imaginary Unit i and Powers of i': { q:'Q1', field:'complex', desc:'The imaginary unit i is defined as i = √(−1), so i² = −1. The powers of i cycle with period 4: i¹=i, i²=−1, i³=−i, i⁴=1, i⁵=i, … To find iⁿ, divide n by 4 and use the remainder (0→1, 1→i, 2→−1, 3→−i). This cycle is fundamental to complex number arithmetic.' },
+  'Complex Numbers in the Form a + bi': { q:'Q1', field:'complex', desc:'A complex number has the form a + bi, where a is the real part and b is the imaginary part (both real numbers). If b = 0, the number is purely real. If a = 0, it is purely imaginary. The set of complex numbers ℂ contains all real and imaginary numbers as subsets.' },
+  'Operations on Complex Numbers (Add, Subtract, Multiply, Divide)': { q:'Q1', field:'complex', desc:'Add/subtract: combine real parts and imaginary parts separately. Multiply: use FOIL and replace i²=−1. Example: (2+3i)(1−4i) = 2−8i+3i−12i² = 2−5i+12 = 14−5i. Divide: multiply numerator and denominator by the conjugate of the denominator to get a real denominator.' },
+  'Complex Conjugates and Modulus': { q:'Q1', field:'complex', desc:'The conjugate of (a+bi) is (a−bi). Their product = a²+b², a real number. The modulus (absolute value) of a+bi is |a+bi| = √(a²+b²), representing the distance from the origin in the complex plane. Conjugates are used to divide complex numbers: (a+bi)/(c+di) = [(a+bi)(c−di)] / (c²+d²).' },
+  'The Four Quadrants, Axes, and Ordered Pairs': { q:'Q2', field:'coord', desc:'The Cartesian plane has two perpendicular number lines: the x-axis (horizontal) and y-axis (vertical), intersecting at the origin (0,0). The four quadrants are: I (+,+), II (−,+), III (−,−), IV (+,−). Any point is located by an ordered pair (x,y) where x is the horizontal position and y is the vertical.' },
+  'Plotting Points and Reading Coordinates': { q:'Q2', field:'coord', desc:'To plot (x,y): start at origin, move x units horizontally, then y units vertically. To read a point from a graph, trace horizontally to find x, then vertically to find y. Points on the x-axis have y=0; points on the y-axis have x=0.' },
+  'Distance Formula: d = √((x₂−x₁)² + (y₂−y₁)²)': { q:'Q2', field:'coord', desc:'The distance between (x₁,y₁) and (x₂,y₂) is d = √((x₂−x₁)² + (y₂−y₁)²). It does not matter which point is labeled 1 or 2 since we square the differences. This formula is a direct application of the Pythagorean theorem on the coordinate plane.' },
+  'Midpoint Formula: M = ((x₁+x₂)/2, (y₁+y₂)/2)': { q:'Q2', field:'coord', desc:'The midpoint of the segment joining (x₁,y₁) and (x₂,y₂) is M = ((x₁+x₂)/2, (y₁+y₂)/2). This averages the x-coordinates and the y-coordinates separately. The midpoint always lies exactly halfway between the two endpoints.' },
+  'Relations: Sets of Ordered Pairs, Tables, Graphs': { q:'Q2', field:'functions', desc:'A relation is any set of ordered pairs (x,y). It can be represented as: a set { (1,2),(3,4) }, a table of values, a graph, or a mapping diagram. The domain is the set of all x-values (inputs); the range is the set of all y-values (outputs).' },
+  'Definition of a Function (Vertical Line Test)': { q:'Q2', field:'functions', desc:'A function is a relation where every x-value maps to exactly one y-value. No input has two outputs. Vertical Line Test: if any vertical line crosses the graph more than once, the relation is NOT a function. Every function is a relation, but not every relation is a function.' },
+  'Domain and Range': { q:'Q2', field:'functions', desc:'Domain: the set of all valid inputs (x-values). Range: the set of all corresponding outputs (y-values). For radical functions, the domain restricts to make the radicand ≥ 0. For rational functions, exclude values that make the denominator 0. Range is often found by analyzing the graph or solving for x in terms of y.' },
+  'Function Notation: f(x) and Mapping Diagrams': { q:'Q2', field:'functions', desc:'f(x) is read "f of x" and means the output of function f when the input is x. It does NOT mean f times x. A mapping diagram shows arrows from domain elements to range elements. If any domain element has two arrows, it is not a function.' },
+  'One-to-One Functions and the Horizontal Line Test': { q:'Q2', field:'functions', desc:'A function is one-to-one if every y-value corresponds to exactly one x-value. Horizontal Line Test: if any horizontal line crosses the graph more than once, the function is NOT one-to-one. One-to-one functions have inverse functions. Linear functions (non-horizontal) are always one-to-one.' },
+  'Evaluating Functions: Finding f(a), f(x+h)': { q:'Q2', field:'functions', desc:'To evaluate f(a): substitute a for every x in the function rule. Example: if f(x)=3x²−1, then f(2)=3(4)−1=11. For f(x+h): replace each x with (x+h) and simplify. This appears in the difference quotient (f(x+h)−f(x))/h, which leads to the derivative in calculus.' },
+  'Sum, Difference, Product, and Quotient of Functions': { q:'Q2', field:'functions', desc:'For functions f and g with overlapping domains: (f+g)(x)=f(x)+g(x), (f−g)(x)=f(x)−g(x), (fg)(x)=f(x)·g(x), (f/g)(x)=f(x)/g(x) where g(x)≠0. The domain of the resulting function is the intersection of the original domains (minus zeros of g for division).' },
+  'Composition of Functions: (f∘g)(x) = f(g(x))': { q:'Q2', field:'functions', desc:'Composition means applying one function to the output of another. (f∘g)(x) = f(g(x)): first apply g, then apply f to the result. Order matters: f∘g ≠ g∘f in general. The domain of f∘g is the set of x-values in the domain of g for which g(x) is in the domain of f.' },
+  'Problem Set: Real-World Function Applications': { q:'Q2', field:'functions', desc:'Functions model real-world relationships: cost as a function of quantity, temperature as a function of time, area as a function of side length. Key skills: identifying the input and output, writing a rule, evaluating for specific values, and interpreting the domain in context.' },
+  'Slope: Rise over Run, m = (y₂−y₁)/(x₂−x₁)': { q:'Q3', field:'linear', desc:'Slope m measures steepness and direction. m = rise/run = (y₂−y₁)/(x₂−x₁). Positive slope: rises left to right. Negative slope: falls left to right. Zero slope: horizontal line. Undefined slope: vertical line. The slope is constant for any two points on a line.' },
+  'Slope-Intercept Form: y = mx + b': { q:'Q3', field:'linear', desc:'y = mx + b, where m is the slope and b is the y-intercept (where the line crosses the y-axis). This is the most common form for graphing a line: start at (0,b) and use the slope m = rise/run to find other points. To convert to slope-intercept form, solve for y.' },
+  'Point-Slope Form: y − y₁ = m(x − x₁)': { q:'Q3', field:'linear', desc:'Used when you know a point (x₁,y₁) on the line and the slope m. Useful for writing the equation directly without finding the y-intercept first. Can be converted to slope-intercept or other forms by expanding and rearranging.' },
+  'Two-Point Form: y − y₁ = ((y₂−y₁)/(x₂−x₁))(x − x₁)': { q:'Q3', field:'linear', desc:'Two-point form is simply Point-Slope form with the slope formula substituted in for m. Since m = (y₂−y₁)/(x₂−x₁), plugging it into y − y₁ = m(x − x₁) gives y − y₁ = ((y₂−y₁)/(x₂−x₁))(x − x₁). Use this when you have two points but no slope given — it skips the step of computing m separately.' },
+  'Intercepts Form: x/a + y/b = 1': { q:'Q3', field:'linear', desc:'Intercepts form x/a + y/b = 1, where a is the x-intercept and b is the y-intercept. Both intercepts are read directly from the equation — no rearranging needed. Multiply through by ab to convert to other forms. This form does not apply to lines through the origin (where a or b would be 0).' },
+  'Parallel Lines: Equal Slopes (m₁ = m₂)': { q:'Q3', field:'linear', desc:'Two non-vertical lines are parallel if and only if they have equal slopes (m₁ = m₂) and different y-intercepts. Lines with the same slope never intersect. To write a line parallel to y=mx+b through point P: use the same slope m in point-slope form.' },
+  'Perpendicular Lines: Negative Reciprocal Slopes (m₁ · m₂ = −1)': { q:'Q3', field:'linear', desc:'Two lines are perpendicular if their slopes are negative reciprocals: m₁ · m₂ = −1, i.e., m₂ = −1/m₁. A horizontal line (slope 0) is perpendicular to a vertical line (undefined slope). To write a perpendicular line through a point, flip and negate the original slope.' },
+  'Writing Equations of Parallel and Perpendicular Lines': { q:'Q3', field:'linear', desc:'To write a parallel line: keep the same slope, use the given point in point-slope form. To write a perpendicular line: negate and reciprocate the slope, use the given point. Always simplify to the requested form (slope-intercept or standard).' },
+  'Solving by Graphing: Consistent, Inconsistent, Dependent': { q:'Q3', field:'systems', desc:'Graph both lines on the same axes. The solution is the point(s) of intersection. Consistent and independent: one intersection point (one unique solution). Inconsistent: parallel lines, no intersection (no solution). Consistent and dependent: same line, infinitely many solutions.' },
+  'Solving by Substitution Method': { q:'Q3', field:'systems', desc:'Steps: (1) Solve one equation for one variable. (2) Substitute that expression into the other equation. (3) Solve for the remaining variable. (4) Substitute back to find the other variable. Works best when one variable has a coefficient of 1 or −1.' },
+  'Solving by Elimination (Addition/Subtraction) Method': { q:'Q3', field:'systems', desc:'Steps: (1) Multiply one or both equations so that one variable has opposite coefficients. (2) Add the equations — one variable cancels. (3) Solve for the remaining variable. (4) Substitute back. Also called the addition method or linear combination method.' },
+  'Types of Solutions: One, None, Infinitely Many': { q:'Q3', field:'systems', desc:'One solution: lines intersect at one point; the system is consistent and independent. No solution: lines are parallel (same slope, different y-intercepts); the system is inconsistent. Infinitely many: lines are identical; the system is consistent and dependent. In elimination/substitution, no solution gives a false statement (0=5); infinite gives 0=0.' },
+  'Word Problems Using Systems of Equations': { q:'Q3', field:'systems', desc:'Strategy: (1) Assign variables to the two unknowns. (2) Write two equations from the given conditions. (3) Solve using graphing, substitution, or elimination. (4) Interpret the solution in context. Common types: mixture, rate-distance-time, ages, cost, digit problems.' },
+  'Graphing Linear Inequalities: Boundary Line and Shading': { q:'Q4', field:'inequalities', desc:'To graph a linear inequality: (1) Replace the inequality with = and graph the boundary line. (2) Shade the half-plane that satisfies the inequality. Test the point (0,0) if it is not on the line — if it satisfies the inequality, shade toward it; otherwise, shade away.' },
+  'Solid vs. Dashed Boundary Lines (≤ / ≥ vs. < / >)': { q:'Q4', field:'inequalities', desc:'A solid boundary line (—) is used for ≤ or ≥: the boundary points ARE solutions. A dashed boundary line (- - -) is used for < or >: the boundary points are NOT solutions. This mirrors the closed/open circle convention on number line graphs.' },
+  'Half-Planes: Testing a Point to Determine the Correct Region': { q:'Q4', field:'inequalities', desc:'A line divides the plane into two half-planes. To find the correct side: pick any test point not on the line (usually (0,0)), substitute into the inequality, and check if it is true or false. If true, shade the side containing the test point. If false, shade the other side.' },
+  'Systems of Linear Inequalities (Feasible Region)': { q:'Q4', field:'inequalities', desc:'The solution to a system of inequalities is the intersection of the solution sets — the feasible region. Graph each inequality, shade, and the overlapping region is the solution. Corners of the feasible region (vertices) are important in linear programming for optimization.' },
+  'Standard Form: f(x) = ax² + bx + c': { q:'Q4', field:'quadratic', desc:'The standard form of a quadratic function is f(x) = ax²+bx+c where a≠0. The parabola opens upward if a>0 and downward if a<0. The y-intercept is (0,c). The axis of symmetry is x = −b/(2a). The vertex x-coordinate is −b/(2a); substitute to find the y-coordinate.' },
+  'Vertex Form: f(x) = a(x − h)² + k': { q:'Q4', field:'quadratic', desc:'Vertex form f(x) = a(x−h)²+k directly reveals the vertex (h,k). The axis of symmetry is x=h. If a>0 the parabola opens up with minimum at k; if a<0 it opens down with maximum at k. To convert from standard form, complete the square.' },
+  'Key Features: Vertex, Axis of Symmetry, Intercepts, Direction of Opening': { q:'Q4', field:'quadratic', desc:'Vertex: highest/lowest point (h,k). Axis of symmetry: vertical line x=h that splits the parabola into mirror halves. y-intercept: set x=0. x-intercepts (roots/zeros): set f(x)=0 and solve. Direction of opening: up if a>0, down if a<0. These features are enough to sketch the parabola.' },
+  'Transformations of Parabolas (Shifts and Reflections)': { q:'Q4', field:'quadratic', desc:'From the parent function y=x²: adding k shifts up (k>0) or down (k<0); replacing x with (x−h) shifts right (h>0) or left (h<0); multiplying by a stretches (|a|>1) or compresses (0<|a|<1) vertically; negating a reflects over the x-axis. Combining these gives a(x−h)²+k.' },
+  'Method 1 — Factoring: (x + p)(x + q) = 0': { q:'Q4', field:'quadratic', desc:'Factor ax²+bx+c into (x+p)(x+q)=0, then set each factor to zero: x=−p or x=−q. Works best when the discriminant is a perfect square. Technique: find two numbers that multiply to c (or ac for a≠1) and add to b. Use the zero-product property: if AB=0 then A=0 or B=0.' },
+  'Method 2 — Square Root Theorem: x² = k → x = ±√k': { q:'Q4', field:'quadratic', desc:'If there is no bx term: isolate x² and take the square root of both sides: x = ±√k. Always include both ± solutions. If k<0, the solutions are imaginary: x = ±i√|k|. This method works efficiently on the form a(x−h)²=k by isolating (x−h)² first.' },
+  'Method 3 — Completing the Square: Half, Square, Add': { q:'Q4', field:'quadratic', desc:'Steps: (1) Move the constant to the right. (2) Divide all by a. (3) Take half of the x-coefficient, square it, and add to both sides. (4) Factor the left side as a perfect square trinomial. (5) Apply the square root theorem. Also used to derive the quadratic formula and convert to vertex form.' },
+  'Method 4 — Quadratic Formula: x = (−b ± √(b²−4ac)) / 2a': { q:'Q4', field:'quadratic', desc:'The quadratic formula x = (−b ± √(b²−4ac)) / 2a solves any quadratic equation in standard form ax²+bx+c=0. It is derived by completing the square on the general form. Always write the formula before substituting. Works when factoring is difficult or impossible.' },
+  'The Discriminant: b²−4ac and the Nature of Roots': { q:'Q4', field:'quadratic', desc:'The discriminant D = b²−4ac, the value under the radical in the quadratic formula: D>0 → two distinct real roots (if D is a perfect square, roots are rational). D=0 → one repeated real root (the vertex touches the x-axis). D<0 → two complex conjugate roots (no real x-intercepts, parabola does not cross x-axis).' },
+};
+
+// ── Quarter filter & search ──────────────────────────────────────────────────
+const cards    = document.querySelectorAll('.field');
+const quarters = document.querySelectorAll('.quarter-pill');
+const search   = document.getElementById('searchBox');
+let activeQ = 'all';
+
+function applyFilters(){
+  const q    = activeQ;
+  const term = search.value.toLowerCase();
+  cards.forEach(card => {
+    const matchQ = (q === 'all') || card.dataset.quarters === q;
+    const matchS = !term || card.innerText.toLowerCase().includes(term);
+    card.classList.toggle('dimmed', !(matchQ && matchS));
+  });
+}
+quarters.forEach(btn => {
+  btn.addEventListener('click', () => {
+    quarters.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeQ = btn.dataset.q;
+    applyFilters();
+  });
+});
+search.addEventListener('input', applyFilters);
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+const FIELD_COLORS = {
+  radicals:'#1a4fad', complex:'#7c3aed', coord:'#0891b2',
+  functions:'#0d9488', linear:'#1d7a3a', systems:'#d97706',
+  inequalities:'#b45309', quadratic:'#dc2626'
+};
+const backdrop    = document.getElementById('modalBackdrop');
+const modalTitle  = document.getElementById('modalTitle');
+const modalTag    = document.getElementById('modalTag');
+const modalQuarter= document.getElementById('modalQuarter');
+const modalDesc   = document.getElementById('modalDesc');
+
+document.querySelectorAll('.topic-name').forEach(el => {
+  el.addEventListener('click', () => {
+    const item  = el.closest('.topic-item');
+    const title = item.dataset.title;
+    const data  = TOPIC_DATA[title];
+    if(!data) return;
+    const col = FIELD_COLORS[data.field] || '#1a4fad';
+    modalTag.textContent = data.field.toUpperCase();
+    modalTag.style.background = `${col}18`;
+    modalTag.style.color = col;
+    modalTag.style.border = `1px solid ${col}44`;
+    modalTitle.textContent = title;
+    modalQuarter.textContent = `Quarter ${data.q.replace('Q','')} · ${data.field.charAt(0).toUpperCase()+data.field.slice(1)}`;
+    modalDesc.textContent = data.desc;
+    backdrop.classList.add('open');
+  });
+});
+
+document.getElementById('modalClose').addEventListener('click', () => backdrop.classList.remove('open'));
+backdrop.addEventListener('click', e => { if(e.target === backdrop) backdrop.classList.remove('open'); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') backdrop.classList.remove('open'); });
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+const tabMap       = document.getElementById('tabMap');
+const tabPractice  = document.getElementById('tabPractice');
+const tabGrapher   = document.getElementById('tabGrapher');
+const tabQuadratic = document.getElementById('tabQuadratic');
+const tabLinear    = document.getElementById('tabLinear');
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+const ALL_TABS = [tabMap, tabPractice, tabGrapher, tabQuadratic, tabLinear];
+
+function showTab(tab, pageId) {
+  const grapherPage   = document.getElementById('grapherPage');
+  const quadraticPage = document.getElementById('quadraticPage');
+  const linearPage    = document.getElementById('linearPage');
+  ALL_TABS.forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  mapPage.classList.toggle('hidden', pageId !== 'map');
+  practicePage.classList.toggle('visible', pageId === 'practice');
+  if (grapherPage)   grapherPage.classList.toggle('visible',   pageId === 'grapher');
+  if (quadraticPage) quadraticPage.classList.toggle('visible', pageId === 'quadratic');
+  if (linearPage)    linearPage.classList.toggle('visible',    pageId === 'linear');
+  if (pageId === 'grapher'   && window.grInit)  { window.grInit();  window.grResize();  window.grDraw();  }
+  if (pageId === 'quadratic' && window.qdInit)  { window.qdInit();  window.qdResize();  window.qdDraw();  }
+  if (pageId === 'linear'    && window.linInit) { window.linInit(); window.linResize(); window.linDraw(); }
+}
+
+tabMap.addEventListener('click',       () => showTab(tabMap,       'map'));
+tabPractice.addEventListener('click',  () => showTab(tabPractice,  'practice'));
+tabGrapher.addEventListener('click',   () => showTab(tabGrapher,   'grapher'));
+tabQuadratic.addEventListener('click', () => showTab(tabQuadratic, 'quadratic'));
+tabLinear.addEventListener('click',    () => showTab(tabLinear,    'linear'));
+
+// ── Try-it links from curriculum map + practice explanations ─────────────────
+document.body.addEventListener('click', function(e) {
+  var el = e.target.closest('.try-it-link[data-goto]');
+  if (!el) return;
+  e.stopPropagation();
+  var dest = el.dataset.goto;
+  if (dest === 'linear')    { showTab(tabLinear,    'linear'); }
+  if (dest === 'quadratic') { showTab(tabQuadratic, 'quadratic'); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ── Multiple-choice interactions ─────────────────────────────────────────────
+document.querySelectorAll('.question-card[data-answer]').forEach(card => {
+  const correct     = card.dataset.answer;
+  const choices     = card.querySelectorAll('.choice');
+  const revealBtn   = card.querySelector('.reveal-btn');
+  const explanation = card.querySelector('.explanation');
+  let answered = false;
+
+  choices.forEach(choice => {
+    choice.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        c.classList.add(c.dataset.val === correct ? 'correct' : 'wrong');
+      });
+      if (revealBtn) { revealBtn.disabled = true; }
+      if (explanation) explanation.classList.add('visible');
+    });
+  });
+
+  if (revealBtn) {
+    revealBtn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => c.classList.add(c.dataset.val === correct ? 'correct' : 'wrong'));
+      revealBtn.disabled = true;
+      if (explanation) explanation.classList.add('visible');
+    });
+  }
+});
+
+// ── Short-answer interactions ─────────────────────────────────────────────────
+document.querySelectorAll('.question-card[data-ps]').forEach(card => {
+  const acceptRaw = card.dataset.accept || '';
+  const accepted  = acceptRaw.split('|').map(s => s.trim().toLowerCase().replace(/\s+/g,''));
+  const input     = card.querySelector('.sa-input');
+  const btn       = card.querySelector('.sa-check-btn');
+  const hint      = card.querySelector('.sa-hint');
+  const expl      = card.querySelector('.explanation');
+  if (!input || !btn) return;
+
+  function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g,''); }
+
+  function check() {
+    const val = normalize(input.value);
+    if (!val) { hint.textContent = 'Type your answer first.'; return; }
+    const ok = accepted.some(a => val === a);
+    input.classList.remove('correct','wrong');
+    input.classList.add(ok ? 'correct' : 'wrong');
+    if (ok) {
+      hint.textContent = '';
+      input.disabled = true;
+      btn.disabled = true;
+      if (expl) expl.classList.add('visible');
+    } else {
+      hint.textContent = '✗ Not quite — try again, or click "Show Answer" below.';
+      if (!card.querySelector('.sa-show-btn')) {
+        const show = document.createElement('button');
+        show.className = 'reveal-btn sa-show-btn';
+        show.style.marginTop = '8px';
+        show.textContent = 'Show Answer';
+        show.addEventListener('click', () => {
+          input.disabled = true; btn.disabled = true;
+          hint.textContent = '';
+          if (expl) expl.classList.add('visible');
+          show.remove();
+        });
+        card.querySelector('.sa-wrap').after(show);
+      }
+    }
+  }
+
+  btn.addEventListener('click', check);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+});
+</script>
+
+<!-- GRAPHER PAGE -->
+<div id="grapherPage">
+  <div class="gr-controls">
+    <button class="gr-ctrl-btn" id="grZoomIn">＋ Zoom In</button>
+    <button class="gr-ctrl-btn" id="grZoomOut">－ Zoom Out</button>
+    <button class="gr-ctrl-btn" id="grReset">⌂ Reset View</button>
+    <span style="margin-left:auto;font-size:10px;color:var(--muted);align-self:center;">Scroll to zoom · Drag to pan · Click swatch to change color</span>
+  </div>
+  <div class="gr-body">
+    <div class="gr-sidebar">
+      <div class="gr-sidebar-head">
+        <span>Equations</span>
+        <span id="grCount" style="color:var(--blue);">0</span>
+      </div>
+      <div class="gr-eq-list" id="grEqList"></div>
+      <button class="gr-add" id="grAddBtn">+ Add equation</button>
+      <div class="gr-hint">
+        <div class="gr-hint-title">Syntax — click any example to add</div>
+        <b style="color:var(--text)">Linear</b><br>
+        <code class="gr-ex" data-ex="y = 2x + 1">y = 2x + 1</code>
+        <code class="gr-ex" data-ex="y = -x + 3">y = -x + 3</code><br>
+        <code class="gr-ex" data-ex="2x + 3y = 6">2x + 3y = 6</code><br><br>
+        <b style="color:var(--text)">Quadratic</b><br>
+        <code class="gr-ex" data-ex="y = x^2 - 4">y = x^2 - 4</code><br>
+        <code class="gr-ex" data-ex="y = -2(x-1)^2 + 3">y = -2(x-1)^2 + 3</code><br><br>
+        <b style="color:var(--text)">Inequality</b><br>
+        <code class="gr-ex" data-ex="y >= 2x - 1">y &gt;= 2x - 1</code>
+        <code class="gr-ex" data-ex="y < x^2">y &lt; x^2</code><br><br>
+        <b style="color:var(--text)">Other</b><br>
+        <code class="gr-ex" data-ex="x = 3">x = 3</code>
+      </div>
+    </div>
+    <div class="gr-canvas-wrap">
+      <canvas id="grCanvas"></canvas>
+      <div class="gr-coords" id="grCoords">x: 0.00 &nbsp; y: 0.00</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var GR_COLORS=['#4a9eff','#f472b6','#34d399','#fb923c','#a78bfa','#facc15','#22d3ee','#f87171'];
+var grEqs=[], grNextId=0, grDrag=null, grInitted=false;
+var grView={cx:0,cy:0,scale:55};
+var grIntersectPts=[];
+var grClickedPt=null;
+
+var grCanvas=document.getElementById('grCanvas');
+var grCtx=grCanvas.getContext('2d');
+var grEqList=document.getElementById('grEqList');
+var grCountEl=document.getElementById('grCount');
+var grCoords=document.getElementById('grCoords');
+
+/* ── parser ── */
+function grParse(raw){
+  var s=raw.trim(); if(!s) return null;
+  // vertical x=N
+  var vm=s.match(/^x\s*=\s*(-?[\d.]+)$/i);
+  if(vm) return{kind:'vert',xVal:parseFloat(vm[1]),ineqDir:null,strict:false,fn:null,error:null};
+  // Ax+By=C
+  var sm=s.match(/^(-?[\d.]*)x\s*([+\-]\s*[\d.]*)y\s*=\s*(-?[\d.]+)$/i);
+  if(sm){
+    var A=sm[1]===''||sm[1]==='+'?1:sm[1]==='-'?-1:parseFloat(sm[1]);
+    var Bs=sm[2].replace(/\s/g,'');
+    var B=Bs===''||Bs==='+'?1:Bs==='-'?-1:parseFloat(Bs);
+    var C=parseFloat(sm[3]);
+    if(isNaN(A))A=1; if(isNaN(B))B=1;
+    if(B===0) return{kind:null,fn:null,error:'Cannot isolate y',ineqDir:null,strict:false};
+    return{kind:'fn',fn:function(x){return(C-A*x)/B;},ineqDir:null,strict:false,error:null};
+  }
+  // y OP expr
+  var im=s.match(/^y\s*(>=|<=|>|<|=)\s*(.+)$/i);
+  if(im){
+    var op=im[1], rhsRaw=im[2];
+    var strict=op==='>'||op==='<';
+    var ineqDir=op==='='?null:(op==='>'||op==='>='?'above':'below');
+    var expr=rhsRaw
+      .replace(/\s+/g,'').replace(/\^/g,'**')
+      .replace(/(\d)(x)/g,'$1*$2').replace(/(\d)(\()/g,'$1*$2')
+      .replace(/\)\(/g,')*(').replace(/([a-zA-Z])\(/g,'$1*(');
+    try{
+      var fn=new Function('x','"use strict";var abs=Math.abs,sqrt=Math.sqrt,pow=Math.pow,PI=Math.PI;return '+expr+';');
+      fn(0);fn(1);fn(-1);
+      return{kind:'fn',fn:fn,ineqDir:ineqDir,strict:strict,error:null};
+    }catch(e){
+      return{kind:null,fn:null,error:'Check syntax',ineqDir:null,strict:false};
+    }
+  }
+  return{kind:null,fn:null,error:'Try: y = 2x+1',ineqDir:null,strict:false};
+}
+
+/* ── coord helpers ── */
+function w2c(wx,wy){
+  return[grCanvas.width/2+(wx-grView.cx)*grView.scale,
+         grCanvas.height/2-(wy-grView.cy)*grView.scale];
+}
+function c2w(cx,cy){
+  return[grView.cx+(cx-grCanvas.width/2)/grView.scale,
+         grView.cy-(cy-grCanvas.height/2)/grView.scale];
+}
+
+/* ── draw ── */
+function grDraw(){
+  var W=grCanvas.width, H=grCanvas.height, ctx=grCtx;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+  var worldW=W/grView.scale, worldH=H/grView.scale;
+  var raw2=Math.max(worldW,worldH)/10;
+  var exp=Math.floor(Math.log10(raw2));
+  var mant=raw2/Math.pow(10,exp);
+  var nice=mant<1.5?1:mant<3.5?2:mant<7.5?5:10;
+  var step=nice*Math.pow(10,exp);
+
+  var r0=c2w(0,0), r1=c2w(W,H);
+  var x0w=r0[0],y1w=r0[1], x1w=r1[0],y0w=r1[1];
+
+  // grid
+  ctx.strokeStyle='rgba(99,152,255,0.06)'; ctx.lineWidth=1;
+  for(var wx=Math.floor(x0w/step)*step;wx<=x1w+step;wx+=step){
+    var cx=w2c(wx,0)[0]; ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  }
+  for(var wy=Math.floor(y0w/step)*step;wy<=y1w+step;wy+=step){
+    var cy=w2c(0,wy)[1]; ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  }
+
+  // axes
+  var ap=w2c(0,0); var ax=ap[0],ay=ap[1];
+  ctx.strokeStyle='rgba(99,152,255,0.30)'; ctx.lineWidth=1.5;
+  if(ay>=0&&ay<=H){ctx.beginPath();ctx.moveTo(0,ay);ctx.lineTo(W,ay);ctx.stroke();}
+  if(ax>=0&&ax<=W){ctx.beginPath();ctx.moveTo(ax,0);ctx.lineTo(ax,H);ctx.stroke();}
+
+  // labels
+  ctx.fillStyle='rgba(100,140,210,0.6)'; ctx.font='10px "IBM Plex Mono",monospace';
+  var labelY=Math.min(Math.max(ay+14,14),H-6);
+  var labelX=Math.min(Math.max(ax-6,6),W-40);
+  ctx.textAlign='center';
+  for(var wx2=Math.floor(x0w/step)*step;wx2<=x1w+step;wx2+=step){
+    if(Math.abs(wx2)<step*0.01)continue;
+    var cx2=w2c(wx2,0)[0]; if(cx2<8||cx2>W-8)continue;
+    ctx.fillText(+wx2.toPrecision(5),cx2,labelY);
+  }
+  ctx.textAlign='right';
+  for(var wy2=Math.floor(y0w/step)*step;wy2<=y1w+step;wy2+=step){
+    if(Math.abs(wy2)<step*0.01)continue;
+    var cy2=w2c(0,wy2)[1]; if(cy2<8||cy2>H-8)continue;
+    ctx.fillText(+wy2.toPrecision(5),labelX,cy2+3);
+  }
+  ctx.fillText('0',Math.min(Math.max(ax-6,20),W-20),labelY);
+
+  // inequality fills
+  grEqs.forEach(function(eq){
+    if(!eq.fn||!eq.ineqDir)return;
+    var col=hexRgba(eq.color,0.14), steps=W, dx=(x1w-x0w)/steps;
+    ctx.fillStyle=col; ctx.beginPath();
+    if(eq.ineqDir==='above'){
+      ctx.moveTo(0,0);
+      for(var i=0;i<=steps;i++){
+        var wx3=x0w+i*dx,wy3; try{wy3=eq.fn(wx3);}catch(e){wy3=0;}
+        if(!isFinite(wy3))wy3=-1e6;
+        var p3=w2c(wx3,wy3); ctx.lineTo(p3[0],p3[1]);
+      }
+      ctx.lineTo(W,0); ctx.closePath();
+    }else{
+      ctx.moveTo(0,H);
+      for(var i2=0;i2<=steps;i2++){
+        var wx4=x0w+i2*dx,wy4; try{wy4=eq.fn(wx4);}catch(e){wy4=0;}
+        if(!isFinite(wy4))wy4=0;
+        var p4=w2c(wx4,wy4); ctx.lineTo(p4[0],p4[1]);
+      }
+      ctx.lineTo(W,H); ctx.closePath();
+    }
+    ctx.fill();
+  });
+
+  // curves
+  grEqs.forEach(function(eq){
+    if(eq.kind==='vert'){
+      var vcx=w2c(eq.xVal,0)[0];
+      ctx.strokeStyle=eq.color; ctx.lineWidth=2.2;
+      ctx.setLineDash(eq.strict?[7,4]:[]);
+      ctx.beginPath();ctx.moveTo(vcx,0);ctx.lineTo(vcx,H);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=eq.color; ctx.font='11px "IBM Plex Mono",monospace';
+      ctx.textAlign='left'; ctx.fillText('x='+eq.xVal,vcx+6,20);
+      return;
+    }
+    if(!eq.fn)return;
+    ctx.strokeStyle=eq.color; ctx.lineWidth=2.5;
+    ctx.setLineDash(eq.strict?[7,4]:[]);
+    var steps2=W*2, dx2=(x1w-x0w)/steps2;
+    ctx.beginPath();
+    var pen=false, prevWy=null;
+    for(var i3=0;i3<=steps2;i3++){
+      var wx5=x0w+i3*dx2, wy5;
+      try{wy5=eq.fn(wx5);}catch(e){pen=false;continue;}
+      if(!isFinite(wy5)||isNaN(wy5)){pen=false;continue;}
+      if(prevWy!==null&&Math.abs(wy5-prevWy)>100){pen=false;}
+      var p5=w2c(wx5,wy5);
+      pen?ctx.lineTo(p5[0],p5[1]):ctx.moveTo(p5[0],p5[1]);
+      pen=true; prevWy=wy5;
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  });
+
+  // intersections — draw dots only, store for click-to-reveal
+  var solids=grEqs.filter(function(e){return e.fn&&!e.ineqDir&&!e.error;});
+  grIntersectPts=[];
+  for(var si=0;si<solids.length;si++){
+    for(var sj=si+1;sj<solids.length;sj++){
+      var pts=grIntersect(solids[si].fn,solids[sj].fn,x0w,x1w);
+      pts.forEach(function(pt){
+        var icp=w2c(pt[0],pt[1]); var icx=icp[0],icy=icp[1];
+        if(icx<0||icx>W||icy<0||icy>H)return;
+        ctx.beginPath();ctx.arc(icx,icy,5,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+        grIntersectPts.push({wx:pt[0],wy:pt[1],cx:icx,cy:icy});
+      });
+    }
+  }
+  // Draw label for the clicked intersection point
+  if(grClickedPt){
+    var cpx=grClickedPt.cx, cpy=grClickedPt.cy;
+    var label='('+grClickedPt.wx.toPrecision(4)+', '+grClickedPt.wy.toPrecision(4)+')';
+    ctx.font='11px "IBM Plex Mono",monospace';
+    var lw=ctx.measureText(label).width;
+    var lx=cpx+10, ly=cpy-10;
+    if(lx+lw+10>W) lx=cpx-lw-14;
+    ctx.fillStyle='rgba(13,27,46,0.88)';
+    ctx.beginPath();
+    ctx.roundRect?ctx.roundRect(lx-5,ly-14,lw+10,22,4):ctx.rect(lx-5,ly-14,lw+10,22);
+    ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
+    ctx.stroke();
+    ctx.fillStyle='rgba(220,235,255,0.95)'; ctx.textAlign='left';
+    ctx.fillText(label,lx,ly);
+    // Highlight the clicked dot
+    ctx.beginPath();ctx.arc(cpx,cpy,7,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,0.8)';ctx.lineWidth=2;ctx.stroke();
+  }
+}
+
+function grIntersect(f,g,x0,x1){
+  var pts=[],N=500,dx=(x1-x0)/N,prev=null;
+  for(var i=0;i<=N;i++){
+    var x=x0+i*dx,fy,gy;
+    try{fy=f(x);gy=g(x);}catch(e){prev=null;continue;}
+    if(!isFinite(fy)||!isFinite(gy)){prev=null;continue;}
+    var d=fy-gy;
+    if(prev!==null&&Math.sign(d)!==Math.sign(prev)&&Math.abs(d)<200){
+      var lo=x-dx,hi=x;
+      for(var k=0;k<40;k++){
+        var m=(lo+hi)/2,fm,gm;
+        try{fm=f(m);gm=g(m);}catch(e){break;}
+        Math.sign(fm-gm)===Math.sign(prev)?lo=m:hi=m;
+      }
+      var mx=(lo+hi)/2,my;
+      try{my=(f(mx)+g(mx))/2;}catch(e){my=0;}
+      if(isFinite(my))pts.push([mx,my]);
+    }
+    prev=d;
+  }
+  return pts;
+}
+
+/* ── resize ── */
+function grResize(){
+  var wrap=grCanvas.parentElement;
+  grCanvas.width=wrap.clientWidth;
+  grCanvas.height=wrap.clientHeight;
+}
+
+/* ── add row ── */
+function grAddRow(raw){
+  var id=grNextId++;
+  // Pick the first color not already used; only wrap around if all colors taken
+  var usedColors=grEqs.map(function(e){return e.color;});
+  var color=GR_COLORS[0];
+  for(var ci2=0;ci2<GR_COLORS.length;ci2++){
+    if(usedColors.indexOf(GR_COLORS[ci2])===-1){color=GR_COLORS[ci2];break;}
+    if(ci2===GR_COLORS.length-1){color=GR_COLORS[grEqs.length%GR_COLORS.length];}
+  }
+  var parsed=grParse(raw)||{kind:null,fn:null,ineqDir:null,strict:false,error:null};
+  var eq={id:id,raw:raw,color:color,kind:parsed.kind,fn:parsed.fn,
+          xVal:parsed.xVal,ineqDir:parsed.ineqDir,strict:parsed.strict,error:parsed.error};
+  grEqs.push(eq);
+
+  var wrap=document.createElement('div'); wrap.className='gr-row'; wrap.dataset.id=id;
+  var swatch=document.createElement('div'); swatch.className='gr-swatch';
+  swatch.style.background=eq.color; swatch.title='Click to change color';
+  var ci=GR_COLORS.indexOf(eq.color);
+  swatch.addEventListener('click',function(){
+    ci=(ci+1)%GR_COLORS.length; eq.color=GR_COLORS[ci]; swatch.style.background=eq.color; grDraw();
+  });
+
+  var inp=document.createElement('input'); inp.className='gr-input'; inp.type='text';
+  inp.value=eq.raw; inp.placeholder='y = 2x + 1'; inp.spellcheck=false; inp.autocomplete='off';
+  inp.addEventListener('input',function(){
+    eq.raw=inp.value;
+    var p=grParse(inp.value)||{kind:null,fn:null,ineqDir:null,strict:false,error:null};
+    eq.kind=p.kind; eq.fn=p.fn; eq.xVal=p.xVal;
+    eq.ineqDir=p.ineqDir; eq.strict=p.strict; eq.error=p.error;
+    var errEl=wrap.nextElementSibling;
+    if(errEl&&errEl.classList.contains('gr-row-err'))
+      errEl.textContent=eq.error?'! '+eq.error:'';
+    grDraw();
+  });
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')grAddRow('');});
+
+  var del=document.createElement('button'); del.className='gr-del'; del.textContent='x';
+  del.addEventListener('click',function(){
+    grEqs=grEqs.filter(function(e){return e.id!==id;});
+    var errEl=wrap.nextElementSibling;
+    if(errEl&&errEl.classList.contains('gr-row-err'))errEl.remove();
+    wrap.remove();
+    grCountEl.textContent=grEqs.length; grDraw();
+  });
+
+  var errDiv=document.createElement('div'); errDiv.className='gr-row-err';
+
+  wrap.appendChild(swatch); wrap.appendChild(inp); wrap.appendChild(del);
+  grEqList.appendChild(wrap); grEqList.appendChild(errDiv);
+  grCountEl.textContent=grEqs.length;
+  inp.focus(); grDraw();
+}
+
+/* ── events ── */
+function grSetupEvents(){
+  grCanvas.addEventListener('mousedown',function(e){
+    grDrag={sx:e.clientX,sy:e.clientY,cx:grView.cx,cy:grView.cy};
+    grCanvas.style.cursor='grabbing';
+  });
+  grCanvas.addEventListener('click',function(e){
+    if(grDrag&&(Math.abs(e.clientX-grDrag.sx)>3||Math.abs(e.clientY-grDrag.sy)>3))return;
+    var rect=grCanvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    var hit=null;
+    for(var i=0;i<grIntersectPts.length;i++){
+      var p=grIntersectPts[i];
+      if(Math.sqrt((mx-p.cx)*(mx-p.cx)+(my-p.cy)*(my-p.cy))<=9){hit=p;break;}
+    }
+    grClickedPt=(hit===grClickedPt)?null:hit;
+    grDraw();
+  });
+  window.addEventListener('mousemove',function(e){
+    var rect=grCanvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    if(mx>=0&&mx<=grCanvas.width&&my>=0&&my<=grCanvas.height){
+      var cw=c2w(mx,my);
+      grCoords.innerHTML='x: '+cw[0].toFixed(2)+'&nbsp;&nbsp;y: '+cw[1].toFixed(2);
+    }
+    if(!grDrag)return;
+    grView.cx=grDrag.cx-(e.clientX-grDrag.sx)/grView.scale;
+    grView.cy=grDrag.cy+(e.clientY-grDrag.sy)/grView.scale;
+    grClickedPt=null;
+    grDraw();
+  });
+  window.addEventListener('mouseup',function(){ grDrag=null; grCanvas.style.cursor='crosshair'; });
+
+  grCanvas.addEventListener('wheel',function(e){
+    e.preventDefault();
+    var rect=grCanvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    var cw=c2w(mx,my); var wx=cw[0],wy=cw[1];
+    var factor=e.deltaY<0?1.18:1/1.18;
+    grView.scale*=factor;
+    grView.cx=wx-(mx-grCanvas.width/2)/grView.scale;
+    grView.cy=wy+(my-grCanvas.height/2)/grView.scale;
+    grDraw();
+  },{passive:false});
+
+  document.getElementById('grZoomIn').addEventListener('click',function(){grView.scale*=1.4;grDraw();});
+  document.getElementById('grZoomOut').addEventListener('click',function(){grView.scale/=1.4;grDraw();});
+  document.getElementById('grReset').addEventListener('click',function(){grView={cx:0,cy:0,scale:55};grDraw();});
+  document.getElementById('grAddBtn').addEventListener('click',function(){grAddRow('');});
+
+  document.querySelectorAll('.gr-ex').forEach(function(el){
+    el.style.cursor='pointer'; el.title='Add this example';
+    el.addEventListener('click',function(){grAddRow(el.dataset.ex);});
+  });
+
+  var ro=new ResizeObserver(function(){grResize();grDraw();});
+  ro.observe(grCanvas.parentElement);
+}
+
+/* ── init ── */
+function grInit(){
+  if(grInitted)return; grInitted=true;
+  grResize(); grSetupEvents();
+  grAddRow('y = 2x + 1');
+  grAddRow('y = x^2 - 4');
+  grAddRow('y >= -x + 2');
+}
+
+window.grInit=grInit;
+window.grResize=grResize;
+window.grDraw=grDraw;
+
+function hexRgba(hex,a){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+})();
+</script>
+
+<!-- QUADRATIC EXPLORER PAGE -->
+<div id="quadraticPage">
+  <div class="exp-controls">
+    <button class="gr-ctrl-btn" id="qdZoomIn">＋</button>
+    <button class="gr-ctrl-btn" id="qdZoomOut">－</button>
+    <button class="gr-ctrl-btn" id="qdReset">⌂ Reset View</button>
+    <span class="exp-hint">Drag to pan · Scroll to zoom · Sliders update live</span>
+  </div>
+  <div class="exp-body">
+    <div class="exp-sidebar">
+      <div>
+        <div class="exp-formula">
+          <small>Vertex Form</small>
+          f(x) = <span class="var-a" style="color:#f472b6">a</span>(x − <span class="var-h" style="color:#34d399">h</span>)² + <span class="var-k" style="color:#facc15">k</span>
+        </div>
+        <div class="exp-formula" style="margin-top:4px">
+          <small>Standard Form</small>
+          f(x) = <span class="var-a" style="color:#f472b6">a</span>x² + bx + c
+        </div>
+        <div class="exp-formula" style="margin-top:4px; font-size:11px;">
+          <small>Quadratic Formula (finds roots)</small>
+          x = <strong>(−b ± √(b²−4ac)) / 2a</strong>
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">How the Variables Work</div>
+        <div class="exp-explain">
+          <b><span class="var-a" style="color:#f472b6">a</span> — shape &amp; direction</b><br>
+          Controls how <em>wide or narrow</em> the parabola is, and which way it opens.<br>
+          • <span class="var-a" style="color:#f472b6">a &gt; 0</span> → opens <b>upward</b> (U-shape) — has a minimum<br>
+          • <span class="var-a" style="color:#f472b6">a &lt; 0</span> → opens <b>downward</b> (∩-shape) — has a maximum<br>
+          • |<span class="var-a" style="color:#f472b6">a</span>| &gt; 1 → <b>narrower</b> (steeper sides)<br>
+          • 0 &lt; |<span class="var-a" style="color:#f472b6">a</span>| &lt; 1 → <b>wider</b> (flatter)<br><br>
+          <b><span class="var-h" style="color:#34d399">h</span> — horizontal shift</b><br>
+          Moves the whole parabola <em>left or right</em>. The vertex x-coordinate.<br>
+          • <span class="var-h" style="color:#34d399">h &gt; 0</span> → shifts <b>right</b><br>
+          • <span class="var-h" style="color:#34d399">h &lt; 0</span> → shifts <b>left</b><br>
+          ⚠ In (x − <span class="var-h" style="color:#34d399">h</span>)², the sign flips: (x−3) means h=<b>+3</b>, shifting right.<br><br>
+          <b><span class="var-k" style="color:#facc15">k</span> — vertical shift</b><br>
+          Moves the whole parabola <em>up or down</em>. The vertex y-coordinate.<br>
+          • <span class="var-k" style="color:#facc15">k &gt; 0</span> → shifts <b>up</b><br>
+          • <span class="var-k" style="color:#facc15">k &lt; 0</span> → shifts <b>down</b><br><br>
+          The <b>vertex</b> is always at (<span class="var-h" style="color:#34d399">h</span>, <span class="var-k" style="color:#facc15">k</span>) — the turning point of the parabola.
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">f(x) = <span style="color:#f472b6">a</span>(x − <span style="color:#34d399">h</span>)² + <span style="color:#facc15">k</span> &nbsp;·&nbsp; Adjust</div>
+        <div class="exp-row">
+          <label><span style="color:#f472b6">a</span> (shape)</label>
+          <input type="range" id="qdA" min="-4" max="4" step="0.1" value="1"/>
+          <span class="val" id="qdAVal">1</span>
+        </div>
+        <div class="exp-row">
+          <label><span style="color:#34d399">h</span> (left/right)</label>
+          <input type="range" id="qdH" min="-8" max="8" step="0.25" value="0"/>
+          <span class="val" id="qdHVal">0</span>
+        </div>
+        <div class="exp-row">
+          <label><span style="color:#facc15">k</span> (up/down)</label>
+          <input type="range" id="qdK" min="-8" max="8" step="0.25" value="0"/>
+          <span class="val" id="qdKVal">0</span>
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Standard Form: ax² + bx + c</div>
+        <div class="exp-info" id="qdStdInfo">—</div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Discriminant &amp; Roots</div>
+        <div class="exp-info" id="qdDiscInfo">—</div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Roots (x-intercepts)</div>
+        <div class="exp-info" id="qdRootCoords" style="font-size:10.5px;">—</div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">What to Notice</div>
+        <div class="exp-notice" id="qdNotice">Try moving the sliders and watching how the parabola responds!</div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Display Options</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="exp-btn active-preset" id="qdShowVertex">Vertex</button>
+          <button class="exp-btn active-preset" id="qdShowAxis">Axis</button>
+          <button class="exp-btn active-preset" id="qdShowRoots">Roots</button>
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Presets</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="exp-btn" data-qd-preset="1,0,0">y=x²</button>
+          <button class="exp-btn" data-qd-preset="1,-2,-3">Opens Up</button>
+          <button class="exp-btn" data-qd-preset="-1,0,4">Opens Down</button>
+          <button class="exp-btn" data-qd-preset="0.4,1,-2">Wide</button>
+          <button class="exp-btn" data-qd-preset="3,0,0">Narrow</button>
+          <button class="exp-btn" data-qd-preset="1,0,2">No Roots</button>
+          <button class="exp-btn" data-qd-preset="1,-3,2.25">One Root</button>
+        </div>
+      </div>
+    </div>
+    <div class="exp-canvas-wrap">
+      <canvas id="qdCanvas"></canvas>
+      <div class="exp-coords" id="qdCoords">x: 0.00 &nbsp; y: 0.00</div>
+    </div>
+  </div>
+</div>
+
+<!-- LINEAR EXPLORER PAGE -->
+<div id="linearPage">
+  <div class="exp-controls">
+    <button class="gr-ctrl-btn" id="linZoomIn">＋</button>
+    <button class="gr-ctrl-btn" id="linZoomOut">－</button>
+    <button class="gr-ctrl-btn" id="linReset">⌂ Reset View</button>
+    <span class="exp-hint">Drag to pan · Scroll to zoom · Adjust slope &amp; intercept below</span>
+  </div>
+  <div class="exp-body">
+    <div class="exp-sidebar">
+      <div>
+        <div class="exp-formula">
+          <small>Slope-Intercept Form</small>
+          y = <span class="var-m" style="color:#f472b6">m</span>x + <span class="var-b" style="color:#34d399">b</span>
+        </div>
+        <div class="exp-formula" style="margin-top:4px;font-size:11px;">
+          <small>Slope Formula</small>
+          <strong>m = (y₂ − y₁) / (x₂ − x₁) = rise / run</strong>
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">How the Variables Work</div>
+        <div class="exp-explain">
+          <b><span class="var-m" style="color:#f472b6">m</span> — slope (steepness &amp; direction)</b><br>
+          How much y changes for every 1 unit you move right.<br>
+          • <span class="var-m" style="color:#f472b6">m &gt; 0</span> → line rises left to right (<b>positive slope</b>)<br>
+          • <span class="var-m" style="color:#f472b6">m &lt; 0</span> → line falls left to right (<b>negative slope</b>)<br>
+          • <span class="var-m" style="color:#f472b6">m = 0</span> → perfectly <b>horizontal</b> line (no rise)<br>
+          • <span class="var-m" style="color:#f472b6">|m| &gt; 1</span> → <b>steeper</b> line (rises quickly)<br>
+          • <span class="var-m" style="color:#f472b6">0 &lt; |m| &lt; 1</span> → <b>shallower</b> line (rises slowly)<br>
+          • <span class="var-m" style="color:#f472b6">undefined</span> → <b>vertical</b> line (x = constant) — slope doesn't exist because division by zero: run = 0<br><br>
+          <b><span class="var-b" style="color:#34d399">b</span> — y-intercept</b><br>
+          Where the line crosses the <b>y-axis</b> (when x = 0).<br>
+          • <span class="var-b" style="color:#34d399">b &gt; 0</span> → crosses y-axis <b>above</b> origin<br>
+          • <span class="var-b" style="color:#34d399">b &lt; 0</span> → crosses y-axis <b>below</b> origin<br>
+          • <span class="var-b" style="color:#34d399">b = 0</span> → line passes through the <b>origin</b><br><br>
+          The equation y = <span class="var-m" style="color:#f472b6">m</span>x + <span class="var-b" style="color:#34d399">b</span> lets you instantly read the slope and y-intercept directly from the formula.
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Line 1 &nbsp;·&nbsp; y = <span style="color:#f472b6">m₁</span>x + <span style="color:#34d399">b₁</span></div>
+        <div id="linUndef1Wrap" style="display:none;font-size:10px;color:#f472b6;padding:4px 0 6px;letter-spacing:.04em;">
+          ⚠ Undefined slope — vertical line x = <span id="linUndef1Val">0</span>
+        </div>
+        <div class="exp-row">
+          <label><span style="color:#f472b6">m₁</span> slope</label>
+          <input type="range" id="linM1" min="-6" max="6" step="0.1" value="1"/>
+          <span class="val" id="linM1Val">1</span>
+        </div>
+        <div class="exp-row">
+          <label><span style="color:#34d399">b₁</span> intercept</label>
+          <input type="range" id="linB1" min="-8" max="8" step="0.25" value="0"/>
+          <span class="val" id="linB1Val">0</span>
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div class="exp-section-title" style="margin:0">Line 2</div>
+          <button class="exp-btn" id="linToggleLine2" style="padding:3px 10px;font-size:9px;">Show</button>
+        </div>
+        <div id="linLine2Controls">
+          <div id="linUndef2Wrap" style="display:none;font-size:10px;color:#f472b6;padding:4px 0 6px;letter-spacing:.04em;">
+            ⚠ Undefined slope — vertical line x = <span id="linUndef2Val">0</span>
+          </div>
+          <div class="exp-row">
+            <label><span style="color:#f472b6">m₂</span> slope</label>
+            <input type="range" id="linM2" min="-6" max="6" step="0.1" value="2"/>
+            <span class="val" id="linM2Val">2</span>
+          </div>
+          <div class="exp-row">
+            <label><span style="color:#34d399">b₂</span> intercept</label>
+            <input type="range" id="linB2" min="-8" max="8" step="0.25" value="3"/>
+            <span class="val" id="linB2Val">3</span>
+          </div>
+        </div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Table of Values — Line 1</div>
+        <table class="exp-table" id="linTable">
+          <thead><tr><th>x</th><th>y</th></tr></thead>
+          <tbody id="linTableBody"></tbody>
+        </table>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">What to Notice</div>
+        <div class="exp-notice" id="linNotice">Try adjusting the slope and intercept and see what changes!</div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Relationship</div>
+        <div class="exp-info" id="linRelInfo">—</div>
+      </div>
+      <div class="exp-divider"></div>
+      <div>
+        <div class="exp-section-title">Presets</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="exp-btn" data-lin-preset="parallel">Parallel</button>
+          <button class="exp-btn" data-lin-preset="perpendicular">Perpendicular</button>
+          <button class="exp-btn" data-lin-preset="intersecting">Intersecting</button>
+          <button class="exp-btn" data-lin-preset="coincident">Same Line</button>
+          <button class="exp-btn" data-lin-preset="horizontal">Horizontal</button>
+          <button class="exp-btn" data-lin-preset="steep">Steep vs Shallow</button>
+          <button class="exp-btn" data-lin-preset="undefined">Undefined Slope</button>
+        </div>
+      </div>
+    </div>
+    <div class="exp-canvas-wrap">
+      <canvas id="linCanvas"></canvas>
+      <div class="exp-coords" id="linCoords">x: 0.00 &nbsp; y: 0.00</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   QUADRATIC EXPLORER
+   ════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var canvas, ctx, view={cx:0,cy:0,scale:55}, drag=null, initted=false;
+var a=1, h=0, k=0;
+var showVertex=true, showAxis=true, showRoots=true;
+
+function init(){
+  if(initted)return; initted=true;
+  canvas=document.getElementById('qdCanvas');
+  ctx=canvas.getContext('2d');
+  resize();
+  setupSliders();
+  setupEvents();
+  draw();
+}
+
+function resize(){
+  var wrap=canvas.parentElement;
+  canvas.width=wrap.clientWidth;
+  canvas.height=wrap.clientHeight;
+}
+
+function w2c(wx,wy){ return[canvas.width/2+(wx-view.cx)*view.scale, canvas.height/2-(wy-view.cy)*view.scale]; }
+function c2w(cx,cy){ return[view.cx+(cx-canvas.width/2)/view.scale, view.cy-(cy-canvas.height/2)/view.scale]; }
+
+function fn(x){ return a*(x-h)*(x-h)+k; }
+
+// Convert vertex form a,h,k to standard form ax²+bx+c
+function toStandard(){ return {a:a, b:-2*a*h, c:a*h*h+k}; }
+function discriminant(){ var s=toStandard(); return s.b*s.b-4*s.a*s.c; }
+
+function draw(){
+  if(!canvas)return;
+  var W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+  // grid/axes
+  var r0=c2w(0,0), r1=c2w(W,H);
+  var x0w=r0[0],y1w=r0[1],x1w=r1[0],y0w=r1[1];
+  var worldRange=Math.max(x1w-x0w,y1w-y0w)/10;
+  var exp=Math.floor(Math.log10(worldRange));
+  var mant=worldRange/Math.pow(10,exp);
+  var nice=mant<1.5?1:mant<3.5?2:mant<7.5?5:10;
+  var step=nice*Math.pow(10,exp);
+
+  ctx.strokeStyle='rgba(99,152,255,0.06)'; ctx.lineWidth=1;
+  for(var wx=Math.floor(x0w/step)*step;wx<=x1w+step;wx+=step){var cx2=w2c(wx,0)[0];ctx.beginPath();ctx.moveTo(cx2,0);ctx.lineTo(cx2,H);ctx.stroke();}
+  for(var wy=Math.floor(y0w/step)*step;wy<=y1w+step;wy+=step){var cy2=w2c(0,wy)[1];ctx.beginPath();ctx.moveTo(0,cy2);ctx.lineTo(W,cy2);ctx.stroke();}
+
+  var ap=w2c(0,0); var ax=ap[0],ay=ap[1];
+  ctx.strokeStyle='rgba(99,152,255,0.30)'; ctx.lineWidth=1.5;
+  if(ay>=0&&ay<=H){ctx.beginPath();ctx.moveTo(0,ay);ctx.lineTo(W,ay);ctx.stroke();}
+  if(ax>=0&&ax<=W){ctx.beginPath();ctx.moveTo(ax,0);ctx.lineTo(ax,H);ctx.stroke();}
+
+  ctx.fillStyle='rgba(100,140,210,0.6)'; ctx.font='10px "IBM Plex Mono",monospace';
+  var labelY=Math.min(Math.max(ay+14,14),H-6);
+  var labelX=Math.min(Math.max(ax-6,6),W-40);
+  ctx.textAlign='center';
+  for(var wx2=Math.floor(x0w/step)*step;wx2<=x1w+step;wx2+=step){if(Math.abs(wx2)<step*0.01)continue;var cx3=w2c(wx2,0)[0];if(cx3<8||cx3>W-8)continue;ctx.fillText(+wx2.toPrecision(4),cx3,labelY);}
+  ctx.textAlign='right';
+  for(var wy2=Math.floor(y0w/step)*step;wy2<=y1w+step;wy2+=step){if(Math.abs(wy2)<step*0.01)continue;var cy3=w2c(0,wy2)[1];if(cy3<8||cy3>H-8)continue;ctx.fillText(+wy2.toPrecision(4),labelX,cy3+3);}
+  ctx.fillText('0',Math.min(Math.max(ax-6,20),W-20),labelY);
+
+  // Axis of symmetry
+  if(showAxis){
+    var axisX=w2c(h,0)[0];
+    ctx.strokeStyle='rgba(250,204,21,0.35)'; ctx.lineWidth=1.2; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(axisX,0); ctx.lineTo(axisX,H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(250,204,21,0.65)'; ctx.font='10px "IBM Plex Mono",monospace'; ctx.textAlign='center';
+    ctx.fillText('x = '+h.toFixed(2), axisX, 18);
+  }
+
+  // Draw parabola — skip when a=0 (straight line)
+  var color='#4a9eff';
+  if(a===0){
+    var yc=w2c(0,k)[1];
+    ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(0,yc); ctx.lineTo(W,yc); ctx.stroke();
+  } else {
+    ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    var steps=W*2, dx=(x1w-x0w)/steps;
+    ctx.beginPath();
+    var pen=false, prevWy=null;
+    for(var i=0;i<=steps;i++){
+      var wx3=x0w+i*dx, wy3=fn(wx3);
+      if(!isFinite(wy3)){pen=false;continue;}
+      if(prevWy!==null&&Math.abs(wy3-prevWy)>200){pen=false;}
+      var p=w2c(wx3,wy3);
+      pen?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);
+      pen=true; prevWy=wy3;
+    }
+    ctx.stroke();
+  }
+
+  // Vertex dot + label
+  if(showVertex){
+    var vp=w2c(h,k);
+    ctx.beginPath(); ctx.arc(vp[0],vp[1],6,0,Math.PI*2);
+    ctx.fillStyle='rgba(80,140,255,0.25)'; ctx.fill();
+    ctx.strokeStyle='#4a9eff'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#7db8ff'; ctx.font='bold 11px "IBM Plex Mono",monospace';
+    ctx.textAlign='left';
+    var vLabel='V('+h.toFixed(2)+', '+k.toFixed(2)+')';
+    ctx.fillText(vLabel, vp[0]+9, vp[1]-6);
+  }
+
+  // Roots
+  if(showRoots && a!==0){
+    var disc=discriminant();
+    if(disc>0){
+      var s=toStandard();
+      var r1x=(-s.b+Math.sqrt(disc))/(2*s.a);
+      var r2x=(-s.b-Math.sqrt(disc))/(2*s.a);
+      [r1x,r2x].forEach(function(rx){
+        var rp=w2c(rx,0);
+        if(rp[0]<0||rp[0]>W)return;
+        ctx.beginPath(); ctx.arc(rp[0],rp[1],5,0,Math.PI*2);
+        ctx.fillStyle='rgba(52,211,153,0.2)'; ctx.fill();
+        ctx.strokeStyle='#34d399'; ctx.lineWidth=1.8; ctx.stroke();
+        ctx.fillStyle='#34d399'; ctx.font='10px "IBM Plex Mono",monospace';
+        ctx.textAlign='center';
+        ctx.fillText(rx.toFixed(2), rp[0], rp[1]+16);
+      });
+    } else if(Math.abs(disc)<1e-8){
+      var rp2=w2c(h,0);
+      ctx.beginPath(); ctx.arc(rp2[0],rp2[1],5,0,Math.PI*2);
+      ctx.fillStyle='rgba(250,204,21,0.2)'; ctx.fill();
+      ctx.strokeStyle='#facc15'; ctx.lineWidth=1.8; ctx.stroke();
+      ctx.fillStyle='#facc15'; ctx.font='10px "IBM Plex Mono",monospace';
+      ctx.textAlign='center';
+      ctx.fillText(h.toFixed(2), rp2[0], rp2[1]+16);
+    }
+  }
+
+  // Update info panels
+  updateInfo();
+}
+
+function updateInfo(){
+  var s=toStandard();
+  var bStr=(s.b>=0?'+':'')+s.b.toFixed(2);
+  var cStr=(s.c>=0?'+':'')+s.c.toFixed(2);
+  document.getElementById('qdStdInfo').innerHTML=
+    '<strong>f(x) = '+s.a.toFixed(2)+'x² '+bStr+'x '+cStr+'</strong><br>'
+    +'<span style="font-size:10px;color:var(--muted)">where b='+(s.b.toFixed(2))+', c='+s.c.toFixed(2)+'</span>';
+
+  var disc=discriminant();
+  var discEl=document.getElementById('qdDiscInfo');
+  var discStr='D = b² − 4ac = '+(disc).toFixed(3);
+  var badge, roots;
+  if(a===0){
+    badge=''; roots='<em>a = 0: not a quadratic (horizontal line)</em>';
+  } else if(disc>1e-8){
+    badge='<span class="exp-badge positive">D &gt; 0 — Two real roots</span>';
+    roots='The parabola crosses the x-axis at <strong>two points</strong>.';
+  } else if(disc>-1e-8){
+    badge='<span class="exp-badge zero">D = 0 — One repeated root</span>';
+    roots='The parabola just <strong>touches</strong> the x-axis at the vertex.';
+  } else {
+    badge='<span class="exp-badge negative">D &lt; 0 — No real roots</span>';
+    roots='The parabola does <strong>not</strong> cross the x-axis.';
+  }
+  discEl.innerHTML=discStr+'<br>'+badge+'<br><span style="font-size:10px;margin-top:4px;display:block;">'+roots+'</span>';
+
+  // Root coordinates
+  var rootEl=document.getElementById('qdRootCoords');
+  if(a===0){ rootEl.innerHTML='<em>Not a quadratic.</em>'; }
+  else if(disc>1e-8){
+    var r1=(-s.b+Math.sqrt(disc))/(2*s.a), r2=(-s.b-Math.sqrt(disc))/(2*s.a);
+    rootEl.innerHTML='x₁ = <strong>'+r1.toFixed(3)+'</strong> &nbsp;→ <strong>('+r1.toFixed(2)+', 0)</strong><br>'
+      +'x₂ = <strong>'+r2.toFixed(3)+'</strong> &nbsp;→ <strong>('+r2.toFixed(2)+', 0)</strong>';
+  } else if(disc>-1e-8){
+    var r0=(-s.b)/(2*s.a);
+    rootEl.innerHTML='x = <strong>'+r0.toFixed(3)+'</strong> &nbsp;→ <strong>('+r0.toFixed(2)+', 0)</strong> (double root)';
+  } else {
+    var re=(-s.b)/(2*s.a), im=Math.sqrt(-disc)/(2*s.a);
+    rootEl.innerHTML='No real roots.<br><span style="font-size:10px;color:var(--muted)">Complex: '+re.toFixed(2)+(im>=0?'+':'')+im.toFixed(2)+'i &nbsp;and&nbsp; '+re.toFixed(2)+((-im)>=0?'+':'')+(-im).toFixed(2)+'i</span>';
+  }
+
+  // Dynamic "what to notice" hint
+  var noticeEl=document.getElementById('qdNotice');
+  var hint='';
+  if(a===0){ hint='Set a ≠ 0 to create a parabola.'; }
+  else if(Math.abs(a)>2){ hint='Large |a| = '+Math.abs(a).toFixed(1)+' makes the parabola narrow — the sides rise steeply because x² is scaled up strongly.'; }
+  else if(Math.abs(a)<0.5&&a!==0){ hint='Small |a| = '+Math.abs(a).toFixed(1)+' makes the parabola wide — the x² term is barely scaled, so the curve flattens out.'; }
+  else if(a<0){ hint='a is negative → the parabola opens downward (∩). The vertex is a maximum point, not a minimum.'; }
+  else if(disc<-1e-8){ hint='D < 0: the parabola never reaches the x-axis. Try lowering k or changing a to create real roots.'; }
+  else if(Math.abs(disc)<0.5){ hint='D ≈ 0: the parabola barely touches the x-axis at one point — the vertex is right on it!'; }
+  else if(Math.abs(h)>4){ hint='Large |h| = '+Math.abs(h).toFixed(1)+': the vertex has shifted far '+(h>0?'right':'left')+'. Notice the axis of symmetry moves with it.'; }
+  else if(Math.abs(k)>4){ hint='k = '+k.toFixed(1)+': the whole parabola has shifted '+(k>0?'up':'down')+' — every y-value including the vertex moved by exactly k.'; }
+  else if(disc>1e-8){ hint='Two real roots! Drag to see where the parabola crosses the x-axis. Moving k down or up shifts both roots symmetrically around the axis.'; }
+  else { hint='Move the sliders to see how each variable transforms the parabola independently.'; }
+  noticeEl.textContent=hint;
+}
+
+function setupSliders(){
+  function bind(id,valId,setter){
+    var el=document.getElementById(id);
+    var vEl=document.getElementById(valId);
+    el.addEventListener('input',function(){
+      setter(parseFloat(el.value));
+      vEl.textContent=parseFloat(el.value).toFixed(el.step<0.5?2:1);
+      draw();
+    });
+  }
+  bind('qdA','qdAVal',function(v){a=v;});
+  bind('qdH','qdHVal',function(v){h=v;});
+  bind('qdK','qdKVal',function(v){k=v;});
+
+  // Toggle buttons
+  function toggle(id,flagSetter,getFlag){
+    var btn=document.getElementById(id);
+    btn.addEventListener('click',function(){
+      flagSetter(!getFlag());
+      btn.classList.toggle('active-preset',getFlag());
+      draw();
+    });
+  }
+  toggle('qdShowVertex',function(v){showVertex=v;},function(){return showVertex;});
+  toggle('qdShowAxis',function(v){showAxis=v;},function(){return showAxis;});
+  toggle('qdShowRoots',function(v){showRoots=v;},function(){return showRoots;});
+
+  // Presets: data-qd-preset="a,h,k"
+  document.querySelectorAll('[data-qd-preset]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var parts=btn.dataset.qdPreset.split(',').map(Number);
+      a=parts[0]; h=parts[1]; k=parts[2];
+      setSlider('qdA','qdAVal',a);
+      setSlider('qdH','qdHVal',h);
+      setSlider('qdK','qdKVal',k);
+      draw();
+    });
+  });
+
+  document.getElementById('qdZoomIn').addEventListener('click',function(){view.scale*=1.4;draw();});
+  document.getElementById('qdZoomOut').addEventListener('click',function(){view.scale/=1.4;draw();});
+  document.getElementById('qdReset').addEventListener('click',function(){view={cx:0,cy:0,scale:55};draw();});
+}
+
+function setSlider(id,valId,val){
+  var el=document.getElementById(id);
+  var vEl=document.getElementById(valId);
+  el.value=val;
+  vEl.textContent=val.toFixed(el.step<0.5?2:1);
+}
+
+function setupEvents(){
+  canvas.addEventListener('mousedown',function(e){drag={sx:e.clientX,sy:e.clientY,cx:view.cx,cy:view.cy};canvas.style.cursor='grabbing';});
+  window.addEventListener('mouseup',function(){drag=null;if(canvas)canvas.style.cursor='crosshair';});
+  window.addEventListener('mousemove',function(e){
+    if(!canvas)return;
+    var rect=canvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    if(mx>=0&&mx<=canvas.width&&my>=0&&my<=canvas.height){
+      var cw=c2w(mx,my);
+      document.getElementById('qdCoords').innerHTML='x: '+cw[0].toFixed(2)+'&nbsp;&nbsp;y: '+cw[1].toFixed(2);
+    }
+    if(!drag)return;
+    view.cx=drag.cx-(e.clientX-drag.sx)/view.scale;
+    view.cy=drag.cy+(e.clientY-drag.sy)/view.scale;
+    draw();
+  });
+  canvas.addEventListener('wheel',function(e){
+    e.preventDefault();
+    var rect=canvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    var cw=c2w(mx,my);
+    var factor=e.deltaY<0?1.18:1/1.18;
+    view.scale*=factor;
+    view.cx=cw[0]-(mx-canvas.width/2)/view.scale;
+    view.cy=cw[1]+(my-canvas.height/2)/view.scale;
+    draw();
+  },{passive:false});
+  var ro=new ResizeObserver(function(){resize();draw();});
+  ro.observe(canvas.parentElement);
+}
+
+window.qdInit=init;
+window.qdResize=resize;
+window.qdDraw=draw;
+})();
+
+/* ════════════════════════════════════════
+   LINEAR EXPLORER
+   ════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var canvas, ctx, view={cx:0,cy:0,scale:55}, drag=null, initted=false;
+var m1=1, b1=0, m2=2, b2=3, line2Visible=false;
+var vert1=false, vertX1=2, vert2=false, vertX2=-2; // undefined-slope state
+var clickedPt=null;
+
+var LINE_COLORS=['#4a9eff','#f472b6'];
+
+function init(){
+  if(initted)return; initted=true;
+  canvas=document.getElementById('linCanvas');
+  ctx=canvas.getContext('2d');
+  resize();
+  setupControls();
+  setupEvents();
+  draw();
+}
+
+function resize(){var wrap=canvas.parentElement;canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;}
+function w2c(wx,wy){return[canvas.width/2+(wx-view.cx)*view.scale,canvas.height/2-(wy-view.cy)*view.scale];}
+function c2w(cx,cy){return[view.cx+(cx-canvas.width/2)/view.scale,view.cy-(cy-canvas.height/2)/view.scale];}
+
+function draw(){
+  if(!canvas)return;
+  var W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+  var r0=c2w(0,0),r1=c2w(W,H);
+  var x0w=r0[0],y1w=r0[1],x1w=r1[0],y0w=r1[1];
+  var worldRange=Math.max(x1w-x0w,y1w-y0w)/10;
+  var exp=Math.floor(Math.log10(worldRange));
+  var mant=worldRange/Math.pow(10,exp);
+  var nice=mant<1.5?1:mant<3.5?2:mant<7.5?5:10;
+  var step=nice*Math.pow(10,exp);
+
+  ctx.strokeStyle='rgba(99,152,255,0.06)'; ctx.lineWidth=1;
+  for(var wx=Math.floor(x0w/step)*step;wx<=x1w+step;wx+=step){var cx2=w2c(wx,0)[0];ctx.beginPath();ctx.moveTo(cx2,0);ctx.lineTo(cx2,H);ctx.stroke();}
+  for(var wy=Math.floor(y0w/step)*step;wy<=y1w+step;wy+=step){var cy2=w2c(0,wy)[1];ctx.beginPath();ctx.moveTo(0,cy2);ctx.lineTo(W,cy2);ctx.stroke();}
+
+  var ap=w2c(0,0); var axX=ap[0],axY=ap[1];
+  ctx.strokeStyle='rgba(99,152,255,0.30)'; ctx.lineWidth=1.5;
+  if(axY>=0&&axY<=H){ctx.beginPath();ctx.moveTo(0,axY);ctx.lineTo(W,axY);ctx.stroke();}
+  if(axX>=0&&axX<=W){ctx.beginPath();ctx.moveTo(axX,0);ctx.lineTo(axX,H);ctx.stroke();}
+
+  ctx.fillStyle='rgba(100,140,210,0.6)'; ctx.font='10px "IBM Plex Mono",monospace';
+  var labelY=Math.min(Math.max(axY+14,14),H-6);
+  var labelX=Math.min(Math.max(axX-6,6),W-40);
+  ctx.textAlign='center';
+  for(var wx2=Math.floor(x0w/step)*step;wx2<=x1w+step;wx2+=step){if(Math.abs(wx2)<step*0.01)continue;var cx3=w2c(wx2,0)[0];if(cx3<8||cx3>W-8)continue;ctx.fillText(+wx2.toPrecision(4),cx3,labelY);}
+  ctx.textAlign='right';
+  for(var wy2=Math.floor(y0w/step)*step;wy2<=y1w+step;wy2+=step){if(Math.abs(wy2)<step*0.01)continue;var cy3=w2c(0,wy2)[1];if(cy3<8||cy3>H-8)continue;ctx.fillText(+wy2.toPrecision(4),labelX,cy3+3);}
+  ctx.fillText('0',Math.min(Math.max(axX-6,20),W-20),labelY);
+
+  // Draw lines
+  function drawLine(m,b,isVert,vertX,color,label){
+    ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.setLineDash([]);
+    if(isVert){
+      // Vertical line: x = vertX, undefined slope
+      var vx=w2c(vertX,0)[0];
+      ctx.beginPath(); ctx.moveTo(vx,0); ctx.lineTo(vx,H); ctx.stroke();
+      ctx.fillStyle=color; ctx.font='bold 11px "IBM Plex Mono",monospace'; ctx.textAlign='left';
+      ctx.fillText('x = '+vertX.toFixed(2), vx+8, 22);
+      return;
+    }
+    ctx.beginPath();
+    var y0=m*x0w+b, y1=m*x1w+b;
+    var p0=w2c(x0w,y0), p1=w2c(x1w,y1);
+    ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p1[0],p1[1]); ctx.stroke();
+    // Label in the middle of visible range
+    var midX=(x0w+x1w)/2, midY=m*midX+b;
+    var mp=w2c(midX,midY);
+    if(mp[0]>=20&&mp[0]<=W-20&&mp[1]>=14&&mp[1]<=H-14){
+      ctx.fillStyle=color; ctx.font='bold 11px "IBM Plex Mono",monospace'; ctx.textAlign='left';
+      ctx.fillText(label, mp[0]+8, mp[1]-8);
+    }
+    // y-intercept dot
+    var yiP=w2c(0,b);
+    if(yiP[0]>=0&&yiP[0]<=W&&yiP[1]>=0&&yiP[1]<=H){
+      ctx.beginPath(); ctx.arc(yiP[0],yiP[1],4,0,Math.PI*2);
+      ctx.fillStyle=color; ctx.fill();
+    }
+  }
+
+  var l1label='y = '+m1.toFixed(2)+'x '+(b1>=0?'+ ':' ')+(b1>=0?b1.toFixed(2):(-b1).toFixed(2));
+  drawLine(m1,b1,line1Vert,line1VertX,LINE_COLORS[0],l1label);
+  if(line2Visible){
+    var l2label='y = '+m2.toFixed(2)+'x '+(b2>=0?'+ ':' ')+(b2>=0?b2.toFixed(2):(-b2).toFixed(2));
+    drawLine(m2,b2,line2Vert,line2VertX,LINE_COLORS[1],l2label);
+    // Intersection point (only if neither line is vertical and not parallel)
+    if(!line1Vert && !line2Vert && Math.abs(m1-m2)>1e-6){
+      var ix=(b2-b1)/(m1-m2);
+      var iy=m1*ix+b1;
+      var ip=w2c(ix,iy);
+      if(ip[0]>0&&ip[0]<W&&ip[1]>0&&ip[1]<H){
+        ctx.beginPath(); ctx.arc(ip[0],ip[1],5,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+        if(clickedPt){
+          var label2='('+ix.toFixed(2)+', '+iy.toFixed(2)+')';
+          ctx.font='11px "IBM Plex Mono",monospace';
+          var lw2=ctx.measureText(label2).width;
+          var lx2=ip[0]+10, ly2=ip[1]-10;
+          if(lx2+lw2+10>W) lx2=ip[0]-lw2-14;
+          ctx.fillStyle='rgba(13,27,46,0.88)';
+          ctx.beginPath();
+          if(ctx.roundRect) ctx.roundRect(lx2-5,ly2-14,lw2+10,22,4); else ctx.rect(lx2-5,ly2-14,lw2+10,22);
+          ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.stroke();
+          ctx.fillStyle='rgba(220,235,255,0.95)'; ctx.textAlign='left';
+          ctx.fillText(label2,lx2,ly2);
+          ctx.beginPath(); ctx.arc(ip[0],ip[1],7,0,Math.PI*2);
+          ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2; ctx.stroke();
+        }
+      }
+    }
+    // Vertical line 1 intersecting normal line 2
+    if(line1Vert && !line2Vert){
+      var ix2=line1VertX, iy2=m2*ix2+b2;
+      var ip2=w2c(ix2,iy2);
+      if(ip2[0]>0&&ip2[0]<W&&ip2[1]>0&&ip2[1]<H){
+        ctx.beginPath(); ctx.arc(ip2[0],ip2[1],5,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+      }
+    }
+  }
+
+  updateRelInfo();
+  updateTable();
+  updateLinNotice();
+}
+
+function updateRelInfo(){
+  var el=document.getElementById('linRelInfo');
+  if(!line2Visible){
+    if(line1Vert){
+      el.innerHTML='<strong>x = '+line1VertX.toFixed(2)+'</strong> — a <strong>vertical line</strong><br><br>'
+        +'Slope: <strong>Undefined</strong><br>'
+        +'A vertical line has an <em>undefined</em> slope because the run (horizontal change) is 0 — dividing by zero is undefined. It cannot be written in y = mx + b form.<br><br>'
+        +'All points on this line share the same x-value: <strong>x = '+line1VertX.toFixed(2)+'</strong>';
+      return;
+    }
+    var bStr=b1>=0?'+ '+b1.toFixed(2):'− '+(Math.abs(b1)).toFixed(2);
+    el.innerHTML='<strong>y = '+m1.toFixed(2)+'x '+bStr+'</strong><br><br>'
+      +'Slope: <strong>'+m1.toFixed(2)+'</strong> — for every 1 unit right, y changes by <strong>'+m1.toFixed(2)+'</strong><br>'
+      +'y-intercept: <strong>(0, '+b1.toFixed(2)+')</strong><br>'
+      +'x-intercept: <strong>'+(Math.abs(m1)<1e-8?'none (horizontal)':'('+(-b1/m1).toFixed(2)+', 0)')+'</strong>';
+    return;
+  }
+  var rel, color;
+  if(line1Vert && line2Vert){
+    if(Math.abs(line1VertX-line2VertX)<1e-6){
+      rel='<strong>Same Line</strong> — both are vertical lines at the same x. Infinitely many solutions.'; color='#facc15';
+    } else {
+      rel='<strong>Parallel vertical lines</strong> — both have undefined slope, never intersect. No solution.'; color='#f87171';
+    }
+  } else if(line1Vert || line2Vert){
+    var vx3=line1Vert?line1VertX:line2VertX;
+    var om=line1Vert?m2:m1, ob=line1Vert?b2:b1;
+    var iy3=om*vx3+ob;
+    rel='<strong>Intersecting</strong> — a vertical line (undefined slope) meets y=mx+b at <strong>('+vx3.toFixed(2)+', '+iy3.toFixed(2)+')</strong>. A vertical line is <em>always</em> perpendicular to a horizontal line (m=0).'; color='#4a9eff';
+  } else {
+    var diff=Math.abs(m1-m2);
+    var prodSlopes=m1*m2;
+    var sameB=Math.abs(b1-b2)<1e-6;
+    if(diff<1e-6){
+      if(sameB){ rel='<strong>Same Line (Coincident)</strong> — identical slopes and y-intercepts. Infinitely many solutions.'; color='#facc15'; }
+      else { rel='<strong>Parallel Lines</strong> — same slope ('+m1.toFixed(2)+'), different y-intercepts. No intersection.'; color='#f87171'; }
+    } else if(Math.abs(prodSlopes+1)<0.05){
+      rel='<strong>Perpendicular Lines</strong> — slopes multiply to −1 ('+m1.toFixed(2)+' × '+m2.toFixed(2)+' ≈ −1). Meet at a right angle.'; color='#34d399';
+    } else {
+      var ix3=(b2-b1)/(m1-m2), iy4=m1*ix3+b1;
+      rel='<strong>Intersecting Lines</strong> — one solution at ('+ix3.toFixed(2)+', '+iy4.toFixed(2)+'). Click the dot to reveal.'; color='#4a9eff';
+    }
+  }
+  el.innerHTML='<span style="color:'+color+'">'+rel+'</span><br><br>'
+    +'Slope 1: <strong>'+(line1Vert?'undefined':m1.toFixed(2))+'</strong> &nbsp;·&nbsp; Slope 2: <strong>'+(line2Vert?'undefined':m2.toFixed(2))+'</strong>';
+}
+
+function updateTable(){
+  var tbody=document.getElementById('linTableBody');
+  if(!tbody)return;
+  var rows='';
+  var xs=[-3,-2,-1,0,1,2,3];
+  xs.forEach(function(x){
+    var y=line1Vert?'—':(m1*x+b1).toFixed(2);
+    rows+='<tr><td>'+x+'</td><td>'+y+'</td></tr>';
+  });
+  tbody.innerHTML=rows;
+}
+
+function updateLinNotice(){
+  var el=document.getElementById('linNotice');
+  if(!el)return;
+  var hint='';
+  if(line1Vert){ hint='Vertical lines (x = constant) have undefined slope — the run is 0 and division by zero is impossible. They can\'t be written as y = mx + b.'; }
+  else if(Math.abs(m1)<1e-8){ hint='m = 0: the line is perfectly horizontal. Every x gives the same y-value ('+b1.toFixed(2)+'). Horizontal lines always have zero slope.'; }
+  else if(line2Visible && Math.abs(m1-m2)<1e-6 && Math.abs(b1-b2)>0.1){ hint='Same slope, different intercepts → Parallel lines! They run in the exact same direction but never meet. No solution.'; }
+  else if(line2Visible && Math.abs(m1-m2)<1e-6 && Math.abs(b1-b2)<0.1){ hint='Same slope AND same intercept → Identical lines (coincident)! Every point is a solution — infinitely many solutions.'; }
+  else if(line2Visible && Math.abs(m1*m2+1)<0.08){ hint='Slopes multiply to −1 → Perpendicular lines! They meet at exactly a right angle (90°).'; }
+  else if(Math.abs(m1)>3){ hint='Steep slope (|m| = '+Math.abs(m1).toFixed(1)+'): y changes by '+m1.toFixed(1)+' for every 1 step right. The line looks nearly vertical.'; }
+  else if(Math.abs(m1)<0.5){ hint='Shallow slope (|m| = '+Math.abs(m1).toFixed(1)+'): y barely changes as x increases. The line looks nearly horizontal.'; }
+  else if(Math.abs(b1)>4){ hint='Large intercept: the line crosses the y-axis far '+(b1>0?'above':'below')+' the origin at (0, '+b1.toFixed(1)+').'; }
+  else if(line2Visible){ hint='Two lines with different slopes always intersect at exactly one point — that\'s the solution to the system of equations they represent!'; }
+  else { hint='The slope tells you the direction and steepness; the intercept tells you where it starts. Together, they completely define the line.'; }
+  el.textContent=hint;
+}
+
+function setupControls(){
+  function bindSlider(id,valId,setter){
+    var el=document.getElementById(id);
+    var vEl=document.getElementById(valId);
+    el.addEventListener('input',function(){
+      setter(parseFloat(el.value));
+      vEl.textContent=parseFloat(el.value).toFixed(2);
+      draw();
+    });
+  }
+  bindSlider('linM1','linM1Val',function(v){m1=v;});
+  bindSlider('linB1','linB1Val',function(v){b1=v;});
+  bindSlider('linM2','linM2Val',function(v){m2=v;});
+  bindSlider('linB2','linB2Val',function(v){b2=v;});
+
+  var toggleBtn=document.getElementById('linToggleLine2');
+  var line2Ctrl=document.getElementById('linLine2Controls');
+  line2Ctrl.style.display='none';
+  toggleBtn.addEventListener('click',function(){
+    line2Visible=!line2Visible;
+    line2Ctrl.style.display=line2Visible?'block':'none';
+    toggleBtn.textContent=line2Visible?'Hide':'Show';
+    toggleBtn.classList.toggle('active-preset',line2Visible);
+    draw();
+  });
+
+  // Presets
+  var PRESETS={
+    parallel:     {m1:2,b1:1,m2:2,b2:3,v1:false,v2:false,show2:true},
+    perpendicular:{m1:2,b1:0,m2:-0.5,b2:3,v1:false,v2:false,show2:true},
+    intersecting: {m1:1,b1:0,m2:2,b2:-2,v1:false,v2:false,show2:true},
+    coincident:   {m1:1.5,b1:2,m2:1.5,b2:2,v1:false,v2:false,show2:true},
+    horizontal:   {m1:0,b1:2,m2:0,b2:-2,v1:false,v2:false,show2:true},
+    steep:        {m1:5,b1:0,m2:0.2,b2:0,v1:false,v2:false,show2:true},
+    undefined:    {m1:1,b1:0,m2:0,b2:0,v1:true,v2:false,show2:false,v1x:2}
+  };
+  document.querySelectorAll('[data-lin-preset]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var p=PRESETS[btn.dataset.linPreset];
+      if(!p)return;
+      m1=p.m1; b1=p.b1; m2=p.m2; b2=p.b2;
+      line1Vert=p.v1; line2Vert=p.v2;
+      if(p.v1x!==undefined) line1VertX=p.v1x;
+      setSlider2('linM1','linM1Val',m1);
+      setSlider2('linB1','linB1Val',b1);
+      setSlider2('linM2','linM2Val',m2);
+      setSlider2('linB2','linB2Val',b2);
+      if(p.show2&&!line2Visible){
+        line2Visible=true;
+        document.getElementById('linLine2Controls').style.display='block';
+        document.getElementById('linToggleLine2').textContent='Hide';
+        document.getElementById('linToggleLine2').classList.add('active-preset');
+      } else if(!p.show2&&line2Visible){
+        line2Visible=false;
+        document.getElementById('linLine2Controls').style.display='none';
+        document.getElementById('linToggleLine2').textContent='Show';
+        document.getElementById('linToggleLine2').classList.remove('active-preset');
+      }
+      draw();
+    });
+  });
+
+  document.getElementById('linZoomIn').addEventListener('click',function(){view.scale*=1.4;draw();});
+  document.getElementById('linZoomOut').addEventListener('click',function(){view.scale/=1.4;draw();});
+  document.getElementById('linReset').addEventListener('click',function(){view={cx:0,cy:0,scale:55};draw();});
+}
+
+function setSlider2(id,valId,val){
+  var el=document.getElementById(id);
+  el.value=val;
+  document.getElementById(valId).textContent=val.toFixed(2);
+}
+
+function setupEvents(){
+  canvas.addEventListener('mousedown',function(e){drag={sx:e.clientX,sy:e.clientY,cx:view.cx,cy:view.cy};canvas.style.cursor='grabbing';});
+  canvas.addEventListener('click',function(e){
+    if(drag&&(Math.abs(e.clientX-drag.sx)>3||Math.abs(e.clientY-drag.sy)>3))return;
+    if(!line2Visible||line1Vert||line2Vert||Math.abs(m1-m2)<1e-6){return;}
+    var rect=canvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    var ix=(b2-b1)/(m1-m2),iy=m1*ix+b1;
+    var ip=w2c(ix,iy);
+    var dist=Math.sqrt((mx-ip[0])*(mx-ip[0])+(my-ip[1])*(my-ip[1]));
+    clickedPt=(dist<=10&&clickedPt===null)?{x:ix,y:iy}:null;
+    draw();
+  });
+  window.addEventListener('mouseup',function(){drag=null;if(canvas)canvas.style.cursor='crosshair';});
+  window.addEventListener('mousemove',function(e){
+    if(!canvas)return;
+    var rect=canvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    if(mx>=0&&mx<=canvas.width&&my>=0&&my<=canvas.height){
+      var cw=c2w(mx,my);
+      document.getElementById('linCoords').innerHTML='x: '+cw[0].toFixed(2)+'&nbsp;&nbsp;y: '+cw[1].toFixed(2);
+    }
+    if(!drag)return;
+    view.cx=drag.cx-(e.clientX-drag.sx)/view.scale;
+    view.cy=drag.cy+(e.clientY-drag.sy)/view.scale;
+    clickedPt=null;
+    draw();
+  });
+  canvas.addEventListener('wheel',function(e){
+    e.preventDefault();
+    var rect=canvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    var cw=c2w(mx,my);
+    var factor=e.deltaY<0?1.18:1/1.18;
+    view.scale*=factor;
+    view.cx=cw[0]-(mx-canvas.width/2)/view.scale;
+    view.cy=cw[1]+(my-canvas.height/2)/view.scale;
+    draw();
+  },{passive:false});
+  var ro=new ResizeObserver(function(){resize();draw();});
+  ro.observe(canvas.parentElement);
+}
+
+window.linInit=init;
+window.linResize=resize;
+window.linDraw=draw;
+})();
+</script>
+
+</body>
+</html>
