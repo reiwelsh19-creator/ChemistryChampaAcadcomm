@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="fil">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Filipino 2 · Komunikasyon at Panitikan · Champaca</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0e1a0e;
+    --deep:     #081008;
+    --surface:  #152015;
+    --surface2: #1c2c1a;
+    --forest:   #2a4a28;
+    --forest2:  #366832;
+    --leaf:     #4a8a40;
+    --leaf2:    #62aa58;
+    --lime:     #8aba78;
+    --cream:    #f0ead8;
+    --cream2:   #e4dcc8;
+    --parch:    #d8cfa8;
+    --ink:      #0a1208;
+    --muted:    #5a7a50;
+    --muted2:   #3e5838;
+    --gold:     #c89a2a;
+    --gold2:    #e0b840;
+    --sun:      #f8d050;
+    --border:   rgba(74,138,64,0.22);
+    --border2:  rgba(74,138,64,0.45);
+    --red:      #a03828;
+    --blue:     #3058a0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle leaf/nature texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    opacity: 0.7;
+  }
+
+  /* Subtle bamboo-like vertical lines */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: repeating-linear-gradient(
+      90deg, transparent, transparent 48px,
+      rgba(74,138,64,0.025) 48px, rgba(74,138,64,0.025) 49px
+    );
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative; z-index: 10;
+    background: linear-gradient(180deg, #050c05 0%, #0e1a0e 55%, #112011 100%);
+    border-bottom: 2px solid var(--forest2);
+    padding: 26px 36px 20px;
+    overflow: hidden;
+    max-width: 1200px; margin: 0 auto;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(74,138,64,0.06) 79px, rgba(74,138,64,0.06) 80px),
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(74,138,64,0.06) 79px, rgba(74,138,64,0.06) 80px);
+    pointer-events: none;
+  }
+  /* Philippine sun decoration */
+  header::after {
+    content: '';
+    position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+    width: 96px; height: 96px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23c89a2a' stroke-width='0.9' opacity='0.45'%3E%3Ccircle cx='50' cy='50' r='18'/%3E%3Ccircle cx='50' cy='50' r='8'/%3E%3Cline x1='50' y1='5' x2='50' y2='28'/%3E%3Cline x1='50' y1='72' x2='50' y2='95'/%3E%3Cline x1='5' y1='50' x2='28' y2='50'/%3E%3Cline x1='72' y1='50' x2='95' y2='50'/%3E%3Cline x1='18' y1='18' x2='34' y2='34'/%3E%3Cline x1='66' y1='66' x2='82' y2='82'/%3E%3Cline x1='82' y1='18' x2='66' y2='34'/%3E%3Cline x1='34' y1='66' x2='18' y2='82'/%3E%3Ccircle cx='50' cy='10' r='2.5' fill='%23c89a2a'/%3E%3Ccircle cx='50' cy='90' r='2.5' fill='%23c89a2a'/%3E%3Ccircle cx='10' cy='50' r='2.5' fill='%23c89a2a'/%3E%3Ccircle cx='90' cy='50' r='2.5' fill='%23c89a2a'/%3E%3Ccircle cx='22' cy='22' r='2' fill='%23c89a2a'/%3E%3Ccircle cx='78' cy='78' r='2' fill='%23c89a2a'/%3E%3Ccircle cx='78' cy='22' r='2' fill='%23c89a2a'/%3E%3Ccircle cx='22' cy='78' r='2' fill='%23c89a2a'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+    pointer-events: none; opacity: 0.8;
+  }
+
+  .home-btn {
+    display: flex; align-items: center;
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    border-right: 1px solid rgba(74,138,64,0.3);
+    padding: 0 20px;
+    transition: color .15s, background .15s;
+    flex-shrink: 0;
+  }
+  .home-btn:hover { color: var(--cream); background: rgba(74,138,64,0.08); }
+  .header-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8.5px; letter-spacing: 0.36em; text-transform: uppercase;
+    color: var(--leaf2); margin-bottom: 8px; opacity: 0.9;
+  }
+  .header-title {
+    font-family: 'Cormorant Garamond', serif; font-weight: 700;
+    font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+    line-height: 1.1; color: var(--cream);
+    letter-spacing: 0.02em;
+  }
+  .header-title em { color: var(--sun); font-style: italic; }
+  .header-sub {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 13px; color: var(--muted); margin-top: 5px;
+  }
+  .header-ornament {
+    margin-top: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .header-ornament::before, .header-ornament::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--forest2), transparent);
+    opacity: 0.5;
+  }
+  .header-ornament span { font-size: 12px; color: var(--leaf); opacity: 0.7; letter-spacing: 0.5em; }
+
+  /* ── TABS ── */
+  .page-tabs {
+    display: flex; border-bottom: 2px solid var(--forest2);
+    background: var(--surface); overflow-x: auto;
+    position: relative; z-index: 10;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .page-tab {
+    padding: 13px 26px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .page-tab:hover { color: var(--cream); background: rgba(74,138,64,0.07); }
+  .page-tab.active { color: var(--leaf2); border-bottom-color: var(--leaf2); }
+
+  /* ── PAGES ── */
+  #mapPage, #practicePage, #guidePage {
+    max-width: 1200px; margin-left: auto; margin-right: auto;
+  }
+  #mapPage, #practicePage, #guidePage { display: none; position: relative; z-index: 1; }
+  #mapPage.visible, #practicePage.visible, #guidePage.visible { display: block; }
+
+  /* ── QUARTER PILLS ── */
+  .quarters {
+    display: flex; border-bottom: 1px solid var(--border2);
+    background: rgba(21,32,21,0.85); overflow-x: auto; padding: 0 12px;
+    position: sticky; top: 0; z-index: 9;
+  }
+  .quarter-pill {
+    padding: 10px 20px; cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); border: none; background: none;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .quarter-pill:hover { background: rgba(74,138,64,0.07); color: var(--cream); }
+  .quarter-pill.active { color: var(--leaf2); border-bottom-color: var(--leaf2); }
+  .quarter-pill span { display: block; font-size: 7.5px; opacity: 0.5; margin-top: 2px; }
+
+  /* ── MAP INNER ── */
+  .map-inner { padding: 28px 32px 60px; }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    padding: 14px 32px 12px; background: rgba(21,32,21,0.6);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .search-wrap input {
+    flex: 1; max-width: 380px;
+    padding: 9px 14px; border: 1px solid var(--border2);
+    border-radius: 3px; background: rgba(240,234,216,0.06);
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--cream); outline: none; transition: border-color 0.2s;
+  }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-wrap input:focus { border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(74,138,64,0.14); }
+  .search-count { font-family: 'Space Mono', monospace; font-size: 9.5px; color: var(--muted); }
+
+  /* ── ERA / PERIOD SECTIONS ── */
+  .era-section { margin-bottom: 38px; }
+  .era-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+  }
+  .era-icon { font-size: 18px; }
+  .era-title {
+    font-family: 'Libre Baskerville', serif; font-size: 13px;
+    font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--lime);
+  }
+  .era-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border2), transparent); }
+
+  /* ── FIELD ── */
+  .field {
+    background: rgba(28,44,26,0.55);
+    border: 1px solid var(--border);
+    border-radius: 4px; margin-bottom: 10px; overflow: hidden;
+  }
+  .field-header {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(21,32,21,0.55);
+  }
+  .field-tag {
+    font-family: 'Space Mono', monospace; font-size: 8.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 2px;
+    background: rgba(74,138,64,0.18); color: var(--leaf2);
+    border: 1px solid rgba(74,138,64,0.35); white-space: nowrap;
+  }
+  .field-title {
+    font-family: 'Libre Baskerville', serif; font-size: 13.5px;
+    font-weight: 700; color: var(--cream2);
+  }
+  .topic-list { list-style: none; padding: 6px 0; }
+  .topic-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 16px; border-bottom: 1px solid rgba(74,138,64,0.08);
+    cursor: pointer; transition: background 0.12s;
+  }
+  .topic-item:last-child { border-bottom: none; }
+  .topic-item:hover { background: rgba(74,138,64,0.09); }
+  .topic-item.hidden { display: none; }
+  .topic-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--leaf); flex-shrink: 0; }
+  .topic-name { flex: 1; font-family: 'Cormorant Garamond', serif; font-size: 14.5px; color: var(--cream2); }
+  .topic-quarter { font-family: 'Space Mono', monospace; font-size: 8.5px; color: var(--muted); }
+
+  [data-q="Q1"] .topic-dot { background: #d4902a; }
+  [data-q="Q2"] .topic-dot { background: #4a90c8; }
+  [data-q="Q3"] .topic-dot { background: #c84040; }
+  [data-q="Q4"] .topic-dot { background: #8a50c8; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(5,10,5,0.85); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 32px 36px;
+    max-width: 580px; width: 100%; position: relative;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.65);
+  }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; color: var(--muted);
+    font-size: 18px; cursor: pointer; transition: color .15s;
+  }
+  .modal-close:hover { color: var(--cream); }
+  .modal-tag { font-family: 'Space Mono', monospace; font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--leaf2); margin-bottom: 10px; }
+  .modal-title { font-family: 'Libre Baskerville', serif; font-size: 19px; color: var(--cream); margin-bottom: 14px; line-height: 1.3; }
+  .modal-body { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--cream2); line-height: 1.7; }
+
+  /* ── PRACTICE ── */
+  #practicePage { padding: 28px 32px 60px; }
+  .practice-section { margin-bottom: 40px; }
+  .practice-section-title {
+    font-family: 'Libre Baskerville', serif; font-size: 15px; font-weight: 700;
+    color: var(--lime); margin-bottom: 18px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border2);
+  }
+  .question-block {
+    background: rgba(28,44,26,0.55); border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px 20px; margin-bottom: 14px;
+  }
+  .question-num { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--leaf2); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .question-text { font-family: 'Cormorant Garamond', serif; font-size: 15.5px; color: var(--cream); margin-bottom: 12px; line-height: 1.65; }
+  .choices { display: flex; flex-direction: column; gap: 7px; }
+  .choice {
+    padding: 8px 14px; border-radius: 3px; border: 1px solid var(--border);
+    background: rgba(240,234,216,0.04); font-family: 'Cormorant Garamond', serif;
+    font-size: 14.5px; color: var(--cream2); cursor: pointer; transition: all .15s; text-align: left;
+  }
+  .choice:hover { border-color: var(--leaf); background: rgba(74,138,64,0.1); }
+  .choice.correct { background: rgba(30,100,50,0.25); border-color: #3a8a50; color: #90e0a0; }
+  .choice.wrong   { background: rgba(120,40,30,0.25); border-color: #a03828; color: #f08080; }
+  .explanation {
+    margin-top: 12px; padding: 10px 14px;
+    border-left: 2px solid var(--leaf); background: rgba(74,138,64,0.08);
+    font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--cream2); line-height: 1.65;
+    display: none;
+  }
+  .explanation.show { display: block; }
+
+  /* ── STUDY GUIDE ── */
+  #guidePage { padding: 28px 32px 60px; }
+  .guide-section { margin-bottom: 44px; }
+  .guide-section-title {
+    font-family: 'Libre Baskerville', serif; font-size: 17px; font-weight: 700;
+    color: var(--lime); margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border2);
+  }
+  .guide-block {
+    background: rgba(28,44,26,0.55); border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px 20px; margin-bottom: 12px;
+  }
+  .guide-block-title {
+    font-family: 'Libre Baskerville', serif; font-size: 14px; font-weight: 700;
+    color: var(--leaf2); margin-bottom: 10px;
+  }
+  .guide-block-body {
+    font-family: 'Cormorant Garamond', serif; font-size: 14.5px;
+    color: var(--cream2); line-height: 1.72;
+  }
+  .guide-block-body strong { color: var(--lime); }
+  .panahon-timeline { display: flex; flex-direction: column; gap: 0; }
+  .panahon-item {
+    display: flex; gap: 0; position: relative;
+  }
+  .panahon-item::before {
+    content: ''; position: absolute; left: 74px; top: 0; bottom: 0;
+    width: 1px; background: var(--border2);
+  }
+  .panahon-year {
+    width: 74px; flex-shrink: 0; padding: 12px 14px 12px 0;
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    color: var(--muted); text-align: right; letter-spacing: 0.04em;
+  }
+  .panahon-content {
+    flex: 1; padding: 10px 0 10px 20px; border-bottom: 1px solid var(--border);
+  }
+  .panahon-item:last-child .panahon-content { border-bottom: none; }
+  .panahon-dot {
+    position: absolute; left: 70px; top: 14px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--leaf); border: 1px solid var(--bg);
+  }
+  .panahon-title {
+    font-family: 'Libre Baskerville', serif; font-size: 13px;
+    font-weight: 700; color: var(--cream); margin-bottom: 4px;
+  }
+  .panahon-desc {
+    font-family: 'Cormorant Garamond', serif; font-size: 13.5px;
+    color: var(--cream2); line-height: 1.6;
+  }
+  .uri-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
+    gap: 10px; margin-top: 8px;
+  }
+  .uri-card {
+    background: rgba(14,26,14,0.6); border: 1px solid var(--border);
+    border-radius: 3px; padding: 12px 14px;
+  }
+  .uri-name { font-family: 'Libre Baskerville', serif; font-size: 13px; font-weight: 700; color: var(--gold2); margin-bottom: 3px; }
+  .uri-desc { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--cream2); line-height: 1.5; }
+  .sub-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 10px; margin-top: 10px; }
+  .sub-card { background: rgba(8,16,8,0.4); border: 1px solid rgba(74,138,64,0.2); border-radius: 3px; padding: 11px 13px; }
+  .sub-card-title { font-family: 'Libre Baskerville', serif; font-size: 12px; font-weight: 700; color: var(--lime); margin-bottom: 5px; }
+  .sub-card-body { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--cream2); line-height: 1.5; }
+  .step-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .step-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 12px; background: rgba(8,16,8,0.35); border: 1px solid rgba(74,138,64,0.15); border-radius: 3px; }
+  .step-num { font-family: 'Libre Baskerville', serif; font-size: 13px; font-weight: 700; color: var(--leaf2); flex-shrink: 0; min-width: 20px; }
+  .step-body { font-family: 'Cormorant Garamond', serif; font-size: 13.5px; color: var(--cream2); line-height: 1.5; }
+  .step-body strong { color: var(--lime); }
+  .example-box { background: rgba(74,138,64,0.08); border-left: 2px solid var(--leaf); padding: 8px 12px; margin: 8px 0; font-style: italic; color: var(--cream2); font-size: 13.5px; }
+  .grammar-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .grammar-table th {
+    background: rgba(74,138,64,0.18); color: var(--lime);
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 8px 12px; text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .grammar-table td {
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    font-family: 'Cormorant Garamond', serif; font-size: 13.5px;
+    color: var(--cream2); vertical-align: top;
+  }
+  .grammar-table tr:last-child td { border-bottom: none; }
+  .kasanayan-block {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 8px;
+  }
+  .kasanayan-card {
+    background: rgba(14,26,14,0.6); border: 1px solid var(--border);
+    border-radius: 3px; padding: 14px;
+    text-align: center;
+  }
+  .kasanayan-icon { font-size: 26px; margin-bottom: 8px; }
+  .kasanayan-name { font-family: 'Libre Baskerville', serif; font-size: 13px; font-weight: 700; color: var(--leaf2); margin-bottom: 5px; }
+  .kasanayan-desc { font-family: 'Cormorant Garamond', serif; font-size: 12.5px; color: var(--cream2); line-height: 1.55; }
+
+</style>
+</head>
+<body>
+
+<canvas id="particles" style="position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.1"></canvas>
+
+<header>
+  <div class="header-label">Baitang 8 · Champaca · SY 2025–2026</div>
+  <div class="header-title">Filipino 2: <em>Komunikasyon at Panitikan</em></div>
+  <div class="header-sub">Mataas na Paaralan ng Pilipinas sa Agham · Diliman</div>
+  <div class="header-ornament"><span>✦ ✦ ✦</span></div>
+</header>
+
+<nav class="page-tabs">
+  <a href="index.html" class="home-btn">← Home</a>
+  <button class="page-tab active" id="tabMap">📋 Curriculum Map</button>
+  <button class="page-tab" id="tabPractice">✏️ Pagsasanay</button>
+  <button class="page-tab" id="tabGuide">📖 Gabay sa Pag-aaral</button>
+</nav>
+
+<!-- ══ CURRICULUM MAP ══ -->
+<div id="mapPage" class="visible">
+  <div class="search-wrap">
+    <input id="searchInput" type="text" placeholder="Maghanap ng paksa…" autocomplete="off"/>
+    <span class="search-count" id="searchCount"></span>
+  </div>
+  <div class="quarters">
+    <button class="quarter-pill active" data-q="ALL">Lahat</button>
+    <button class="quarter-pill" data-q="Q1">Unang Markahan <span>Komunikasyon</span></button>
+    <button class="quarter-pill" data-q="Q2">Ikalawang Markahan <span>Pagbabasa, Panonood</span></button>
+    <button class="quarter-pill" data-q="Q3">Ikatlong Markahan <span>Panitikan: Uri ng Tula</span></button>
+  </div>
+  <div class="map-inner">
+
+    <!-- Q1 -->
+    <div class="era-section" id="section-Q1">
+      <div class="era-header">
+        <span class="era-icon">🗣️</span>
+        <span class="era-title">Unang Markahan — Komunikasyon</span>
+        <span class="era-line"></span>
+      </div>
+      <div class="field" data-quarters="Q1">
+        <div class="field-header">
+          <span class="field-tag">Komunikasyon</span>
+          <span class="field-title">Kahulugan, Uri at Proseso</span>
+        </div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q1" data-title="Kahulugan ng Komunikasyon" data-desc="Ang komunikasyon ay ang proseso ng pagpapalitan ng impormasyon, ideya, damdamin, at kahulugan sa pagitan ng dalawa o higit pang tao gamit ang iba't ibang paraan. Ito ay isang dalawang-daan na proseso na nangangailangan ng nagpadala (encoder), mensahe, daluyan, at tumatanggap (decoder)."><span class="topic-dot"></span><span class="topic-name">Kahulugan ng Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Kahalagahan ng Komunikasyon" data-desc="Mahalaga ang komunikasyon sa pansariling pag-unlad, sa pakikipag-ugnayan sa kapwa, sa lipunan, at sa propesyon. Sa pamamagitan ng mabisang komunikasyon, nabubuo ang pagkakaunawaan, naiiwasan ang hidwaan, at naipapahayag ang ating mga pangangailangan at damdamin."><span class="topic-dot"></span><span class="topic-name">Kahalagahan ng Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Uri ng Komunikasyon" data-desc="Ang komunikasyon ay maaaring pormal (may estruktura at opisyal na layunin) o impormal (walang nakatakdang estilo). Ayon sa direksyon: patayo (vertical — sa pagitan ng nasa kapangyarihan at subordinado) at pahalang (horizontal — sa kapwa katrabaho o mag-aaral). Ayon sa daluyan: verbal at non-verbal."><span class="topic-dot"></span><span class="topic-name">Uri ng Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Katangian ng Mabisang Komunikasyon" data-desc="Ang mabisang komunikasyon ay: malinaw (clear), tumpak (accurate), kumpleto (complete), magalang (courteous), maayos (coherent), maikli at malinaw (concise), at may kongkretong impormasyon (concrete). Kilala rin ito bilang ang '7 C's of Communication'."><span class="topic-dot"></span><span class="topic-name">Katangian ng Mabisang Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Mga Sangkap at Proseso ng Komunikasyon" data-desc="Ang modelo ng komunikasyon ay binubuo ng: Pinagmulan (Source/Sender), Mensahe (Message), Daluyan (Channel/Medium), Tatanggap (Receiver), Tugon/Feedback, at Ingay (Noise). Ang proseso ay nagsisimula sa pagbuo ng mensahe (encoding) hanggang sa pagtanggap at pag-unawa nito (decoding)."><span class="topic-dot"></span><span class="topic-name">Mga Sangkap at Proseso ng Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Paraan ng Komunikasyon" data-desc="Ang komunikasyon ay nagaganap sa pamamagitan ng: (1) Verbal — sa pamamagitan ng mga salita, pasalita at pasulat; (2) Non-verbal — sa pamamagitan ng kilos ng katawan, ekspresyon ng mukha, tono ng boses, at espasyo; (3) Visual — sa pamamagitan ng mga larawan, tsart, at simbolo."><span class="topic-dot"></span><span class="topic-name">Paraan ng Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Mga Konsiderasyon sa Mabisang Komunikasyon" data-desc="Upang maging mabisa ang komunikasyon, kailangang isaalang-alang ang: layunin ng komunikasyon, ang tatanggap ng mensahe (audience), konteksto at sitwasyon, kultura at background ng mga kalahok, at ang pisikal at sikolohikal na kalagayan ng mga kalahok."><span class="topic-dot"></span><span class="topic-name">Mga Konsiderasyon sa Mabisang Komunikasyon</span><span class="topic-quarter">Q1</span></li>
+        </ul>
+      </div>
+      <div class="field" data-quarters="Q1">
+        <div class="field-header">
+          <span class="field-tag">Makrong Kasanayan</span>
+          <span class="field-title">Kasanayan sa Pakikinig</span>
+        </div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q1" data-title="Kahulugan ng Pakikinig" data-desc="Ang pakikinig ay hindi lamang ang pagdinig ng mga tunog — ito ay isang aktibong proseso ng pagtanggap, pagbibigay-kahulugan, at pagtugon sa mga mensaheng narinig. Kabilang dito ang pakikinig sa nilalaman, layunin, damdamin, at istilo ng nagsasalita."><span class="topic-dot"></span><span class="topic-name">Kahulugan ng Pakikinig</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Uri ng Pakikinig" data-desc="Ang mga uri ng pakikinig ay: (1) Mapanuring pakikinig (critical listening) — pagsusuri ng impormasyon; (2) Masining na pakikinig (appreciative) — para sa kasiyahan; (3) Mapagkaibigan (empathic) — para maunawaan ang damdamin; (4) Komprehensibong pakikinig — para sa kaalaman."><span class="topic-dot"></span><span class="topic-name">Uri ng Pakikinig</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Uri ng Tagapakinig" data-desc="Ang mga tagapakinig ay maaaring: aktibo (aktibong tumutugon sa mensahe), pasibo (tumatanggap lamang ng mensahe nang walang tugon), mapanuri (kritikal na tinatasa ang mensahe), o mapagsamantala (nakikinig lamang sa bahagi na kapaki-pakinabang sa kanila)."><span class="topic-dot"></span><span class="topic-name">Uri ng Tagapakinig</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Hadlang sa Mabisang Pakikinig" data-desc="Ang mga hadlang sa pakikinig ay: pisikal na ingay, personal na biases at pag-aakala, emosyonal na estado, kahirapan sa konsentrasyon, mabilis na paghusga sa nagsasalita, at pagka-abala sa sariling saloobin habang nakikinig."><span class="topic-dot"></span><span class="topic-name">Hadlang sa Mabisang Pakikinig</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1" data-title="Hakbang sa Mabisang Pakikinig" data-desc="Ang mga hakbang sa mabisang pakikinig: (1) Ihanda ang isip at katawan; (2) Alamin ang layunin ng pakikinig; (3) Makinig nang may buong atensyon; (4) Magtala ng mahahalagang puntos; (5) Suriin at tasahin ang mensahe; (6) Magbigay ng naaangkop na tugon."><span class="topic-dot"></span><span class="topic-name">Hakbang sa Mabisang Pakikinig</span><span class="topic-quarter">Q1</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="era-section" id="section-Q2">
+      <div class="era-header">
+        <span class="era-icon">📚</span>
+        <span class="era-title">Ikalawang Markahan — Kasanayan sa Pagbabasa at Panonood</span>
+        <span class="era-line"></span>
+      </div>
+      <div class="field" data-quarters="Q2">
+        <div class="field-header">
+          <span class="field-tag">Makrong Kasanayan</span>
+          <span class="field-title">Kasanayan sa Pagbabasa</span>
+        </div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q2" data-title="Kahulugan ng Pagbabasa" data-desc="Ang pagbabasa ay isang prosesong komunikatibo kung saan nag-iinteract ang mambabasa sa teksto upang bumuo ng kahulugan. Hindi lamang ito ang pag-decode ng mga titik — kabilang dito ang pag-unawa, pagsusuri, pagtasa, at paglikha ng sariling kahulugan batay sa teksto."><span class="topic-dot"></span><span class="topic-name">Kahulugan ng Pagbabasa</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Uri ng Pagbabasa" data-desc="Ang mga uri ng pagbabasa ayon sa layunin: (1) Intensibo — mabagal at masusing pagbabasa para sa kumpletong pag-unawa; (2) Ekstensibo — mabilis na pagbabasa para sa pangkalahatang ideya; (3) Scanning — paghahanap ng tiyak na impormasyon; (4) Skimming — mabilis na pagkuha ng pangunahing ideya. Uri ng Pagbabasa ayon sa Antas: (1) Persepsyon — nakikita at nabibigkas ang teksto; (2) Komprehensiyon — naiintindihan ang kahulugan; (3) Reaksyon — nagbibigay ng sariling opinyon; (4) Integrasyon — ginagamit ang impormasyong nabasa para kumilos."><span class="topic-dot"></span><span class="topic-name">Uri ng Pagbabasa</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Patnubay sa Malakas at Tahimik na Pagbabasa" data-desc="Ang malakas na pagbabasa (oral reading) ay nangangailangan ng malinaw na pagbigkas, tamang tono, wastong bilis, at tamang diin. Ang tahimik na pagbabasa (silent reading) ay mas mabilis at ginagamit para sa pag-aaral at kasiyahan nang walang pagbigkas."><span class="topic-dot"></span><span class="topic-name">Patnubay sa Malakas at Tahimik na Pagbabasa</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Mga Antas ng Pagbabasa" data-desc="Ang pagbabasa ay may APAT na antas ayon sa curriculum: (1) PERSEPSYON — pagkilala at pag-decode ng mga simbolo/titik/salita. Pinakamababang antas. Halimbawa: Nabasa ng bata ang salitang 'laso' bilang 'lasa'. (2) KOMPREHENSIYON — pag-unawa at pagpapaliwanag ng kahulugan ng teksto. Halimbawa: Nabasa ni Jose ang aralin at naipaliwanag niya ito sa kagrupo. (3) REAKSYON — personal na tugon o opinyon sa tekstong nabasa. Halimbawa: Nabasa ni Maria ang usapin ukol sa pagbubuwis at tumutol siya. (4) INTEGRASYON — paggamit ng natutuhan para kumilos o lumikha ng bagong kaalaman. Pinakamataas. Halimbawa: Nagsimulang mag-organisa ng mga kabataan si Maria matapos mabasa ang panukalang batas."><span class="topic-dot"></span><span class="topic-name">Mga Antas ng Pagbabasa (4 Antas)</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Gabay o Dimensiyon sa Masining na Pagbasa" data-desc="Ang masining na pagbasa ay nangangailangan ng: wastong pagbigkas (pronunciation), malinaw na diksiyon (diction), tamang ritmo at tulin (rhythm and pace), angkop na tono at damdamin (tone and emotion), at wastong paghinto (pause) upang maihatid ang mensahe ng teksto."><span class="topic-dot"></span><span class="topic-name">Dimensiyon ng Masining na Pagbasa</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Mga Sagabal sa Mabisang Pagbasa" data-desc="Ang mga hadlang sa pagbabasa: limitadong bokabularyo, mahirap na istruktura ng pangungusap, kakulangan sa kaalaman sa paksa, pagkapagod, ingay sa kapaligiran, masamang kondisyon ng ilaw o materyal, at kawalan ng interes o motibasyon."><span class="topic-dot"></span><span class="topic-name">Mga Sagabal sa Mabisang Pagbabasa</span><span class="topic-quarter">Q2</span></li>
+        </ul>
+      </div>
+      <div class="field" data-quarters="Q2">
+        <div class="field-header">
+          <span class="field-tag">Makrong Kasanayan</span>
+          <span class="field-title">Kasanayan sa Panonood</span>
+        </div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q2" data-title="Kahulugan at Kahalagahan ng Panonood" data-desc="Ang panonood ay ang proseso ng pagmamasid at pag-unawa sa mga biswal na materyal. Mahalaga ito dahil: nagbibigay ng mabilis na pagkatuto, naglinang ng mapanuring pag-iisip, nagpapalawak ng kaalaman, at nakapagpapukaw ng damdamin. Sa modernong lipunan, ito ay pangunahing paraan ng komunikasyon at pagkatuto."><span class="topic-dot"></span><span class="topic-name">Kahulugan at Kahalagahan ng Panonood</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Uri ng Panonood" data-desc="(1) DESKRIMINATIBO — nakabatay sa opinyon o prejudice ng manonood. (2) KOMPREHENSIBO — pag-unawa sa mensahe at mga detalye ng palabas. (3) KASWAL/PANLIBANG — para sa aliw lamang; hindi nagtutuon sa detalye. (4) KRITIKAL — masusing pagsusuri gamit ang ebidensya at lohikal na pag-iisip."><span class="topic-dot"></span><span class="topic-name">Uri ng Panonood</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Uri ng Palabas" data-desc="(1) IMPORMATIBO — nagdaragdag ng kaalaman (halimbawa: dokumentaryo, balita). (2) PERSUASIVE — nanghihikayat ng opinyon o aksyon. (3) NARATIBO — pagsasalaysay ng kwento (sine, teleserye). (4) EKSPOSITORI — nagpapaliwanag gamit ang ebidensya (GMA Documentaries). (5) ARGUMENTATIBO — naghahasa ng paniniwala sa pamamagitan ng debate. (6) SYMPATHETIC — pumupukaw ng damdamin at emosyon."><span class="topic-dot"></span><span class="topic-name">Uri ng Palabas</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Mga Gabay na Framework sa Panonood" data-desc="FRAMEWORK 1: 3Cs at 3Ss (para sa pelikula/video) — Colour (kulay at mood), Camera (anggulo at perspektibo), Character (tauhan at kilos), Story (simula-gitna-wakas), Setting (tagpuan), Sound (musika at tunog). FRAMEWORK 2: See-Think-Wonder (Harvard Project Zero) — Ano ang NAKIKITA mo? Ano ang INIISIP mo? Ano ang IPINAGTATAKA mo? FRAMEWORK 3: Visual Thinking Strategies (VTS) — Ano ang nangyayari? Ano ang nakikita mong dahilan? Ano pa ang maaari nating makita?"><span class="topic-dot"></span><span class="topic-name">Mga Gabay na Framework sa Panonood</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2" data-title="Hadlang sa Panonood at Katangian ng Epektibong Manonood" data-desc="HADLANG: karamdaman, maling pag-unawa, kapansanan sa paningin/pandinig, maitim o malabong screen, ingay sa paligid. KATANGIAN NG EPEKTIBONG MANONOOD: malawak ang kaalaman, bukas ang isipan, matalim na pag-unawa, kayang magbasa ng nakatagong mensahe, nagpapakita ng positibong pananaw."><span class="topic-dot"></span><span class="topic-name">Hadlang at Katangian ng Epektibong Manonood</span><span class="topic-quarter">Q2</span></li>
+        </ul>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<!-- ══ PAGSASANAY ══ -->
+<div id="practicePage">
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Komunikasyon — Mga Sangkap at Proseso</div>
+
+    <div class="question-block">
+      <div class="question-num">01 / MULTIPLE CHOICE</div>
+      <div class="question-text">Alin sa mga sumusunod ang HINDI isang sangkap ng proseso ng komunikasyon?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Nagpadala (Sender/Encoder)</button>
+        <button class="choice" data-val="B">B. Mensahe (Message)</button>
+        <button class="choice" data-val="C">C. Pagkamalikhain (Creativity)</button>
+        <button class="choice" data-val="D" data-correct="true">D. Pagkamalikhain (Creativity)</button>
+      </div>
+      <div class="explanation">✓ Ang <strong>Pagkamalikhain</strong> ay hindi isang pormal na sangkap ng proseso ng komunikasyon. Ang mga pangunahing sangkap ay: Nagpadala, Mensahe, Daluyan, Tatanggap, Feedback, at Ingay (Noise). Ang pagkamalikhain ay katangian ng nagpadala, hindi isang sangkap ng proseso.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">02 / MULTIPLE CHOICE</div>
+      <div class="question-text">Nagpadala ng mensahe si Ana sa kanyang kaibigan ngunit hindi naiintindihan ng kaibigan dahil sa maingay na kapaligiran. Anong sangkap ng komunikasyon ang pumipigil sa mabisang komunikasyon?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Feedback</button>
+        <button class="choice" data-val="B" data-correct="true">B. Ingay (Noise)</button>
+        <button class="choice" data-val="C">C. Mensahe</button>
+        <button class="choice" data-val="D">D. Daluyan</button>
+      </div>
+      <div class="explanation">✓ Ang <strong>Ingay (Noise)</strong> — anumang bagay na nakakagambala sa maayos na daloy ng komunikasyon — ang sagabal dito. Maaaring pisikal (maingay na kapaligiran), sikolohikal (pagkabigo, stress), o semantiko (hindi malinaw na mensahe).</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">03 / MULTIPLE CHOICE</div>
+      <div class="question-text">Alin sa mga sumusunod ang halimbawa ng VERBAL na komunikasyon?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Pagngiti sa isang tao</button>
+        <button class="choice" data-val="B">B. Pagtango ng ulo bilang sagot</button>
+        <button class="choice" data-val="C" data-correct="true">C. Pagsulat ng liham sa guro</button>
+        <button class="choice" data-val="D">D. Pagpapakita ng thumbs-up</button>
+      </div>
+      <div class="explanation">✓ Ang <strong>pagsulat ng liham</strong> ay halimbawa ng verbal na komunikasyon (written form). Ang verbal na komunikasyon ay gumagamit ng mga salita — pasalita man o pasulat. Ang mga pagngiti, pagtango, at thumbs-up ay non-verbal na komunikasyon.</div>
+    </div>
+  </div>
+
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Kasanayan sa Pagbabasa</div>
+
+    <div class="question-block">
+      <div class="question-num">04 / MULTIPLE CHOICE</div>
+      <div class="question-text">Anong antas ng pagbabasa ang nasa sitwasyon: Nabasa ni Jose ang aralin ukol sa wastong pagtatalumpati at <em>naipaliwanag niya nang husto ang aralin sa kanyang kagrupo</em>.</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Persepsyon</button>
+        <button class="choice" data-val="B" data-correct="true">B. Komprehensiyon</button>
+        <button class="choice" data-val="C">C. Reaksyon</button>
+        <button class="choice" data-val="D">D. Integrasyon</button>
+      </div>
+      <div class="explanation">✓ <strong>Komprehensiyon</strong> — Naipaliwanag ni Jose ang aralin nang husto, ibig sabihin naunawaan niya ito. Ang komprehensiyon ay ang ikalawang antas — pag-unawa at pagpapaliwanag ng kahulugan ng teksto.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">05 / MULTIPLE CHOICE</div>
+      <div class="question-text">Anong antas ng pagbabasa ang nasa sitwasyon: Nabasa ni Maria ang usapin ukol sa pagbubuwis nang mas mataas kaya't <em>nagsimula siyang mag-organisa ng mga kabataang lalaban sa panukalang batas</em>.</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Persepsyon</button>
+        <button class="choice" data-val="B">B. Komprehensiyon</button>
+        <button class="choice" data-val="C">C. Reaksyon</button>
+        <button class="choice" data-val="D" data-correct="true">D. Integrasyon</button>
+      </div>
+      <div class="explanation">✓ <strong>Integrasyon</strong> — Hindi lamang tumutol si Maria (reaksyon) — <em>kumilos</em> siya at nag-organisa ng mga kabataan. Ang integrasyon ay ang pinakamataas na antas — ginagamit ang natutuhan para lumikha ng bagong aksyon o kaalaman.</div>
+    </div>
+  </div>
+
+
+
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Ikatlong Markahan — Uri ng Tula at Mga Elemento</div>
+
+    <div class="question-block">
+      <div class="question-num">06 / MULTIPLE CHOICE</div>
+      <div class="question-text">Anong uri ng tula ang "Bayan Ko" ni Jose Corazon de Jesus?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Tulang Patnigan</button>
+        <button class="choice" data-val="B">B. Tulang Pantanghalan</button>
+        <button class="choice" data-val="C" data-correct="true">C. Tulang Liriko o Pandamdamin</button>
+        <button class="choice" data-val="D">D. Tulang Pasalaysay</button>
+      </div>
+      <div class="explanation">✓ <strong>Tulang Liriko o Pandamdamin</strong> — Nagpapahayag ito ng damdamin ng pagmamahal at pagnanais ng kalayaan. Hindi ito may banghay o dayalogo — isang pagbubuhos ng damdamin ng persona. Ang Patnigan ay may pagtatalo; ang Pantanghalan ay itinatanghal sa entablado; ang Pasalaysay ay may sunod-sunod na pangyayari.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">07 / MULTIPLE CHOICE</div>
+      <div class="question-text">Sa tula na "Bayan Ko," ano ang sinisimbolo ng ibon na may layang lumipad?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Kagandahan ng kalikasan</button>
+        <button class="choice" data-val="B" data-correct="true">B. Kalayaan</button>
+        <button class="choice" data-val="C">C. Kayamanan ng bansa</button>
+        <button class="choice" data-val="D">D. Kapangyarihan ng dayuhan</button>
+      </div>
+      <div class="explanation">✓ <strong>Kalayaan</strong> — Ang ibon na may layang lumipad ay sumisimbolo sa kalayaan. Kapag kinulong at umiyak ang ibon, ito ay kumakatawan sa Pilipinas na nasadlak sa dusa dahil sa pananakop ng dayuhan.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">08 / MULTIPLE CHOICE</div>
+      <div class="question-text">Alin sa mga sumusunod ang tamang paglalarawan ng Tanaga?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Tatlong taludtod na may sukat na 5-7-5</button>
+        <button class="choice" data-val="B">B. Apat na taludtod na may sukat na 7-7-7-7 at tugmang AAAA</button>
+        <button class="choice" data-val="C" data-correct="true">B. Apat na taludtod na may sukat na 7-7-7-7 at tugmang AAAA</button>
+        <button class="choice" data-val="D">D. Limang taludtod na may sukat na 5-7-5-7-7</button>
+      </div>
+      <div class="explanation">✓ <strong>Apat na taludtod, 7-7-7-7 na sukat, tugmang AAAA</strong> — Ito ang katutubo at natatanging katangian ng Tanaga bilang anyo ng tulang Pilipino. Ang 5-7-5 ay Haiku (Hapon); ang 5-7-5-7-7 ay Tanka (Hapon).</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">09 / MULTIPLE CHOICE</div>
+      <div class="question-text">Ano ang pagkakaiba ng Tanaga sa Haiku?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Ang Tanaga ay nagmula sa Hapon; ang Haiku ay katutubong Pilipino</button>
+        <button class="choice" data-val="B">B. Ang Tanaga ay may tatlong taludtod; ang Haiku ay may apat</button>
+        <button class="choice" data-val="C" data-correct="true">C. Ang Tanaga ay may apat na taludtod na 7-7-7-7; ang Haiku ay may tatlong taludtod na 5-7-5</button>
+        <button class="choice" data-val="D">D. Walang pagkakaiba — parehong katutubong Pilipino ang dalawa</button>
+      </div>
+      <div class="explanation">✓ Ang <strong>Tanaga</strong> ay katutubong Pilipino — apat na taludtod, pitong pantig bawat isa, tugmang AAAA. Ang <strong>Haiku</strong> ay nagmula sa Hapon — tatlong taludtod, sukat na 5-7-5. Pareho silang maikli ngunit iba ang pinagmulan at istraktura.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ GABAY SA PAG-AARAL ══ -->
+<div id="guidePage">
+
+  <div class="guide-section">
+    <div class="guide-section-title">🗣️ Komunikasyon — Mahahalagang Konsepto</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Ang Proseso ng Komunikasyon</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">1. Nagpadala (Encoder)</div><div class="sub-card-body">Bumubuo at nagpapadala ng mensahe. Kailangan niyang tiyaking malinaw at naiintindihan ang mensahe.</div></div>
+        <div class="sub-card"><div class="sub-card-title">2. Mensahe</div><div class="sub-card-body">Ang impormasyon, ideya, o damdaming nais ipahayag. Maaaring pasalita, pasulat, o biswal.</div></div>
+        <div class="sub-card"><div class="sub-card-title">3. Daluyan (Channel)</div><div class="sub-card-body">Ang paraan ng paghahatid: salita, sulat, email, telepono, kilos, ekspresyon ng mukha.</div></div>
+        <div class="sub-card"><div class="sub-card-title">4. Tatanggap (Decoder)</div><div class="sub-card-body">Tumatanggap at nagbibigay-kahulugan sa mensahe. Ang pag-unawa niya ang sukatan ng tagumpay ng komunikasyon.</div></div>
+        <div class="sub-card"><div class="sub-card-title">5. Feedback</div><div class="sub-card-body">Ang tugon ng tatanggap. Nagpapatunay kung naunawaan ang mensahe. Ginagawa itong two-way ang komunikasyon.</div></div>
+        <div class="sub-card"><div class="sub-card-title">6. Ingay (Noise)</div><div class="sub-card-body">Anumang nakakasagabal: pisikal (maingay na lugar), sikolohikal (stress), semantiko (maling interpretasyon), kultural.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Ang 7 C's ng Mabisang Komunikasyon</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Clear — Malinaw</div><div class="sub-card-body">Madaling maunawaan. Walang kalabuan o hindi malinaw na salita.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Concise — Maigsi</div><div class="sub-card-body">Walang sobrang salita o paulit-ulit na impormasyon. Tuwid sa punto.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Concrete — Kongkreto</div><div class="sub-card-body">May tiyak na impormasyon, halimbawa, at datos. Hindi malabo o abstract.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Correct — Tumpak</div><div class="sub-card-body">Walang grammatikal na pagkakamali. Tama ang impormasyon at ang estilo.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Coherent — Maayos</div><div class="sub-card-body">Lohikal ang daloy. Magkakaugnay ang mga ideya at maayos ang pagkakasunod.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Complete + Courteous</div><div class="sub-card-body">Kumpleto ang impormasyon at magalang ang tono — iginagalang ang tatanggap.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Mga Makrong Kasanayan sa Wika</div>
+      <div class="kasanayan-block">
+        <div class="kasanayan-card">
+          <div class="kasanayan-icon">👂</div>
+          <div class="kasanayan-name">Pakikinig</div>
+          <div class="kasanayan-desc">Aktibong proseso ng pagtanggap at pag-unawa sa sinasabi ng iba. Hindi lamang pagdinig — kundi pagbibigay-kahulugan.</div>
+        </div>
+        <div class="kasanayan-card">
+          <div class="kasanayan-icon">📖</div>
+          <div class="kasanayan-name">Pagbabasa</div>
+          <div class="kasanayan-desc">Proseso ng pakikipag-ugnayan sa teksto upang bumuo ng kahulugan. Mula sa literal hanggang kritikal na pag-unawa.</div>
+        </div>
+        <div class="kasanayan-card">
+          <div class="kasanayan-icon">📺</div>
+          <div class="kasanayan-name">Panonood</div>
+          <div class="kasanayan-desc">Aktibong pagtanggap ng biswal na mensahe. Nangangailangan ng visual literacy at kritikal na pag-iisip.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <div class="guide-section-title">📖 Kasanayan sa Pagbabasa — Detalyadong Gabay</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Apat na Uri ng Pagbabasa</div>
+      <div class="uri-grid">
+        <div class="uri-card">
+          <div class="uri-name">Skimming</div>
+          <div class="uri-desc"><strong>Layunin:</strong> Mabilis na pagkuha ng pangunahing ideya ng isang teksto nang hindi binabasa nang buo. Tinitingnan ang pamagat, unang at huling talata, at mga heading. Ginagamit bago ang intensive reading para malaman kung kapaki-pakinabang ang teksto.</div>
+        </div>
+        <div class="uri-card">
+          <div class="uri-name">Scanning</div>
+          <div class="uri-desc"><strong>Layunin:</strong> Paghahanap ng tiyak na impormasyon (petsa, pangalan, numero, salita) nang hindi binabasa ang buong teksto. Gumagalaw ang mata nang mabilis hanggang sa mahanap ang hinahanap. Ginagamit sa diksyunaryo, talaan, at index.</div>
+        </div>
+        <div class="uri-card">
+          <div class="uri-name">Intensive Reading</div>
+          <div class="uri-desc"><strong>Layunin:</strong> Masusing pag-unawa sa bawat detalye ng teksto — bawat salita, pangungusap, at talata. Mabagal at maingat. Ginagamit para sa mga teksto na nangangailangan ng buong pag-unawa tulad ng kontrata, batas, o teknikal na gabay.</div>
+        </div>
+        <div class="uri-card">
+          <div class="uri-name">Extensive Reading</div>
+          <div class="uri-desc"><strong>Layunin:</strong> Pagbabasa ng mahabang teksto (nobela, aklat) para sa pangkalahatang kasiyahan at kaalaman nang walang masusing pagsusuri sa bawat salita. Nagpapalakas ng bokabularyo at nagpapabilis ng reading speed sa paglipas ng panahon.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Apat na Antas ng Pagbabasa</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><strong>Persepsyon</strong> — Pagkilala at pag-decode ng mga simbolo, titik, at salita. Pinakamababang antas. Halimbawa: Nabasa ang salitang <em>laso</em> bilang <em>lasa</em> — nagaganap pa rin ang pagbabasa sa antas na ito.</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><strong>Komprehensiyon</strong> — Pag-unawa at pagpapaliwanag ng kahulugan ng teksto. Halimbawa: Nabasa ni Jose ang aralin at naipaliwanag niya nang husto sa kanyang kagrupo.</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><strong>Reaksyon</strong> — Personal na tugon, opinyon, o emosyon bilang sagot sa tekstong nabasa. Halimbawa: Nabasa ni Maria ang panukalang batas sa pagbubuwis at tumutol siya.</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><strong>Integrasyon</strong> — Paggamit ng natutuhan para kumilos, lumikha, o baguhin ang pananaw. Pinakamataas na antas. Halimbawa: Nagsimula si Maria mag-organisa ng mga kabataang lalaban sa panukalang batas.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Mga Hadlang sa Mabisang Pagbabasa at Paraan ng Paglampas</div>
+      <table class="grammar-table">
+        <tr><th>Hadlang</th><th>Kahulugan</th><th>Solusyon</th></tr>
+        <tr><td><strong>Limitadong Bokabularyo</strong></td><td>Hindi maintindihan ang mga salita sa teksto</td><td>Gumamit ng kontekstwal na pahiwatig; pag-aralan ang mga root words, prefix, at suffix</td></tr>
+        <tr><td><strong>Subvocalization</strong></td><td>Binibigkas sa isip ang bawat salita — nagpapabagal ng bilis</td><td>Pag-aralan ang chunking — pagbabasa ng grupo ng mga salita nang sabay</td></tr>
+        <tr><td><strong>Kakulangan ng Background Knowledge</strong></td><td>Mahirap maunawaan ang teksto dahil sa kawalan ng kaalaman sa paksa</td><td>Mag-pre-read — maghanap ng maikling background bago basahin ang pangunahing teksto</td></tr>
+        <tr><td><strong>Regression</strong></td><td>Paulit-ulit na pagbabalik sa nabasang bahagi</td><td>Magtiwala sa unang pagbasa; mag-highlight ng mahalagang bahagi</td></tr>
+        <tr><td><strong>Pisikal na Kaguluhan</strong></td><td>Ingay, masamang ilaw, kahinaan ng mata</td><td>Hanapin ang tahimik na lugar; tiyakin ang sapat na ilaw</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <div class="guide-section-title">📺 Kasanayan sa Panonood — Detalyadong Gabay</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Uri ng Panonood</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Deskriminatibo</div><div class="sub-card-body">Nakabatay sa opinyon o prejudice ng manonood. Ang paghuhusga ay nagmumula sa personal na pananaw, hindi sa ebidensya.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Komprehensibo</div><div class="sub-card-body">Layunin ang pag-unawa sa mensahe at mga detalye ng palabas. Aktibong nakikinig at nagmamasid.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Kaswal / Panlibang</div><div class="sub-card-body">Para sa aliw lamang. Hindi nagtutuon sa detalye o mensahe — relaxation at kasiyahan ang layunin.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Kritikal</div><div class="sub-card-body">Masusing pagsusuri gamit ang ebidensya at lohikal na pag-iisip. Pinakamataas na antas ng panonood.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Uri ng Palabas</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Impormatibo</div><div class="sub-card-body">Nagdaragdag ng kaalaman. Halimbawa: dokumentaryo, balita, edukasyonal na programa.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Persuasive</div><div class="sub-card-body">Nanghihikayat ng opinyon o aksyon sa manonood.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Naratibo</div><div class="sub-card-body">Pagsasalaysay ng kwento — sine, teleserye, maikling pelikula.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Ekspositori</div><div class="sub-card-body">Nagpapaliwanag gamit ang ebidensya. Halimbawa: GMA Documentaries.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Argumentatibo</div><div class="sub-card-body">Naghahasa ng paniniwala sa pamamagitan ng debate at argumento. Halimbawa: Mel &amp; Jay na may pakikipagtalo.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Sympathetic</div><div class="sub-card-body">Pumupukaw ng damdamin at emosyon ng manonood.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Mga Gabay na Framework sa Panonood</div>
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-title">Framework 1 — 3Cs at 3Ss</div>
+          <div class="sub-card-body">Para sa pelikula at video.<br><strong>3Cs:</strong> Colour (kulay at mood) · Camera (anggulo at perspektibo) · Character (tauhan at kilos)<br><strong>3Ss:</strong> Story (banghay) · Setting (tagpuan) · Sound (musika at tunog)</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Framework 2 — See, Think, Wonder</div>
+          <div class="sub-card-body"><em>Harvard Project Zero</em><br>• Ano ang <strong>NAKIKITA</strong> mo?<br>• Ano ang <strong>INIISIP</strong> mo tungkol dito?<br>• Ano ang <strong>IPINAGTATAKA</strong> o gusto mo pang malaman?</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Framework 3 — Visual Thinking Strategies</div>
+          <div class="sub-card-body">• Ano ang nangyayari sa larawang ito?<br>• Ano ang nakikita mong dahilan kung bakit mo iyon nasabi?<br>• Ano pa ang maaari nating makita?</div>
+        </div>
+      </div>
+    </div>
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-title">Naratibong Dimensyon</div>
+          <div class="sub-card-body">Ang kwento, tema, tauhan, at layunin ng tagalikha. Tanong: "Ano ang nais iparating ng pelikula o programa?"</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Visual na Dimensyon</div>
+          <div class="sub-card-body">Kulay, anggulo ng kamera, ilaw, at espasyo. Mababang anggulo = kapangyarihan. Mataas na anggulo = kahinaan.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Teknikal na Dimensyon</div>
+          <div class="sub-card-body">Editing, sound effects, at musika. Mabilis na editing = tensyon. Mahinang musika = emosyon at lalim.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Apat na Uri ng Panonood</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Deskriminatibo</div><div class="sub-card-body">Nakabatay sa opinyon o prejudice ng manonood. Ang pagtingin ay naiimpluwensyahan ng personal na paniniwala at pag-aakala bago pa man manood.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Komprehensibo</div><div class="sub-card-body">Pag-unawa sa mensahe at detalye ng palabas. Aktibong sinisiguruhing naiintindihan ang lahat ng impormasyong ipinipakita.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Kaswal / Panlibang</div><div class="sub-card-body">Para sa aliw at kasiyahan lamang. Hindi nagtutuon sa detalye. Halimbawa: nanood ng pelikula para magpahinga.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Kritikal</div><div class="sub-card-body">Masusing pagsusuri gamit ang ebidensya. Tinatanong ang layunin, bias, at katotohanan ng ipinakita. Pinakamataas na antas.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Anim na Uri ng Palabas</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Impormatibo</div><div class="sub-card-body">Nagdaragdag ng kaalaman. Halimbawa: dokumentaryo, balita, educational videos.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Persuasive</div><div class="sub-card-body">Nanghihikayat ng manonood na maniwala o kumilos. Halimbawa: advertisement, propaganda.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Naratibo</div><div class="sub-card-body">Pagsasalaysay ng kwento. Halimbawa: pelikula, teleserye, short film.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Ekspositori</div><div class="sub-card-body">Nagpapaliwanag gamit ang ebidensya. Halimbawa: GMA Documentaries, explainer videos.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Argumentatibo</div><div class="sub-card-body">Naghahasa ng paniniwala sa pamamagitan ng debate o pagtatalo. Halimbawa: "Mel &amp; Jay" na may pakikipagtalo.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Sympathetic</div><div class="sub-card-body">Pumupukaw ng damdamin at empatiya ng manonood. Halimbawa: kuwento ng pagdurusa o inspirasyon.</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Mga Framework sa Panonood</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Framework 1: 3Cs &amp; 3Ss</div><div class="sub-card-body"><strong>3Cs:</strong> Colour (kulay), Camera (kamera), Character (karakter)<br><strong>3Ss:</strong> Story (kwento), Setting (tagpuan), Sound (tunog). Para sa pelikula at video.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Framework 2: See, Think, Wonder</div><div class="sub-card-body"><strong>See:</strong> Ano ang nakikita mo?<br><strong>Think:</strong> Ano ang iniisip mo?<br><strong>Wonder:</strong> Ano ang gusto mo pang malaman? (Harvard Project Zero)</div></div>
+        <div class="sub-card"><div class="sub-card-title">Framework 3: VTS</div><div class="sub-card-body">Visual Thinking Strategies: "Ano ang nangyayari?" → "Ano ang nakikita mo na dahilan?" → "Ano pa ang maaari nating makita?"</div></div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Media Literacy — Paano Maging Matalinong Manonood</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">①</div><div class="step-body"><strong>Magtanong</strong> — "Sino ang gumawa nito? Para kanino? Para sa anong layunin?"</div></div>
+        <div class="step-item"><div class="step-num">②</div><div class="step-body"><strong>Kilalanin</strong> ang propaganda, stereotyping, at bias sa media</div></div>
+        <div class="step-item"><div class="step-num">③</div><div class="step-body"><strong>Suriin</strong> ang credibility ng source — sino ang nagpopondo ng programa o pelikula?</div></div>
+        <div class="step-item"><div class="step-num">④</div><div class="step-body"><strong>Ihambing</strong> ang mensahe sa iba pang pinagkukunan bago maniwala</div></div>
+        <div class="step-item"><div class="step-num">⑤</div><div class="step-body"><strong>Tandaan</strong> — ang bawat media ay isang constructed reality. Pinili at binago ng tagalikha ang lahat.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <div class="guide-section-title">📜 Ikatlong Markahan — Uri ng Tula</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Apat na Pangunahing Uri ng Tula</div>
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-title">Liriko / Pandamdamin</div>
+          <div class="sub-card-body">Nagpapahayag ng personal na damdamin at emosyon. Walang banghay — snapshot ng damdamin lamang. Halimbawa: <em>Bayan Ko</em> — nagpapahayag ng pagmamahal at pagnanais ng kalayaan.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Pasalaysay</div>
+          <div class="sub-card-body">Nagkukuwento sa anyong tula. May banghay, tauhan, at sunod-sunod na pangyayari. May simula, gitna, at wakas.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Patnigan / Balagtasan</div>
+          <div class="sub-card-body">May pagtatalo o debate sa anyong tula. Ang <strong>Balagtasan</strong> ay debate sa Filipino — dalawang makata ang nagtatalo tungkol sa isang paksa. Pinangalanan kay Francisco Balagtas.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Pantanghalan</div>
+          <div class="sub-card-body">Itinatanghal sa entablado. May mga dayalogo — para mapanood at marinig, hindi lamang mabasa. Malapit sa dula ngunit nasa anyong tula.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Haiku at Tanaga — Paghahambing</div>
+      <table class="grammar-table">
+        <tr><th>Katangian</th><th>Haiku (Hapon)</th><th>Tanaga (Pilipino)</th></tr>
+        <tr><td><strong>Bilang ng linya</strong></td><td>3 linya</td><td>4 na linya</td></tr>
+        <tr><td><strong>Sukat</strong></td><td>5-7-5 pantig (17 total)</td><td>7-7-7-7 pantig (28 total)</td></tr>
+        <tr><td><strong>Tugma</strong></td><td>Wala (karaniwang walang tugma)</td><td>May tugma sa dulo ng bawat linya</td></tr>
+        <tr><td><strong>Paksa</strong></td><td>Kalikasan, isang sandali, kigo (salitang pangpanahon)</td><td>Karunungan, pagmamahal, kalikasan, buhay</td></tr>
+        <tr><td><strong>Pinagmulan</strong></td><td>Japan (Matsuo Bashō, Yosa Buson)</td><td>Pilipinas — katutubong anyo ng tula</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Mga Elemento ng Tula</div>
+      <div class="sub-cards">
+        <div class="sub-card"><div class="sub-card-title">Taludtod</div><div class="sub-card-body">Isang linya ng tula — katulad ng pangungusap sa prosa.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Saknong</div><div class="sub-card-body">Grupo ng mga taludtod — katulad ng talata sa prosa.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Sukat</div><div class="sub-card-body">Bilang ng pantig sa bawat taludtod. Tinutukoy ang ritmo ng tula.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Tugma</div><div class="sub-card-body">Pagkakatulad ng tunog sa dulo ng mga taludtod. Nagbibigay ng musikalidad sa tula.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Imahen</div><div class="sub-card-body">Mga salitang lumilikha ng larawan sa isip ng mambabasa sa pamamagitan ng limang pandama.</div></div>
+        <div class="sub-card"><div class="sub-card-title">Simbolo</div><div class="sub-card-body">Bagay na kumakatawan sa ibang kahulugan. Halimbawa sa <em>Bayan Ko</em>: ang ibon = kalayaan.</div></div>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// Particles
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, pts = [];
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for(let i=0;i<30;i++) pts.push({
+    x:Math.random()*2000, y:Math.random()*2000,
+    r:Math.random()*1.4+0.4,
+    vx:(Math.random()-.5)*.1, vy:-Math.random()*.15-.04,
+    a:Math.random()*.45+.12
+  });
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.y<-10)p.y=H+10; if(p.x<-10)p.x=W+10; if(p.x>W+10)p.x=-10;
+      ctx.beginPath(); ctx.arc(p.x%W,p.y%H,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(98,170,88,${p.a})`; ctx.fill(); });
+    requestAnimationFrame(tick);
+  } tick();
+})();
+
+// Tabs
+const tabMap      = document.getElementById('tabMap');
+const tabPractice = document.getElementById('tabPractice');
+const tabGuide    = document.getElementById('tabGuide');
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+const guidePage    = document.getElementById('guidePage');
+
+function showTab(tab, pageEl) {
+  [tabMap, tabPractice, tabGuide].forEach(t => t.classList.remove('active'));
+  [mapPage, practicePage, guidePage].forEach(p => p.classList.remove('visible'));
+  tab.classList.add('active'); pageEl.classList.add('visible');
+}
+tabMap.addEventListener('click',      () => showTab(tabMap,      mapPage));
+tabPractice.addEventListener('click', () => showTab(tabPractice, practicePage));
+tabGuide.addEventListener('click',    () => showTab(tabGuide,    guidePage));
+
+// Quarter filter
+document.querySelectorAll('.quarter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.quarter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const q = pill.dataset.q;
+    document.querySelectorAll('.topic-item').forEach(item => {
+      item.classList.toggle('hidden', q !== 'ALL' && item.dataset.q !== q);
+    });
+    document.querySelectorAll('.era-section').forEach(sec => {
+      const id = sec.id.replace('section-', '');
+      sec.style.display = (q === 'ALL' || q === id) ? '' : 'none';
+    });
+  });
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  let count = 0;
+  document.querySelectorAll('.topic-item').forEach(item => {
+    const match = !term ||
+      item.querySelector('.topic-name').textContent.toLowerCase().includes(term) ||
+      (item.dataset.title || '').toLowerCase().includes(term) ||
+      (item.dataset.desc  || '').toLowerCase().includes(term);
+    item.classList.toggle('hidden', !match);
+    if (match) count++;
+  });
+  document.getElementById('searchCount').textContent = term ? `${count} resulta` : '';
+});
+
+// Modal
+document.querySelectorAll('.topic-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const tag = el.closest('.field').querySelector('.field-tag').textContent;
+    document.getElementById('modalTag').textContent  = tag + ' · ' + el.dataset.q;
+    document.getElementById('modalTitle').textContent = el.dataset.title || el.querySelector('.topic-name').textContent;
+    document.getElementById('modalBody').textContent  = el.dataset.desc  || '';
+    document.getElementById('modalBackdrop').classList.add('open');
+  });
+});
+document.getElementById('modalClose').addEventListener('click', () => document.getElementById('modalBackdrop').classList.remove('open'));
+document.getElementById('modalBackdrop').addEventListener('click', e => { if(e.target===document.getElementById('modalBackdrop')) document.getElementById('modalBackdrop').classList.remove('open'); });
+
+// Practice MCQ
+document.querySelectorAll('.question-block').forEach(block => {
+  const choices = block.querySelectorAll('.choice');
+  const explanation = block.querySelector('.explanation');
+  let answered = false;
+  choices.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        if (c.dataset.correct) c.classList.add('correct');
+        else if (c === btn && !c.dataset.correct) c.classList.add('wrong');
+        c.style.pointerEvents = 'none';
+      });
+      if (explanation) explanation.classList.add('show');
+    });
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>English 2 · Communication Arts · Champaca</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #1a0608;
+    --deep:     #0f0304;
+    --surface:  #2a0c0f;
+    --surface2: #360f13;
+    --crimson:  #8b1a22;
+    --crimson2: #b02030;
+    --crimson3: #d42838;
+    --rose:     #e8a0a8;
+    --rose2:    #f0c0c8;
+    --cream:    #f5e8d8;
+    --cream2:   #ede0cc;
+    --ink:      #1a0406;
+    --muted:    #7a3840;
+    --muted2:   #5a2830;
+    --accent:   #c8901a;
+    --accent2:  #e8b030;
+    --border:   rgba(180,60,80,0.22);
+    --border2:  rgba(180,60,80,0.45);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Crimson Pro', serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle paper grain */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.6;
+  }
+
+  /* Subtle diagonal line pattern */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 28px,
+      rgba(139,26,34,0.03) 28px, rgba(139,26,34,0.03) 29px
+    );
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative; z-index: 10;
+    background: linear-gradient(180deg, #0a0102 0%, #150406 50%, #1a0608 100%);
+    border-bottom: 2px solid var(--crimson);
+    padding: 26px 36px 20px;
+    overflow: hidden;
+    max-width: 1200px; margin: 0 auto;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(139,26,34,0.07) 59px, rgba(139,26,34,0.07) 60px),
+      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(139,26,34,0.07) 59px, rgba(139,26,34,0.07) 60px);
+    pointer-events: none;
+  }
+  /* Open book decoration top-right */
+  header::after {
+    content: '';
+    position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+    width: 90px; height: 90px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%238b1a22' stroke-width='1' opacity='0.5'%3E%3Cpath d='M50 20 C35 20 20 25 20 35 L20 75 C20 65 35 60 50 60 C65 60 80 65 80 75 L80 35 C80 25 65 20 50 20Z'/%3E%3Cline x1='50' y1='20' x2='50' y2='60'/%3E%3Cline x1='25' y1='38' x2='48' y2='38'/%3E%3Cline x1='25' y1='44' x2='48' y2='44'/%3E%3Cline x1='25' y1='50' x2='48' y2='50'/%3E%3Cline x1='52' y1='38' x2='75' y2='38'/%3E%3Cline x1='52' y1='44' x2='75' y2='44'/%3E%3Cline x1='52' y1='50' x2='75' y2='50'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+    pointer-events: none; opacity: 0.7;
+  }
+  .home-btn {
+    display: flex; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    border-right: 1px solid rgba(180,60,80,0.3);
+    padding: 0 20px;
+    transition: color .15s, background .15s;
+    flex-shrink: 0;
+  }
+  .home-btn:hover { color: var(--cream); background: rgba(139,26,34,0.1); }
+  .header-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px; letter-spacing: 0.38em; text-transform: uppercase;
+    color: var(--crimson2); margin-bottom: 8px; opacity: 0.9;
+  }
+  .header-title {
+    font-family: 'Playfair Display', serif; font-weight: 700;
+    font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+    line-height: 1.1; color: var(--cream);
+    letter-spacing: 0.02em;
+  }
+  .header-title em { color: var(--crimson3); font-style: italic; }
+  .header-sub {
+    font-family: 'Crimson Pro', serif; font-style: italic;
+    font-size: 13px; color: var(--muted); margin-top: 5px;
+  }
+  .header-ornament {
+    margin-top: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .header-ornament::before, .header-ornament::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--crimson), transparent);
+    opacity: 0.4;
+  }
+  .header-ornament span { font-size: 12px; color: var(--crimson2); opacity: 0.6; letter-spacing: 0.5em; }
+
+  /* ── TABS ── */
+  .page-tabs {
+    display: flex; border-bottom: 2px solid var(--crimson);
+    background: var(--surface); overflow-x: auto;
+    position: relative; z-index: 10;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .page-tab {
+    padding: 13px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .page-tab:hover { color: var(--cream); background: rgba(139,26,34,0.08); }
+  .page-tab.active { color: var(--crimson3); border-bottom-color: var(--crimson3); }
+
+  /* ── PAGES ── */
+  #mapPage, #practicePage, #guidePage {
+    max-width: 1200px; margin-left: auto; margin-right: auto;
+  }
+  #mapPage, #practicePage, #guidePage { display: none; position: relative; z-index: 1; }
+  #mapPage.visible, #practicePage.visible, #guidePage.visible { display: block; }
+
+  /* ── QUARTER PILLS ── */
+  .quarters {
+    display: flex; border-bottom: 1px solid var(--border2);
+    background: rgba(42,12,15,0.8); overflow-x: auto; padding: 0 12px;
+    position: sticky; top: 0; z-index: 9;
+  }
+  .quarter-pill {
+    padding: 10px 20px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); border: none; background: none;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .quarter-pill:hover { background: rgba(139,26,34,0.08); color: var(--cream); }
+  .quarter-pill.active { color: var(--crimson3); border-bottom-color: var(--crimson3); }
+  .quarter-pill span { display: block; font-size: 7.5px; opacity: 0.5; margin-top: 2px; }
+
+  /* ── MAP INNER ── */
+  .map-inner { padding: 28px 32px 60px; }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    padding: 14px 32px 12px; background: rgba(42,12,15,0.6);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .search-wrap input {
+    flex: 1; max-width: 380px;
+    padding: 9px 14px; border: 1px solid var(--border2);
+    border-radius: 3px; background: rgba(245,232,216,0.07);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--cream); outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-wrap input:focus { border-color: var(--crimson2); box-shadow: 0 0 0 3px rgba(139,26,34,0.15); }
+  .search-count { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); }
+
+  /* ── ERA SECTIONS ── */
+  .era-section { margin-bottom: 36px; }
+  .era-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .era-icon { font-size: 18px; }
+  .era-title {
+    font-family: 'Playfair Display', serif; font-size: 13px;
+    font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--rose2);
+  }
+  .era-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border2), transparent); }
+
+  /* ── FIELD ── */
+  .field {
+    background: rgba(54,15,19,0.5);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .field-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(42,12,15,0.5);
+  }
+  .field-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 2px;
+    background: rgba(139,26,34,0.2); color: var(--crimson3);
+    border: 1px solid rgba(139,26,34,0.35); white-space: nowrap;
+  }
+  .field-title {
+    font-family: 'Playfair Display', serif; font-size: 13.5px;
+    font-weight: 600; color: var(--cream2);
+  }
+  .topic-list { list-style: none; padding: 6px 0; }
+  .topic-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 16px;
+    border-bottom: 1px solid rgba(180,60,80,0.08);
+    cursor: pointer; transition: background 0.12s;
+  }
+  .topic-item:last-child { border-bottom: none; }
+  .topic-item:hover { background: rgba(139,26,34,0.1); }
+  .topic-item.hidden { display: none; }
+  .topic-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--crimson2); flex-shrink: 0;
+  }
+  .topic-name {
+    flex: 1; font-family: 'Crimson Pro', serif; font-size: 14px; color: var(--cream2);
+  }
+  .topic-quarter {
+    font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
+    color: var(--muted); letter-spacing: 0.08em;
+  }
+
+  /* Colour coding by quarter */
+  [data-q="Q1"] .topic-dot { background: #c87040; }
+  [data-q="Q2"] .topic-dot { background: #c84060; }
+  [data-q="Q3"] .topic-dot { background: #6080c8; }
+  [data-q="Q4"] .topic-dot { background: #40a870; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(10,1,2,0.82); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 20px;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px; padding: 32px 36px;
+    max-width: 580px; width: 100%; position: relative;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; color: var(--muted);
+    font-size: 18px; cursor: pointer; transition: color .15s;
+  }
+  .modal-close:hover { color: var(--cream); }
+  .modal-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--crimson3); margin-bottom: 10px;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif; font-size: 20px;
+    color: var(--cream); margin-bottom: 14px; line-height: 1.3;
+  }
+  .modal-body {
+    font-family: 'Crimson Pro', serif; font-size: 14.5px;
+    color: var(--cream2); line-height: 1.7;
+  }
+
+  /* ── PRACTICE PAGE ── */
+  #practicePage { padding: 28px 32px 60px; }
+  .practice-section { margin-bottom: 40px; }
+  .practice-section-title {
+    font-family: 'Playfair Display', serif; font-size: 15px;
+    font-weight: 700; color: var(--rose2);
+    letter-spacing: 0.04em; margin-bottom: 18px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border2);
+  }
+  .question-block {
+    background: rgba(54,15,19,0.5);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px 20px; margin-bottom: 14px;
+  }
+  .question-text {
+    font-family: 'Crimson Pro', serif; font-size: 15px;
+    color: var(--cream); margin-bottom: 12px; line-height: 1.6;
+  }
+  .question-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--crimson3); letter-spacing: 0.1em; margin-bottom: 6px;
+  }
+  .choices { display: flex; flex-direction: column; gap: 7px; }
+  .choice {
+    padding: 8px 14px; border-radius: 3px;
+    border: 1px solid var(--border);
+    background: rgba(245,232,216,0.04);
+    font-family: 'Crimson Pro', serif; font-size: 14px;
+    color: var(--cream2); cursor: pointer; transition: all .15s;
+    text-align: left;
+  }
+  .choice:hover { border-color: var(--crimson2); background: rgba(139,26,34,0.12); }
+  .choice.correct { background: rgba(30,100,50,0.25); border-color: #3a8a50; color: #90e0a0; }
+  .choice.wrong   { background: rgba(139,26,34,0.25); border-color: var(--crimson2); color: #f08090; }
+  .explanation {
+    margin-top: 12px; padding: 10px 14px;
+    border-left: 2px solid var(--crimson2);
+    background: rgba(139,26,34,0.1);
+    font-family: 'Crimson Pro', serif; font-size: 13.5px;
+    color: var(--cream2); line-height: 1.6;
+    display: none;
+  }
+  .explanation.show { display: block; }
+
+  /* ── STUDY GUIDE PAGE ── */
+  #guidePage { padding: 28px 32px 60px; }
+  .guide-section { margin-bottom: 44px; }
+  .guide-section-title {
+    font-family: 'Playfair Display', serif; font-size: 17px;
+    font-weight: 700; color: var(--rose2);
+    margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border2);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .guide-block {
+    background: rgba(54,15,19,0.5);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px 20px; margin-bottom: 12px;
+  }
+  .guide-block-title {
+    font-family: 'Playfair Display', serif; font-size: 14px;
+    font-weight: 700; color: var(--crimson3); margin-bottom: 8px;
+  }
+  .guide-block-body {
+    font-family: 'Crimson Pro', serif; font-size: 14px;
+    color: var(--cream2); line-height: 1.7;
+  }
+  .guide-block-body strong { color: var(--rose2); }
+  .grammar-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .grammar-table th {
+    background: rgba(139,26,34,0.2); color: var(--rose2);
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 8px 12px; text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .grammar-table td {
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    font-family: 'Crimson Pro', serif; font-size: 13.5px; color: var(--cream2);
+    vertical-align: top;
+  }
+  .grammar-table tr:last-child td { border-bottom: none; }
+  .example-box {
+    background: rgba(139,26,34,0.08); border-left: 2px solid var(--crimson2);
+    padding: 8px 12px; margin: 8px 0; font-style: italic; color: var(--cream2);
+    font-size: 13.5px;
+  }
+  /* Sub-cards inside a guide block */
+  .sub-cards {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+    gap: 10px; margin-top: 10px;
+  }
+  .sub-card {
+    background: rgba(10,1,2,0.35); border: 1px solid rgba(180,60,80,0.18);
+    border-radius: 3px; padding: 11px 13px;
+  }
+  .sub-card-title {
+    font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700;
+    color: var(--rose2); margin-bottom: 5px;
+  }
+  .sub-card-body {
+    font-family: 'Crimson Pro', serif; font-size: 13px;
+    color: var(--cream2); line-height: 1.5;
+  }
+  .sub-card-body em { color: var(--cream); font-style: italic; }
+  /* Step list */
+  .step-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .step-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 12px; background: rgba(10,1,2,0.3);
+    border: 1px solid rgba(180,60,80,0.15); border-radius: 3px;
+  }
+  .step-num {
+    font-family: 'Playfair Display', serif; font-size: 13px; font-weight: 700;
+    color: var(--crimson3); flex-shrink: 0; min-width: 20px;
+  }
+  .step-body { font-family: 'Crimson Pro', serif; font-size: 13.5px; color: var(--cream2); line-height: 1.5; }
+  .step-body strong { color: var(--rose2); }
+  .key-terms-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
+    gap: 12px; margin-top: 10px;
+  }
+  .key-term {
+    background: rgba(54,15,19,0.6);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 12px 14px;
+  }
+  .key-term-word {
+    font-family: 'Playfair Display', serif; font-size: 13px;
+    font-weight: 700; color: var(--accent2); margin-bottom: 4px;
+  }
+  .key-term-def {
+    font-family: 'Crimson Pro', serif; font-size: 13px;
+    color: var(--cream2); line-height: 1.5;
+  }
+
+</style>
+</head>
+<body>
+
+<canvas id="particles" style="position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.12"></canvas>
+
+<header>
+  <div class="header-label">Grade 8 · Champaca · SY 2025–2026</div>
+  <div class="header-title">English 2: <em>Communication Arts</em></div>
+  <div class="header-sub">Philippine Science High School · Main Campus</div>
+  <div class="header-ornament"><span>✦ ✦ ✦</span></div>
+</header>
+
+<nav class="page-tabs">
+  <a href="index.html" class="home-btn">← Home</a>
+  <button class="page-tab active" id="tabMap">📋 Curriculum Map</button>
+  <button class="page-tab" id="tabPractice">✏️ Practice Exercises</button>
+  <button class="page-tab" id="tabGuide">📖 Study Guide</button>
+</nav>
+
+<!-- ══ CURRICULUM MAP ══ -->
+<div id="mapPage" class="visible">
+  <div class="search-wrap">
+    <input id="searchInput" type="text" placeholder="Search topics, skills, grammar…" autocomplete="off"/>
+    <span class="search-count" id="searchCount"></span>
+  </div>
+  <div class="quarters">
+    <button class="quarter-pill active" data-q="ALL">All Quarters</button>
+    <button class="quarter-pill" data-q="Q1">Quarter 1 <span>Quest for Truth</span></button>
+    <button class="quarter-pill" data-q="Q2">Quarter 2 <span>Passion for Excellence</span></button>
+    <button class="quarter-pill" data-q="Q3">Quarter 3 <span>Commitment to Service</span></button>
+    <button class="quarter-pill" data-q="Q4">Quarter 4 <span>Power of Connection</span></button>
+  </div>
+  <div class="map-inner">
+
+    <!-- Q1 -->
+    <div class="era-section" id="section-Q1">
+      <div class="era-header"><span class="era-icon">🔍</span><span class="era-title">Quarter 1 — The Quest for Truth: Understanding Ourselves and the World</span><span class="era-line"></span></div>
+      <div class="field" data-quarters="Q1">
+        <div class="field-header"><span class="field-tag">Grammar &amp; Usage</span><span class="field-title">Language Mechanics — Q1</span></div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q1"
+            data-title="Subject-Verb Agreement — Tricky Cases"
+            data-desc="The basic rule: singular subject → singular verb; plural subject → plural verb. Tricky cases: (1) Words that look plural but are singular: news, mathematics, physics, economics, politics, measles → always singular. (2) Collective nouns (team, committee, family, jury) → usually singular when acting as one unit. (3) Neither…nor / Either…or → verb agrees with the NEAREST subject. (4) Every/each + compound subject → singular verb. (5) Indefinite pronouns — always singular: everyone, somebody, nobody, each, either, neither, anything. Always plural: both, few, many, several. Depend on context: some, most, all, none. (6) Intervening prepositional phrases don't affect agreement: 'The box of chocolates IS on the table.' (7) Expressions of time, money, distance, weight as a unit → singular: 'Two hours IS enough.' (8) Titles of books, films, subjects → singular: 'Romeo and Juliet IS a tragedy.'"><span class="topic-dot"></span><span class="topic-name">Subject-Verb Agreement (Tricky Cases)</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1"
+            data-title="Direct and Indirect Speech"
+            data-desc="Direct speech uses the speaker's exact words in quotation marks: She said, 'I am tired.' Indirect (reported) speech conveys the meaning without quoting exactly: She said (that) she was tired. KEY CHANGES when converting direct → indirect: (1) TENSE BACKSHIFT: present simple → past simple; present continuous → past continuous; present perfect → past perfect; past simple → past perfect; will → would; can → could; may → might; must → had to. (2) PRONOUNS change according to the speaker/context. (3) TIME EXPRESSIONS: now → then; today → that day; yesterday → the day before; tomorrow → the next day; here → there; this → that. (4) For questions: use 'if'/'whether' for yes-no questions; keep the wh-word for wh-questions; change word order to statement order. (5) For commands: use 'told/asked/ordered + object + to + infinitive'. Exception: modals 'would, could, might, should, ought to' do NOT backshift."><span class="topic-dot"></span><span class="topic-name">Direct and Indirect Speech</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1"
+            data-title="Conjunctive Adverbs"
+            data-desc="Conjunctive adverbs (also called adverbial conjunctions or transitional adverbs) connect two independent clauses and show the logical relationship between them. PUNCTUATION RULE: [Independent clause] ; conjunctive adverb , [independent clause]. Examples: 'She studied hard; however, she still failed.' 'He was tired; nevertheless, he finished.' Common conjunctive adverbs by function — CONTRAST: however, nevertheless, nonetheless, on the contrary, on the other hand, still, yet. CAUSE/EFFECT: therefore, consequently, thus, as a result, hence, accordingly. ADDITION: furthermore, moreover, in addition, besides, also, likewise. SEQUENCE: first, then, next, finally, subsequently, meanwhile. CONCESSION: admittedly, certainly, granted. COMPARISON: similarly, likewise, in the same way. Do NOT confuse with coordinating conjunctions (FANBOYS) which use only a comma before them."><span class="topic-dot"></span><span class="topic-name">Conjunctive Adverbs</span><span class="topic-quarter">Q1</span></li>
+        </ul>
+      </div>
+      <div class="field" data-quarters="Q1">
+        <div class="field-header"><span class="field-tag">Writing &amp; Speaking</span><span class="field-title">Research &amp; Academic Skills — Q1</span></div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q1"
+            data-title="Summarizing, Paraphrasing, and Quoting"
+            data-desc="SUMMARIZING: Condense a text to its main ideas only. Much shorter than the original. Use your own words. No quotation marks needed. Example: A 10-page article becomes 2–3 sentences capturing the core argument. PARAPHRASING: Restate a specific passage in your own words, roughly the same length as the original. Changes vocabulary AND sentence structure — not just synonyms. Still requires citation. Example: 'The economy grew rapidly' → 'There was significant and swift economic expansion.' QUOTING: Use the author's EXACT words. Enclose in quotation marks. Use sparingly — only when exact wording matters (statistics, definitions, powerful phrasing). Always cite. KEY DISTINCTION: Changing only a few words from the original while keeping the same structure = plagiarism, not paraphrasing."><span class="topic-dot"></span><span class="topic-name">Summarizing, Paraphrasing &amp; Quoting</span><span class="topic-quarter">Q1</span></li>
+          <li class="topic-item" data-q="Q1"
+            data-title="Academic Integrity, Plagiarism &amp; APA Citation (7th Ed.)"
+            data-desc="PLAGIARISM = presenting someone else's words, ideas, or work as your own without acknowledgment. Types: verbatim copying, paraphrasing without citation, submitting AI-generated text as your own, using a classmate's work. AVOID by: always citing sources, paraphrasing properly, using quotation marks for exact words. APA 7TH EDITION FORMAT — In-text citation: (Author Last Name, Year) or (Author Last Name, Year, p. #) for quotes. Reference list — Journal article: Author, A. A. (Year). Title of article. Journal Name, volume(issue), pages. https://doi.org/... — Book: Author, A. A. (Year). Title of work: Capital letter also for subtitle. Publisher. — Website: Author, A. A. (Year, Month Day). Title of page. Site Name. URL — AI tools (e.g., ChatGPT): OpenAI. (Year). ChatGPT (version) [Large language model]. https://chat.openai.com. Similarity threshold at PSHS: more than 10% triggers review."><span class="topic-dot"></span><span class="topic-name">Academic Integrity, Plagiarism &amp; APA Citation</span><span class="topic-quarter">Q1</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="era-section" id="section-Q2">
+      <div class="era-header"><span class="era-icon">⭐</span><span class="era-title">Quarter 2 — The Passion for Excellence: Striving for Greatness</span><span class="era-line"></span></div>
+      <div class="field" data-quarters="Q2">
+        <div class="field-header"><span class="field-tag">Grammar &amp; Usage</span><span class="field-title">Language Mechanics — Q2</span></div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q2"
+            data-title="Verbals and Verbal Phrases"
+            data-desc="Verbals are verb forms that function as other parts of speech. THREE TYPES: (1) GERUND: verb + -ing used as a NOUN. Can be subject, object, or complement. Example: 'Swimming is relaxing.' (subject) / 'She enjoys reading.' (object) / 'Her hobby is painting.' (complement). (2) INFINITIVE: 'to' + base verb. Can function as a NOUN, ADJECTIVE, or ADVERB. As noun: 'To succeed takes effort.' As adjective: 'She has a lot to learn.' As adverb: 'He studied hard to pass.' (3) PARTICIPLE: verb form used as an ADJECTIVE. Present participle (-ing): 'The crying baby woke everyone.' Past participle (-ed/irregular): 'The broken window needs repair.' VERBAL PHRASES include the verbal + its complements/modifiers: 'Running at full speed, he crossed the finish line.' KEY DISTINCTION: A present participle modifies a noun (adjective use), but a gerund IS the noun. 'Running is fun' (gerund) vs. 'The running water' (participle)."><span class="topic-dot"></span><span class="topic-name">Verbals and Verbal Phrases</span><span class="topic-quarter">Q2</span></li>
+          <li class="topic-item" data-q="Q2"
+            data-title="Errors in Modification — Misplaced and Dangling Modifiers"
+            data-desc="MISPLACED MODIFIER: A modifier placed too far from the word it modifies, creating ambiguity or unintended meaning. FIX: Move the modifier next to the word it describes. Examples: ✗ 'She almost drove her children to school every day.' (almost is misplaced — she did drive them, but not quite every day) ✓ 'She drove her children to school almost every day.' ✗ 'I saw the man with the telescope.' (who has the telescope?) ✓ 'Using a telescope, I saw the man.' or 'I saw the man who had a telescope.' DANGLING MODIFIER: A modifier that has no clear subject to modify in the sentence — the word it's supposed to describe is missing. FIX: Add the missing subject or restructure the sentence. Examples: ✗ 'Walking to school, the rain began to fall.' (The rain wasn't walking.) ✓ 'Walking to school, I got caught in the rain.' ✗ 'Exhausted after the exam, the bed looked very inviting.' (The bed isn't exhausted.) ✓ 'Exhausted after the exam, she found the bed very inviting.' QUICK TEST: Ask 'Who or what is [modifier]?' — if the answer isn't clearly in the sentence, it's dangling."><span class="topic-dot"></span><span class="topic-name">Errors in Modification (Misplaced &amp; Dangling)</span><span class="topic-quarter">Q2</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="era-section" id="section-Q3">
+      <div class="era-header"><span class="era-icon">🤝</span><span class="era-title">Quarter 3 — The Commitment to Service: Serving a Greater Good</span><span class="era-line"></span></div>
+      <div class="field" data-quarters="Q3">
+        <div class="field-header"><span class="field-tag">Grammar &amp; Usage</span><span class="field-title">Language Mechanics — Q3</span></div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q3"
+            data-title="Consistency in Writing — Subject, POV, Number, Voice, Tense"
+            data-desc="Writing consistency means avoiding unnecessary shifts that confuse the reader. (1) SUBJECT CONSISTENCY: Don't shift person without reason. ✗ 'When one studies hard, you tend to do well.' ✓ 'When one studies hard, one tends to do well.' OR 'When you study hard, you tend to do well.' (2) POINT OF VIEW: Choose 1st (I/we), 2nd (you), or 3rd (he/she/they) and stick to it. Academic writing typically uses 3rd person. (3) NUMBER: Don't shift between singular and plural. ✗ 'A student should bring their book.' (mixed) ✓ 'Students should bring their books.' (4) VOICE: Don't mix active and passive without reason. ✗ 'Maria wrote the report and the data was analyzed by her.' ✓ 'Maria wrote the report and analyzed the data.' (5) TENSE: Use a consistent tense for events at the same time. Literary present tense for discussing texts: 'Hamlet struggles with indecision.' Historical past tense for events: 'The war ended in 1945.'"><span class="topic-dot"></span><span class="topic-name">Consistency (Subject, POV, Number, Voice, Tense)</span><span class="topic-quarter">Q3</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="era-section" id="section-Q4">
+      <div class="era-header"><span class="era-icon">🌏</span><span class="era-title">Quarter 4 — The Power of Connection: Linking Lives in a Shared World</span><span class="era-line"></span></div>
+      <div class="field" data-quarters="Q4">
+        <div class="field-header"><span class="field-tag">Grammar &amp; Usage</span><span class="field-title">Language Mechanics — Q4</span></div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q4"
+            data-title="Sentence Fragments"
+            data-desc="A sentence fragment is an incomplete sentence that is missing a subject, a verb, or a complete thought (often a dependent clause left alone). TYPES: (1) Missing subject: ✗ 'Ran to the store quickly.' ✓ 'She ran to the store quickly.' (2) Missing verb: ✗ 'The tall man in the blue coat.' ✓ 'The tall man in the blue coat waved.' (3) Dependent clause alone (subordinating conjunction with no main clause): ✗ 'Because she was tired.' ✓ 'She went to bed early because she was tired.' (4) Verbal phrase alone: ✗ 'Running late to class.' ✓ 'Running late to class, he missed the introduction.' HOW TO FIX: (a) Add the missing element; (b) Attach to the adjacent sentence; (c) Remove the subordinating conjunction. NOTE: Intentional fragments exist in literature for effect ('No way.' 'Not a chance.') but in academic writing, fragments are errors."><span class="topic-dot"></span><span class="topic-name">Fragments</span><span class="topic-quarter">Q4</span></li>
+          <li class="topic-item" data-q="Q4"
+            data-title="Run-on Sentences"
+            data-desc="A run-on sentence fuses two or more independent clauses without proper punctuation or a conjunction. TYPES: (1) Fused sentence (no punctuation): ✗ 'It was raining we stayed inside.' (2) Comma splice (only a comma): ✗ 'It was raining, we stayed inside.' FOUR WAYS TO FIX: (1) Period: 'It was raining. We stayed inside.' (2) Semicolon: 'It was raining; we stayed inside.' (3) Coordinating conjunction (FANBOYS — For, And, Nor, But, Or, Yet, So) with comma: 'It was raining, so we stayed inside.' (4) Subordinating conjunction: 'Because it was raining, we stayed inside.' IDENTIFYING RUN-ONS: Read aloud — does it feel like two sentences? Are there two complete thoughts? KEY NOTE: A long sentence is NOT automatically a run-on. Length doesn't matter; structure does. 'Although the weather was extremely bad and we had planned to go to the beach, we decided to stay inside and watch movies instead' is ONE correctly structured sentence."><span class="topic-dot"></span><span class="topic-name">Run-on Sentences</span><span class="topic-quarter">Q4</span></li>
+          <li class="topic-item" data-q="Q4"
+            data-title="Comma Splices"
+            data-desc="A comma splice occurs when two independent clauses are joined with ONLY a comma. It is a specific type of run-on error. ✗ 'The movie was incredible, it had stunning visuals.' ✗ 'I love Filipino food, it is so flavorful.' FIX OPTIONS — same as run-ons: (1) Semicolon: 'The movie was incredible; it had stunning visuals.' (2) Period: 'The movie was incredible. It had stunning visuals.' (3) Coordinating conjunction: 'The movie was incredible, and it had stunning visuals.' (4) Subordinating conjunction: 'The movie was incredible because it had stunning visuals.' EXCEPTION: Comma splices are sometimes acceptable in informal or literary writing for stylistic effect (Caesar: 'I came, I saw, I conquered') — but NOT in academic writing. TRICK TO SPOT: Replace the comma with a period. If both halves are complete sentences, you have a comma splice."><span class="topic-dot"></span><span class="topic-name">Comma Splices</span><span class="topic-quarter">Q4</span></li>
+        </ul>
+      </div>
+      <div class="field" data-quarters="Q4">
+        <div class="field-header"><span class="field-tag">Writing &amp; Speaking</span><span class="field-title">Discourse — Q4</span></div>
+        <ul class="topic-list">
+          <li class="topic-item" data-q="Q4"
+            data-title="Facts vs. Opinions"
+            data-desc="FACT: A statement that can be verified/proven through observation, measurement, or reliable evidence. Facts are objective and do not depend on personal feelings. Example: 'The Philippines has 7,641 islands.' 'World War II ended in 1945.' OPINION: A statement that expresses personal beliefs, judgments, or interpretations. Cannot be proven true or false. Example: 'The Philippines is the most beautiful country in Southeast Asia.' 'World War II was the most devastating conflict in history.' WARNING SIGNALS FOR OPINIONS: value words (beautiful, terrible, should, best, worst), hedging language (seems, appears, may be), 'I think/believe/feel.' LOADED LANGUAGE: Emotionally charged words that suggest an opinion while appearing factual. Example: 'The president's reckless decision' vs. 'the president's decision.' DISTINGUISHING IN MEDIA: Questions to ask — Can this be measured? Could a scientist test this? Would most reasonable people agree? Is this based on values or evidence?"><span class="topic-dot"></span><span class="topic-name">Facts vs. Opinions</span><span class="topic-quarter">Q4</span></li>
+          <li class="topic-item" data-q="Q4"
+            data-title="Logical Fallacies"
+            data-desc="Logical fallacies are errors in reasoning that make an argument invalid or misleading. KEY FALLACIES: (1) AD HOMINEM — Attacking the person, not their argument. 'You can't trust her opinion on taxes — she failed math.' (2) STRAW MAN — Misrepresenting someone's argument to make it easier to attack. 'You want stricter gun laws? So you want to leave us defenseless!' (3) FALSE DICHOTOMY (False Dilemma) — Presenting only two options when more exist. 'You're either with us or against us.' (4) SLIPPERY SLOPE — Claiming one action will inevitably cause extreme consequences without evidence. 'If we allow phones at lunch, students will never study again.' (5) HASTY GENERALIZATION — Drawing a broad conclusion from too little evidence. 'My neighbor is Filipino and he is rude, therefore Filipinos are rude.' (6) CIRCULAR REASONING (Begging the Question) — Using the conclusion as premise. 'The Bible is true because it says so in the Bible.' (7) APPEAL TO AUTHORITY — Citing an irrelevant authority. 'This diet must work — a famous actor endorses it.' (8) BANDWAGON — Something is right because many people believe/do it. 'Everyone is cheating on this test, so it must be okay.' (9) RED HERRING — Introducing an irrelevant topic to distract from the main issue. (10) POST HOC — Assuming causation from correlation. 'I wore my lucky shirt and we won — the shirt caused it.'"><span class="topic-dot"></span><span class="topic-name">Logical Fallacies</span><span class="topic-quarter">Q4</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ PRACTICE EXERCISES ══ -->
+<div id="practicePage">
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Grammar: Subject-Verb Agreement</div>
+
+    <div class="question-block">
+      <div class="question-num">01 / MULTIPLE CHOICE</div>
+      <div class="question-text">The news about the discoveries in the Antarctic <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> scientists around the world.</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. fascinate</button>
+        <button class="choice" data-val="B" data-correct="true">B. fascinates</button>
+        <button class="choice" data-val="C">C. are fascinating</button>
+        <button class="choice" data-val="D">D. have fascinated</button>
+      </div>
+      <div class="explanation">✓ <strong>Fascinates</strong> — "The news" is singular even though it sounds plural. News, mathematics, economics, physics, and similar words ending in -s are singular nouns and take singular verbs.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">02 / MULTIPLE CHOICE</div>
+      <div class="question-text">Neither the principal nor the teachers <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> aware of the schedule change.</div>
+      <div class="choices">
+        <button class="choice" data-val="A" data-correct="true">A. were</button>
+        <button class="choice" data-val="B">B. was</button>
+        <button class="choice" data-val="C">C. is</button>
+        <button class="choice" data-val="D">D. has been</button>
+      </div>
+      <div class="explanation">✓ <strong>Were</strong> — With neither…nor / either…or, the verb agrees with the subject closest to it. "Teachers" (plural) is closest, so use the plural verb "were."</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">03 / MULTIPLE CHOICE</div>
+      <div class="question-text">Every student and teacher in the school <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> expected to attend the assembly.</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. are</button>
+        <button class="choice" data-val="B">B. were</button>
+        <button class="choice" data-val="C" data-correct="true">C. is</button>
+        <button class="choice" data-val="D">D. have been</button>
+      </div>
+      <div class="explanation">✓ <strong>Is</strong> — When "every" or "each" precedes a compound subject joined by "and," the verb is singular. "Every student and teacher" = singular concept.</div>
+    </div>
+  </div>
+
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Grammar: Verbals</div>
+
+    <div class="question-block">
+      <div class="question-num">04 / MULTIPLE CHOICE</div>
+      <div class="question-text">Identify the type of verbal in the underlined word: "<u>Running</u> every morning improves cardiovascular health."</div>
+      <div class="choices">
+        <button class="choice" data-val="A" data-correct="true">A. Gerund — acts as the subject of the sentence</button>
+        <button class="choice" data-val="B">B. Present participle — modifies "morning"</button>
+        <button class="choice" data-val="C">C. Infinitive — expresses purpose</button>
+        <button class="choice" data-val="D">D. Past participle — modifies "cardiovascular"</button>
+      </div>
+      <div class="explanation">✓ <strong>Gerund</strong> — "Running" functions as the subject of the sentence ("Running… improves"). When a word ending in -ing acts as a noun (subject, object, or complement), it is a gerund.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">05 / MULTIPLE CHOICE</div>
+      <div class="question-text">Which sentence contains a DANGLING modifier?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Running quickly, she reached the finish line first.</button>
+        <button class="choice" data-val="B">B. The broken window, shattered by the storm, was repaired.</button>
+        <button class="choice" data-val="C" data-correct="true">C. Exhausted after the hike, the tent was set up quickly.</button>
+        <button class="choice" data-val="D">D. Smiling broadly, the winner accepted the trophy.</button>
+      </div>
+      <div class="explanation">✓ Option C — "Exhausted after the hike" dangles because it has no clear subject to modify. The tent cannot be exhausted. The sentence should read: "Exhausted after the hike, <em>they</em> set up the tent quickly."</div>
+    </div>
+  </div>
+
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Grammar: Sentence Errors</div>
+
+    <div class="question-block">
+      <div class="question-num">06 / MULTIPLE CHOICE</div>
+      <div class="question-text">Identify the type of error: "The movie was incredible, it had stunning visuals and a powerful soundtrack."</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Sentence fragment</button>
+        <button class="choice" data-val="B">B. Run-on sentence</button>
+        <button class="choice" data-val="C" data-correct="true">C. Comma splice</button>
+        <button class="choice" data-val="D">D. No error</button>
+      </div>
+      <div class="explanation">✓ <strong>Comma splice</strong> — Two complete independent clauses ("The movie was incredible" + "it had stunning visuals…") are joined with only a comma. Fix: use a semicolon, a period, or add a conjunction — "The movie was incredible; it had stunning visuals and a powerful soundtrack."</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">07 / MULTIPLE CHOICE</div>
+      <div class="question-text">Which of these is a sentence FRAGMENT?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. The students studied hard for the exam.</button>
+        <button class="choice" data-val="B">B. She finished the project on time despite the difficulties.</button>
+        <button class="choice" data-val="C" data-correct="true">C. Because the power went out during the storm.</button>
+        <button class="choice" data-val="D">D. He wrote the essay and revised it three times.</button>
+      </div>
+      <div class="explanation">✓ Option C is a fragment — it begins with a subordinating conjunction ("Because") but has no independent clause to complete the thought. It leaves the reader asking: "What happened because the power went out?"</div>
+    </div>
+  </div>
+
+  <div class="practice-section">
+    <div class="practice-section-title">📝 Logical Fallacies</div>
+
+    <div class="question-block">
+      <div class="question-num">08 / MULTIPLE CHOICE</div>
+      <div class="question-text">"You can't trust Mark's opinion on climate change — he failed his science class last year." This is an example of:</div>
+      <div class="choices">
+        <button class="choice" data-val="A" data-correct="true">A. Ad hominem</button>
+        <button class="choice" data-val="B">B. Straw man</button>
+        <button class="choice" data-val="C">C. False dichotomy</button>
+        <button class="choice" data-val="D">D. Slippery slope</button>
+      </div>
+      <div class="explanation">✓ <strong>Ad hominem</strong> — attacking the person making the argument rather than the argument itself. Even if Mark failed science class, his current claims about climate change must be evaluated on their own merits.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">09 / MULTIPLE CHOICE</div>
+      <div class="question-text">"If we allow students to use phones during lunch, soon they'll be on them all day and never learn anything." This is:</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Hasty generalization</button>
+        <button class="choice" data-val="B">B. Circular reasoning</button>
+        <button class="choice" data-val="C">C. Appeal to authority</button>
+        <button class="choice" data-val="D" data-correct="true">D. Slippery slope</button>
+      </div>
+      <div class="explanation">✓ <strong>Slippery slope</strong> — assumes one action will inevitably lead to a chain of negative consequences without evidence that this progression is likely or necessary.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-num">10 / MULTIPLE CHOICE</div>
+      <div class="question-text">"You're either with us or against us." This statement commits which fallacy?</div>
+      <div class="choices">
+        <button class="choice" data-val="A">A. Ad hominem</button>
+        <button class="choice" data-val="B" data-correct="true">B. False dichotomy</button>
+        <button class="choice" data-val="C">C. Bandwagon</button>
+        <button class="choice" data-val="D">D. Straw man</button>
+      </div>
+      <div class="explanation">✓ <strong>False dichotomy</strong> (false dilemma) — presents only two options when more exist. In reality, someone could be neutral, partially supportive, or opposed for complex reasons.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STUDY GUIDE ══ -->
+<div id="guidePage">
+
+  <div class="guide-section">
+    <div class="guide-section-title">📐 Grammar Reference</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Subject-Verb Agreement — Key Rules</div>
+      <table class="grammar-table">
+        <tr><th>Rule</th><th>Example</th></tr>
+        <tr><td>Nouns that look plural but are singular (news, mathematics, physics)</td><td><em>The news is alarming. Mathematics is useful.</em></td></tr>
+        <tr><td>Collective nouns are usually singular</td><td><em>The committee has made its decision.</em></td></tr>
+        <tr><td>Neither…nor / Either…or → verb agrees with nearest subject</td><td><em>Neither she nor they were ready.</em></td></tr>
+        <tr><td>Every / Each + compound subject → singular verb</td><td><em>Every boy and girl is welcome.</em></td></tr>
+        <tr><td>Indefinite pronouns: everyone, someone, nobody → singular</td><td><em>Everyone has a role to play.</em></td></tr>
+        <tr><td>Intervening phrases don't affect agreement</td><td><em>The box of chocolates is on the table.</em></td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Three Types of Verbals</div>
+      <table class="grammar-table">
+        <tr><th>Verbal</th><th>Form</th><th>Function</th><th>Example</th></tr>
+        <tr><td><strong>Gerund</strong></td><td>verb + -ing</td><td>Acts as a noun</td><td><em>Swimming is relaxing.</em></td></tr>
+        <tr><td><strong>Infinitive</strong></td><td>to + verb</td><td>Noun, adjective, or adverb</td><td><em>To succeed, work hard.</em></td></tr>
+        <tr><td><strong>Participle</strong></td><td>-ing / -ed / irregular</td><td>Acts as an adjective</td><td><em>The exhausted runner stopped.</em></td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Modifier Errors</div>
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-title">Misplaced Modifier</div>
+          <div class="sub-card-body">Placed too far from what it modifies — creates ambiguity.<br><br>
+            ✗ <em>She almost drove her children to school every day.</em><br>
+            ✓ <em>She drove her children to school almost every day.</em>
+          </div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Dangling Modifier</div>
+          <div class="sub-card-body">Has no clear noun to modify in the sentence.<br><br>
+            ✗ <em>Walking to school, the rain began to fall.</em><br>
+            ✓ <em>Walking to school, I got caught in the rain.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Consistency in Writing (Q3) — All Five Types</div>
+      <table class="grammar-table">
+        <tr><th>Type</th><th>Rule</th><th>Inconsistent ✗</th><th>Consistent ✓</th></tr>
+        <tr><td><strong>Person</strong></td><td>Don't shift between 1st, 2nd, 3rd person without reason</td><td><em>When one exercises, you feel better.</em></td><td><em>When one exercises, one feels better.</em></td></tr>
+        <tr><td><strong>Point of View</strong></td><td>Keep the narrative perspective stable throughout</td><td><em>I walked in. Suddenly she saw the note.</em></td><td><em>I walked in. Suddenly I saw the note.</em></td></tr>
+        <tr><td><strong>Number</strong></td><td>Don't shift between singular and plural for the same noun</td><td><em>A student should submit their assignment on time.</em></td><td><em>Students should submit their assignments on time.</em></td></tr>
+        <tr><td><strong>Voice</strong></td><td>Don't mix active and passive voice unnecessarily</td><td><em>She wrote the report and then it was submitted.</em></td><td><em>She wrote the report and then submitted it.</em></td></tr>
+        <tr><td><strong>Tense</strong></td><td>Don't shift tense unless the time actually changes</td><td><em>He opens the door and walked inside.</em></td><td><em>He opened the door and walked inside.</em></td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Verbals — Deep Dive</div>
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-title">Gerund — acts as a noun</div>
+          <div class="sub-card-body">
+            Form: verb + <em>-ing</em><br><br>
+            Subject: <em>Running every morning improves stamina.</em><br>
+            Object: <em>She enjoys reading classic novels.</em><br>
+            Complement: <em>His hobby is hiking.</em>
+          </div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Infinitive — noun, adj, or adverb</div>
+          <div class="sub-card-body">
+            Form: <em>to</em> + base verb<br><br>
+            Noun: <em>To succeed requires patience.</em><br>
+            Adjective: <em>She has a plan to solve it.</em><br>
+            Adverb: <em>He studied hard to pass.</em>
+          </div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Participle — acts as adjective</div>
+          <div class="sub-card-body">
+            Form: <em>-ing</em> / <em>-ed</em> / irregular<br><br>
+            Present: <em>The student sitting up front answered.</em><br>
+            Past: <em>Exhausted by the run, he collapsed.</em>
+          </div>
+        </div>
+      </div>
+      <div class="example-box" style="margin-top:10px">
+        ⚠️ Watch out — participial phrase at the start must modify the subject:<br>
+        ✗ <em>Running to catch the bus, the rain started.</em> (rain wasn't running)<br>
+        ✓ <em>Running to catch the bus, she got soaked by the rain.</em>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Sentence Errors — Quick Reference</div>
+      <table class="grammar-table">
+        <tr><th>Error</th><th>Definition</th><th>Fix</th></tr>
+        <tr><td><strong>Fragment</strong></td><td>Incomplete sentence — missing subject, verb, or complete thought</td><td>Add the missing element or attach to an adjacent clause</td></tr>
+        <tr><td><strong>Run-on</strong></td><td>Two+ independent clauses joined without punctuation or conjunction</td><td>Period, semicolon, or coordinating conjunction (FANBOYS)</td></tr>
+        <tr><td><strong>Comma splice</strong></td><td>Two independent clauses joined with only a comma</td><td>Replace comma with semicolon, period, or add FANBOYS</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Conjunctive Adverbs — Complete Guide</div>
+      <div class="example-box" style="margin-bottom:10px">
+        Punctuation rule: [Independent clause] <strong>; conjunctive adverb ,</strong> [independent clause]<br>
+        ✗ <em>I was tired, however, I kept working.</em> &nbsp;|&nbsp; ✓ <em>I was tired; however, I kept working.</em>
+      </div>
+      <table class="grammar-table">
+        <tr><th>Relationship</th><th>Conjunctive Adverbs</th><th>Example</th></tr>
+        <tr><td><strong>Contrast</strong></td><td>however, nevertheless, nonetheless, on the other hand, still, yet</td><td><em>The storm was bad; however, play continued.</em></td></tr>
+        <tr><td><strong>Cause / Effect</strong></td><td>therefore, consequently, thus, hence, as a result, accordingly</td><td><em>She prepared well; consequently, she aced it.</em></td></tr>
+        <tr><td><strong>Addition</strong></td><td>furthermore, moreover, in addition, besides, also, likewise</td><td><em>It's efficient; furthermore, it's free.</em></td></tr>
+        <tr><td><strong>Sequence</strong></td><td>first, then, next, finally, subsequently, meanwhile, afterward</td><td><em>Review notes; then, attempt the test.</em></td></tr>
+        <tr><td><strong>Emphasis</strong></td><td>indeed, in fact, certainly, undoubtedly, above all</td><td><em>The result shocked us; indeed, no one expected it.</em></td></tr>
+        <tr><td><strong>Alternative</strong></td><td>otherwise, instead, on the contrary</td><td><em>Submit Friday; otherwise, points are deducted.</em></td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Direct vs. Indirect Speech — Complete Conversion Rules</div>
+      <table class="grammar-table">
+        <tr><th>Direct (Original Tense)</th><th>Indirect (Backshift)</th></tr>
+        <tr><td>Simple present: <em>"I work hard."</em></td><td>Simple past: <em>She said she worked hard.</em></td></tr>
+        <tr><td>Present continuous: <em>"I am studying."</em></td><td>Past continuous: <em>He said he was studying.</em></td></tr>
+        <tr><td>Present perfect: <em>"I have finished."</em></td><td>Past perfect: <em>She said she had finished.</em></td></tr>
+        <tr><td>Simple past: <em>"I saw it."</em></td><td>Past perfect: <em>He said he had seen it.</em></td></tr>
+        <tr><td>Will: <em>"I will come."</em></td><td>Would: <em>She said she would come.</em></td></tr>
+        <tr><td>Can: <em>"I can help."</em></td><td>Could: <em>He said he could help.</em></td></tr>
+        <tr><td>May: <em>"I may leave."</em></td><td>Might: <em>She said she might leave.</em></td></tr>
+      </table>
+      <br>
+      <strong>Time expression changes:</strong><br>
+      now → then &nbsp;|&nbsp; today → that day &nbsp;|&nbsp; yesterday → the day before &nbsp;|&nbsp; tomorrow → the next day &nbsp;|&nbsp; here → there &nbsp;|&nbsp; this → that &nbsp;|&nbsp; these → those
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <div class="guide-section-title">✍️ Essay Writing Guide</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Compare &amp; Contrast Essay (Q1)</div>
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-title">Block Method</div>
+          <div class="sub-card-body">Discuss Subject A completely, then Subject B completely. Best for shorter essays or very different subjects.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Point-by-Point Method</div>
+          <div class="sub-card-body">Alternate between subjects for each point of comparison. Best for complex comparisons with many shared criteria.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Similarity Transitions</div>
+          <div class="sub-card-body">similarly · likewise · in the same way · just as · both · also</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Contrast Transitions</div>
+          <div class="sub-card-body">however · on the other hand · in contrast · whereas · while · unlike · although · conversely</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Problem-Solution Essay (Q3)</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><strong>Introduction</strong> — Hook (startling fact / statistic / anecdote) → Background → Thesis (names the problem and hints at solution)</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><strong>Problem Paragraph(s)</strong> — Define the problem, its causes, its effects, evidence of its severity</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><strong>Solution Paragraph(s)</strong> — Propose the solution, explain HOW it works, address objections, explain feasibility</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><strong>Conclusion</strong> — Restate problem + solution, broader significance, call to action</div></div>
+      </div>
+      <div class="example-box" style="margin-top:10px">
+        ✗ Weak: "The government should do something about poverty."<br>
+        ✓ Strong: "Schools should implement mandatory 30-minute reading periods, as research shows this increases literacy rates by 40%."
+      </div>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Argumentative Essay (Q4)</div>
+      <div class="sub-cards" style="margin-bottom:10px">
+        <div class="sub-card">
+          <div class="sub-card-title">Logos</div>
+          <div class="sub-card-body">Logic and evidence — facts, statistics, data, expert quotes. Most important in academic writing.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Ethos</div>
+          <div class="sub-card-body">Credibility — using reliable, authoritative sources and demonstrating knowledge of the topic.</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Pathos</div>
+          <div class="sub-card-body">Emotional appeal — connecting to the audience's values, experiences, or feelings about the issue.</div>
+        </div>
+      </div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><strong>Introduction</strong> — Hook → Background → Thesis (clear, specific, debatable)</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><strong>Body Paragraphs</strong> — Topic sentence → Evidence → Explanation/Analysis → Transition</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><strong>Counterargument</strong> — Acknowledge opposing view → Concede valid points → Refute with stronger evidence</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><strong>Conclusion</strong> — Restate thesis differently → Synthesize main points → Broader implication / call to action</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <div class="guide-section-title">🌏 Literary Forms — Q4 Focus</div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Haiku vs. Tanka</div>
+      <table class="grammar-table">
+        <tr><th>Feature</th><th>Haiku</th><th>Tanka</th></tr>
+        <tr><td>Syllable structure</td><td>5-7-5 (17 syllables)</td><td>5-7-5-7-7 (31 syllables)</td></tr>
+        <tr><td>Lines</td><td>3 lines</td><td>5 lines</td></tr>
+        <tr><td>Focus</td><td>Single moment, image, or observation</td><td>Haiku image + personal reflection or emotion</td></tr>
+        <tr><td>Kigo (seasonal word)</td><td>Traditional feature</td><td>Optional</td></tr>
+        <tr><td>Notable poets</td><td>Matsuo Bashō, Yosa Buson, Kobayashi Issa</td><td>Murasaki Shikibu, Ki no Tsurayuki</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-block-title">Key Logical Fallacies</div>
+      <div class="key-terms-grid">
+        <div class="key-term"><div class="key-term-word">Ad Hominem</div><div class="key-term-def">Attacking the person rather than their argument.</div></div>
+        <div class="key-term"><div class="key-term-word">Straw Man</div><div class="key-term-def">Misrepresenting someone's argument to make it easier to attack.</div></div>
+        <div class="key-term"><div class="key-term-word">False Dichotomy</div><div class="key-term-def">Presenting only two options when more exist.</div></div>
+        <div class="key-term"><div class="key-term-word">Slippery Slope</div><div class="key-term-def">Claiming one action will inevitably cause extreme consequences.</div></div>
+        <div class="key-term"><div class="key-term-word">Hasty Generalization</div><div class="key-term-def">Drawing a broad conclusion from too little evidence.</div></div>
+        <div class="key-term"><div class="key-term-word">Circular Reasoning</div><div class="key-term-def">Using the conclusion as evidence for itself.</div></div>
+        <div class="key-term"><div class="key-term-word">Appeal to Authority</div><div class="key-term-def">Citing an authority figure whose expertise is irrelevant.</div></div>
+        <div class="key-term"><div class="key-term-word">Bandwagon</div><div class="key-term-def">Arguing something is true because many people believe it.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// Particles
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, pts = [];
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for(let i=0;i<28;i++) pts.push({ x:Math.random()*2000, y:Math.random()*2000, r:Math.random()*1.2+0.3, vx:(Math.random()-.5)*.12, vy:-Math.random()*.18-.04, a:Math.random()*.4+.15 });
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.y<-10)p.y=H+10; if(p.x<-10)p.x=W+10; if(p.x>W+10)p.x=-10;
+      ctx.beginPath(); ctx.arc(p.x%W,p.y%H,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,80,80,${p.a})`; ctx.fill(); });
+    requestAnimationFrame(tick);
+  } tick();
+})();
+
+// Tabs
+const tabMap      = document.getElementById('tabMap');
+const tabPractice = document.getElementById('tabPractice');
+const tabGuide    = document.getElementById('tabGuide');
+const mapPage      = document.getElementById('mapPage');
+const practicePage = document.getElementById('practicePage');
+const guidePage    = document.getElementById('guidePage');
+
+function showTab(tab, pageEl) {
+  [tabMap, tabPractice, tabGuide].forEach(t => t.classList.remove('active'));
+  [mapPage, practicePage, guidePage].forEach(p => p.classList.remove('visible'));
+  tab.classList.add('active');
+  pageEl.classList.add('visible');
+}
+tabMap.addEventListener('click',      () => showTab(tabMap,      mapPage));
+tabPractice.addEventListener('click', () => showTab(tabPractice, practicePage));
+tabGuide.addEventListener('click',    () => showTab(tabGuide,    guidePage));
+
+// Quarter filter
+document.querySelectorAll('.quarter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.quarter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const q = pill.dataset.q;
+    document.querySelectorAll('.topic-item').forEach(item => {
+      item.classList.toggle('hidden', q !== 'ALL' && item.dataset.q !== q);
+    });
+    document.querySelectorAll('.era-section').forEach(sec => {
+      const id = sec.id.replace('section-', '');
+      sec.style.display = (q === 'ALL' || q === id) ? '' : 'none';
+    });
+  });
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  let count = 0;
+  document.querySelectorAll('.topic-item').forEach(item => {
+    const match = !term || item.querySelector('.topic-name').textContent.toLowerCase().includes(term)
+      || (item.dataset.title || '').toLowerCase().includes(term)
+      || (item.dataset.desc || '').toLowerCase().includes(term);
+    item.classList.toggle('hidden', !match);
+    if (match) count++;
+  });
+  document.getElementById('searchCount').textContent = term ? `${count} result${count!==1?'s':''}` : '';
+});
+
+// Topic modal
+document.querySelectorAll('.topic-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const tag = el.closest('.field').querySelector('.field-tag').textContent;
+    document.getElementById('modalTag').textContent  = tag + ' · ' + el.dataset.q;
+    document.getElementById('modalTitle').textContent = el.dataset.title || el.querySelector('.topic-name').textContent;
+    document.getElementById('modalBody').textContent  = el.dataset.desc  || '';
+    document.getElementById('modalBackdrop').classList.add('open');
+  });
+});
+document.getElementById('modalClose').addEventListener('click', () => document.getElementById('modalBackdrop').classList.remove('open'));
+document.getElementById('modalBackdrop').addEventListener('click', e => { if(e.target===document.getElementById('modalBackdrop')) document.getElementById('modalBackdrop').classList.remove('open'); });
+
+// Practice MCQ
+document.querySelectorAll('.question-block').forEach(block => {
+  const choices = block.querySelectorAll('.choice');
+  const explanation = block.querySelector('.explanation');
+  let answered = false;
+  choices.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      choices.forEach(c => {
+        if (c.dataset.correct) c.classList.add('correct');
+        else if (c === btn && !c.dataset.correct) c.classList.add('wrong');
+        c.style.pointerEvents = 'none';
+      });
+      if (explanation) explanation.classList.add('show');
+    });
+  });
+});
+</script>
+</body>
+</html>
